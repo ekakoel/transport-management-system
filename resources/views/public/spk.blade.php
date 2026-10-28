@@ -427,7 +427,7 @@
     <h4 class="section-title">Ketentuan & Himbauan untuk Driver</h4>
     <ul>
         <li>Pastikan kondisi kendaraan bersih, aman, dan siap digunakan.</li>
-        <li>Tiba tepat waktu sesuai jadwal penjemputan yang telah ditentukan.</li>
+        <li>Tiba tepat waktu sesuai jadwal kunjungan pada itinerary.</li>
         <li>Selalu mengemudi dengan hati-hati dan mematuhi rambu lalu lintas.</li>
         <li>Pastikan kenyamanan penumpang menjadi prioritas.</li>
         <li>Lakukan check-in GPS di destinasi sesuai itinerary.</li>
