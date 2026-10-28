@@ -62,14 +62,20 @@
                 </div>
 
                 <div class="service-create-fields">
+                    <div class="service-create-field service-field-full">
+                        <label for="reservation_user_id">Pemilik Reservation / Kasus <span>*</span></label>
+                        <select id="reservation_user_id" name="reservation_user_id" required>
+                            <option value="">Pilih user ber-role reservation</option>
+                            @foreach ($reservationUsers as $reservationUser)
+                                <option value="{{ $reservationUser->id }}" @selected(old('reservation_user_id') == $reservationUser->id)>{{ $reservationUser->name }} ({{ $reservationUser->email }})</option>
+                            @endforeach
+                        </select>
+                        @error('reservation_user_id')<small class="service-create-error">{{ $message }}</small>@enderror
+                        <small>Pemilik kasus adalah staf internal Reservation, bukan wisatawan.</small>
+                    </div>
                     <div class="service-create-field">
-                        <label for="customer_name">Nama Pelanggan / Pemesan <span>*</span></label>
-                        <input id="customer_name" name="customer_name" type="text"
-                            value="{{ old('customer_name') }}" placeholder="Masukkan nama pelanggan"
-                            autocomplete="name" required>
-                        @error('customer_name')
-                            <small class="service-create-error">{{ $message }}</small>
-                        @enderror
+                        <label for="customer_name">Nama pelanggan (opsional)</label>
+                        <input id="customer_name" name="customer_name" type="text" value="{{ old('customer_name') }}" placeholder="Kontak pelanggan jika diperlukan">
                     </div>
 
                     <div class="service-create-field">
@@ -116,6 +122,19 @@
                         @enderror
                     </div>
                 </div>
+            </section>
+
+            <section class="service-create-card">
+                <div class="service-create-section-header"><div><h2>Daftar Tamu / Wisatawan</h2><p>Pemilik Reservation tidak otomatis menjadi tamu.</p></div><span class="service-create-step">02A</span></div>
+                <div id="service-guests">
+                    <div class="service-stop-row service-guest-row"><div class="service-stop-fields">
+                        <div class="service-create-field"><label>Nama tamu</label><input name="guests[0][name]" maxlength="150"></div>
+                        <div class="service-create-field"><label>Jenis kelamin</label><select name="guests[0][gender]"><option value="">Pilih</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+                        <div class="service-create-field"><label>Kategori usia</label><select name="guests[0][age_category]"><option value="">Pilih</option><option value="Adult">Adult</option><option value="Children">Children</option></select></div>
+                        <div class="service-create-field"><label>Kontak (opsional)</label><input name="guests[0][phone]" maxlength="40" type="tel"></div>
+                    </div></div>
+                </div>
+                <button class="service-add-stop-btn" type="button" id="addGuest">+ Tambah tamu</button>
             </section>
 
             {{-- Section 2: Schedule --}}
@@ -339,6 +358,18 @@
 
     <script>
         (() => {
+            const guestContainer = document.getElementById('service-guests');
+            const addGuestButton = document.getElementById('addGuest');
+            let nextGuestIndex = 1;
+            addGuestButton?.addEventListener('click', () => {
+                if (!guestContainer || guestContainer.querySelectorAll('.service-guest-row').length >= 100) return;
+                const i = nextGuestIndex++;
+                const row = document.createElement('div');
+                row.className = 'service-stop-row service-guest-row';
+                row.innerHTML = '<div class="service-stop-fields"><div class="service-create-field"><label>Nama tamu</label><input name="guests['+i+'][name]" maxlength="150"></div><div class="service-create-field"><label>Jenis kelamin</label><select name="guests['+i+'][gender]"><option value="">Pilih</option><option value="Male">Male</option><option value="Female">Female</option></select></div><div class="service-create-field"><label>Kategori usia</label><select name="guests['+i+'][age_category]"><option value="">Pilih</option><option value="Adult">Adult</option><option value="Children">Children</option></select></div><div class="service-create-field"><label>Kontak (opsional)</label><input name="guests['+i+'][phone]" maxlength="40" type="tel"></div></div><button type="button" class="service-remove-stop">Hapus tamu</button>';
+                row.querySelector('.service-remove-stop').addEventListener('click', () => row.remove());
+                guestContainer.appendChild(row);
+            });
             const stopsContainer = document.getElementById('stops');
             const addButton = document.getElementById('addStop');
             const counter = document.getElementById('stopCounter');
