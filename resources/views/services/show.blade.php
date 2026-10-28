@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Detail SPK')
 
@@ -39,11 +39,6 @@
                 </svg>
                 Semua Layanan
             </a>
-            @if ($service->spk)
-                <a href="{{ route('services.spk.preview', $service) }}" class="service-show-back">
-                    Lihat SPK
-                </a>
-            @endif
         </div>
     </header>
     <div class="service-show-page">
@@ -480,7 +475,7 @@
                         <span class="tms-info-description">Riwayat event SPK yang tersedia.</span>
                     </div>
                 </div>
-                <div class="tms-info-panel-footer"><a href="{{ route('services.index') }}">â† Kembali ke daftar
+                <div class="tms-info-panel-footer"><a href="{{ route('services.index') }}">&#8592; Kembali ke Daftar Layanan</a></div>
                         layanan</a></div>
             </aside>
         </div>

@@ -20,7 +20,6 @@ Route::middleware(['auth'])->group(function(){
     Route::get('/services',[TmsController::class,'services'])->name('services.index');
     Route::get('/services/create',[TmsController::class,'createService'])->name('services.create');
     Route::post('/services',[TmsController::class,'storeService'])->name('services.store');
-    Route::get('/services/{service}/spk-preview',[TmsController::class,'previewSpk'])->name('services.spk.preview');
     Route::get('/services/{service}',[TmsController::class,'showService'])->name('services.show');
     Route::get('/drivers',[TmsController::class,'drivers'])->name('drivers.index');
     Route::post('/drivers',[TmsController::class,'storeDriver'])->name('drivers.store');

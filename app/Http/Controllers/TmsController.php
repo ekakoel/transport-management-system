@@ -96,15 +96,22 @@ class TmsController extends Controller
         $newUrl=session('new_spk_url');
         return view('services.show',compact('service','newUrl'));
     }
-    public function previewSpk(TransportService $service){
-        $service->load(['driver','vehicle','serviceType','stops','spk.events.stop']);
+    
+    public function previewSpk(TransportService $service)
+    {
+        $service->load(['driver', 'vehicle', 'serviceType', 'stops', 'spk.events.stop']);
+
         abort_unless($service->spk, 404);
+
+        $newUrl = session('new_spk_url');
 
         return view('services.spk-preview', [
             'service' => $service,
             'spk' => $service->spk,
+            'newUrl' => $newUrl,
         ]);
     }
+
 
     public function drivers(){
         $drivers = Driver::orderBy('name')->paginate(20);
