@@ -378,7 +378,7 @@
                             <div class="description-item"><div class="icon">🗺️</div><div class="desc">Lokasi check-in: <a href="https://www.google.com/maps?q={{ $stopEvent->latitude }},{{ $stopEvent->longitude }}" target="_blank" rel="noreferrer">Lihat di Google Maps</a></div></div>
                             <p class="public-small">Koordinat: {{ $stopEvent->latitude }}, {{ $stopEvent->longitude }}@if($stopEvent->created_at) · {{ $stopEvent->created_at->timezone('Asia/Makassar')->format('d M Y H:i') }} WITA@endif</p>
                         @endif
-                    @endif
+                    <?php endif; ?>
                     @if($stop->status !== 'Checked In' && $canCheckIn && $stop->status !== 'Cancelled')
                         <button type="button" class="public-action public-stop-checkin" data-stop-id="{{ $stop->id }}" data-stop-name="{{ $stop->name }}">📍 Check-in destinasi dengan GPS</button>
                         <form method="post" action="{{ $showNumberUrl ? route('public.spk.number.destinations.cancel', [$spk->id, $spk->spk_number, $stop->id]) : route('public.spk.destinations.cancel', [$token, $stop->id]) }}" class="mt-2">
