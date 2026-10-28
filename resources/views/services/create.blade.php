@@ -74,8 +74,8 @@
                         <small>Pemilik kasus adalah staf internal Reservation, bukan wisatawan.</small>
                     </div>
                     <div class="service-create-field">
-                        <label for="customer_name">Nama pelanggan (opsional)</label>
-                        <input id="customer_name" name="customer_name" type="text" value="{{ old('customer_name') }}" placeholder="Kontak pelanggan jika diperlukan">
+                        <label for="customer_name">Nama pelanggan / kontak layanan <span>*</span></label>
+                        <input id="customer_name" name="customer_name" type="text" value="{{ old('customer_name') }}" placeholder="Nama pelanggan / kontak layanan" required>
                     </div>
 
                     <div class="service-create-field">
