@@ -60,7 +60,7 @@ class TmsController extends Controller
     public function storeService(Request $request){
         $data=$request->validate([
             'reservation_user_id'=>['required', Rule::exists('users','id')->where(fn($q)=>$q->where('role','reservation')->where('is_active',1))],
-            'customer_name'=>'nullable|string|max:150','customer_phone'=>'nullable|string|max:40',
+            'customer_name'=>'required|string|max:150','customer_phone'=>'nullable|string|max:40',
             'guests'=>'nullable|array|max:100','guests.*.name'=>'required_with:guests.*.gender|string|max:150',
             'guests.*.gender'=>['required_with:guests.*.name',Rule::in(['Male','Female'])],
             'guests.*.age_category'=>['required_with:guests.*.name',Rule::in(['Adult','Children'])],
