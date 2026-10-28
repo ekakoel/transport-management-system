@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS transport_services (
  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, service_code VARCHAR(40) NOT NULL UNIQUE,
  customer_name VARCHAR(150) NOT NULL, customer_phone VARCHAR(40) NULL,
  service_type_id BIGINT UNSIGNED NOT NULL, service_date DATE NOT NULL, service_end_date DATE NOT NULL,
- start_time TIME NULL, end_time TIME NULL, pickup_location VARCHAR(255) NOT NULL,
+ start_time TIME NULL, end_time TIME NULL,
  notes TEXT NULL, driver_id BIGINT UNSIGNED NOT NULL, vehicle_id BIGINT UNSIGNED NOT NULL,
  status VARCHAR(30) NOT NULL DEFAULT 'Draft', created_by BIGINT UNSIGNED NULL,
  created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL,
