@@ -23,7 +23,7 @@ class Reservation extends Model
         ];
     }
 
-    public function requester() { return $this->belongsTo(User::class, 'user_id'); }
+    public function guests() { return $this->hasMany(ReservationGuest::class); }\n    public function requester() { return $this->belongsTo(User::class, 'user_id'); }
     public function serviceType() { return $this->belongsTo(ServiceType::class); }
     public function transportService() { return $this->belongsTo(TransportService::class); }
     public function reviewer() { return $this->belongsTo(User::class, 'reviewed_by'); }
