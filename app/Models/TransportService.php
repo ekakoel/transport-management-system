@@ -35,7 +35,22 @@ class TransportService extends Model
         ];
     }
 
-    public function reservationOwner()\n    {\n        return $this->belongsTo(User::class, 'reservation_user_id');\n    }\n\n    public function reservation()\n    {\n        return $this->belongsTo(Reservation::class);\n    }\n\n    public function guests()\n    {\n        return $this->hasMany(ServiceGuest::class, 'transport_service_id');\n    }\n\n    public function driver()
+    public function reservationOwner()
+    {
+        return $this->belongsTo(User::class, 'reservation_user_id');
+    }
+
+    public function reservation()
+    {
+        return $this->belongsTo(Reservation::class);
+    }
+
+    public function guests()
+    {
+        return $this->hasMany(ServiceGuest::class, 'transport_service_id');
+    }
+
+    public function driver()
     {
         return $this->belongsTo(Driver::class);
     }
