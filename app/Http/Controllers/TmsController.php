@@ -96,6 +96,15 @@ class TmsController extends Controller
         $newUrl=session('new_spk_url');
         return view('services.show',compact('service','newUrl'));
     }
+    public function previewSpk(TransportService $service){
+        $service->load(['driver','vehicle','serviceType','stops','spk.events.stop']);
+        abort_unless($service->spk, 404);
+
+        return view('services.spk-preview', [
+            'service' => $service,
+            'spk' => $service->spk,
+        ]);
+    }
 
     public function drivers(){
         $drivers = Driver::orderBy('name')->paginate(20);
@@ -198,3 +207,4 @@ class TmsController extends Controller
         return back()->with('success','Layanan ditandai selesai.');
     }
 }
+

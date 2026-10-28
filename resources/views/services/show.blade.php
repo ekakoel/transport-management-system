@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Detail SPK')
 
@@ -27,7 +27,7 @@
                 <p>
                     Nomor SPK:
                     <strong>{{ $service->spk?->spk_number ?: 'Belum diterbitkan' }}</strong>
-                    <span class="service-show-separator">·</span>
+                    <span class="service-show-separator">Â·</span>
                     Detail layanan dan laporan driver
                 </p>
             </div>
@@ -39,6 +39,11 @@
                 </svg>
                 Semua Layanan
             </a>
+            @if ($service->spk)
+                <a href="{{ route('services.spk.preview', $service) }}" class="service-show-back">
+                    Lihat SPK
+                </a>
+            @endif
         </div>
     </header>
     <div class="service-show-page">
@@ -129,7 +134,7 @@
 
                         <div class="service-show-card-bottom">
                             <span>Tipe Layanan</span>
-                            <strong>{{ $service->serviceType?->name ?? '—' }}</strong>
+                            <strong>{{ $service->serviceType?->name ?? 'â€”' }}</strong>
                         </div>
                     </section>
 
@@ -230,9 +235,9 @@
                             <div>
                                 <span class="service-show-detail-label">Waktu Layanan</span>
                                 <strong>
-                                    {{ $service->start_time ?: '—' }}
-                                    <span class="service-show-time-separator">–</span>
-                                    {{ $service->end_time ?: '—' }}
+                                    {{ $service->start_time ?: 'â€”' }}
+                                    <span class="service-show-time-separator">â€“</span>
+                                    {{ $service->end_time ?: 'â€”' }}
                                 </strong>
                                 <small>Waktu setempat Bali (WITA)</small>
                             </div>
@@ -367,10 +372,10 @@
                                     <tr>
                                         <td>
                                             <div class="service-show-event-date">
-                                                {{ $e->created_at?->timezone('Asia/Makassar')->format('d M Y') ?? '—' }}
+                                                {{ $e->created_at?->timezone('Asia/Makassar')->format('d M Y') ?? 'â€”' }}
                                             </div>
                                             <div class="service-show-event-time">
-                                                {{ $e->created_at?->timezone('Asia/Makassar')->format('H:i:s') ?? '—' }}
+                                                {{ $e->created_at?->timezone('Asia/Makassar')->format('H:i:s') ?? 'â€”' }}
                                             </div>
                                         </td>
 
@@ -380,7 +385,7 @@
                                             </span>
                                         </td>
 
-                                        <td>{{ $e->stop?->name ?: '—' }}</td>
+                                        <td>{{ $e->stop?->name ?: 'â€”' }}</td>
 
                                         <td>
                                             @if ($e->latitude !== null && $e->longitude !== null)
@@ -401,11 +406,11 @@
                                         </td>
 
                                         <td>
-                                            {{ $e->accuracy_meters !== null ? number_format((float) $e->accuracy_meters, 0) . ' m' : '—' }}
+                                            {{ $e->accuracy_meters !== null ? number_format((float) $e->accuracy_meters, 0) . ' m' : 'â€”' }}
                                         </td>
 
                                         <td class="service-show-event-note">
-                                            {{ $e->note ?: '—' }}
+                                            {{ $e->note ?: 'â€”' }}
                                         </td>
                                     </tr>
                                 @empty
@@ -445,12 +450,12 @@
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Tanggal mulai</span>
-                        <strong class="tms-info-value">{{ $service->service_date?->format('d M Y') ?? '—' }}</strong>
+                        <strong class="tms-info-value">{{ $service->service_date?->format('d M Y') ?? 'â€”' }}</strong>
                         <span class="tms-info-description">Tanggal layanan.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Tanggal selesai</span>
-                        <strong class="tms-info-value">{{ $service->service_end_date?->format('d M Y') ?? '—' }}</strong>
+                        <strong class="tms-info-value">{{ $service->service_end_date?->format('d M Y') ?? 'â€”' }}</strong>
                         <span class="tms-info-description">Tanggal akhir layanan.</span>
                     </div>
                     <div class="tms-info-item">
@@ -475,7 +480,7 @@
                         <span class="tms-info-description">Riwayat event SPK yang tersedia.</span>
                     </div>
                 </div>
-                <div class="tms-info-panel-footer"><a href="{{ route('services.index') }}">← Kembali ke daftar
+                <div class="tms-info-panel-footer"><a href="{{ route('services.index') }}">â† Kembali ke daftar
                         layanan</a></div>
             </aside>
         </div>
@@ -527,3 +532,4 @@
         </script>
     @endif
 @endsection
+
