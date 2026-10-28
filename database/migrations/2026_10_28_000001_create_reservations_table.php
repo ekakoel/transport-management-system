@@ -20,7 +20,6 @@ return new class extends Migration
             $table->date('service_end_date');
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();
-            $table->string('pickup_location', 255);
             $table->text('itinerary')->nullable();
             $table->text('notes')->nullable();
             $table->string('status', 30)->default('Pending');
