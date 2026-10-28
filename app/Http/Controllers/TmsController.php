@@ -160,60 +160,283 @@ class TmsController extends Controller
     }
     public function storeContact(Request $r){$d=$r->validate(['name'=>'required|string|max:150','phone'=>'required|string|max:40','whatsapp'=>'nullable|string|max:40']);if($r->boolean('is_default')) EmergencyContact::query()->update(['is_default'=>false]);EmergencyContact::create($d+['is_default'=>$r->boolean('is_default'),'is_active'=>$r->boolean('is_active')]);return back()->with('success','Kontak disimpan.');}
 
-    private function validPublicSpk(string $token): ?Spk {
-        $hash=hash('sha256',$token);
-        $spk=Spk::where('token_hash',$hash)->first();
-        if(!$spk || $spk->revoked_at) return null;
-        $service=$spk->service;
-        if(!$service) return null;
-        if(now('Asia/Makassar')->toDateString() > $service->service_end_date->format('Y-m-d') && !in_array($service->status,['Expired','Cancelled','Completed'])) {
-            $service->update(['status'=>'Expired']);
+    private function validPublicSpk(string $token): ?Spk
+    {
+        $spk = Spk::where('token_hash', hash('sha256', $token))->first();
+
+        if (!$spk || $spk->revoked_at) {
+            return null;
         }
+
+        $this->expirePublicSpkIfNeeded($spk);
+
         return $spk;
     }
-    private function publicWritable(Spk $spk): bool {
-        $s=$spk->service;
-        return $s && !in_array($s->status,['Expired','Cancelled','Completed']) && now('Asia/Makassar')->toDateString()>=$s->service_date->format('Y-m-d') && now('Asia/Makassar')->toDateString()<=$s->service_end_date->format('Y-m-d');
+
+    private function expirePublicSpkIfNeeded(Spk $spk): void
+    {
+        $service = $spk->service;
+
+        // SPK tetap dapat dibaca setelah selesai; status berubah menjadi Expired
+        // setelah tanggal akhir layanan terlewati. SPK yang dibatalkan tetap Cancelled.
+        if (
+            $service
+            && now('Asia/Makassar')->toDateString() > $service->service_end_date->format('Y-m-d')
+            && $service->status !== 'Cancelled'
+            && $service->status !== 'Expired'
+        ) {
+            $service->update(['status' => 'Expired']);
+        }
     }
-    public function publicSpk(string $token){
-        $spk=$this->validPublicSpk($token);
-        abort_unless($spk,404);
-        $spk->load(['service.driver','service.vehicle','service.serviceType','service.stops','events.stop']);
-        return response()->view('public.spk',compact('spk','token'))->header('Referrer-Policy','no-referrer')->header('Cache-Control','no-store');
+
+    private function publicWritable(Spk $spk): bool
+    {
+        $service = $spk->service;
+
+        return $service
+            && !in_array($service->status, ['Expired', 'Cancelled', 'Completed'], true)
+            && now('Asia/Makassar')->toDateString() >= $service->service_date->format('Y-m-d')
+            && now('Asia/Makassar')->toDateString() <= $service->service_end_date->format('Y-m-d');
     }
-    public function publicCheckIn(Request $r,string $token){
-        $spk=$this->validPublicSpk($token);abort_unless($spk,404);
-        abort_unless($this->publicWritable($spk),403,'SPK tidak dapat diubah di luar tanggal layanan atau statusnya sudah final.');
-        $d=$r->validate(['latitude'=>'required|numeric|between:-90,90','longitude'=>'required|numeric|between:-180,180','accuracy_meters'=>'nullable|numeric|gt:0|max:100000','note'=>'nullable|string|max:1000','itinerary_stop_id'=>'nullable|integer|exists:service_itinerary_stops,id','idempotency_key'=>'required|uuid']);
-        $duplicate=SpkEvent::where('spk_id',$spk->id)->where('metadata->idempotency_key',$d['idempotency_key'])->first();
-        if($duplicate)return back()->with('success','Check-in ini sudah tersimpan.')->with('event_id',$duplicate->id);
-        $stop=null;
-        if(!empty($d['itinerary_stop_id'])){$stop=ItineraryStop::where('transport_service_id',$spk->transport_service_id)->findOrFail($d['itinerary_stop_id']);if($stop->status==='Cancelled')return back()->withErrors(['itinerary_stop_id'=>'Destinasi ini sudah dibatalkan.']);}
-        DB::transaction(function()use($spk,$d,$stop){
-            SpkEvent::create(['spk_id'=>$spk->id,'transport_service_id'=>$spk->transport_service_id,'itinerary_stop_id'=>$stop?->id,'event_type'=>'check_in','latitude'=>$d['latitude'],'longitude'=>$d['longitude'],'accuracy_meters'=>$d['accuracy_meters']??null,'note'=>$d['note']??null,'actor_type'=>'driver_public','actor_id'=>null,'created_at'=>now('UTC'),'metadata'=>['idempotency_key'=>$d['idempotency_key']]]);
-            if($stop)$stop->update(['status'=>'Checked In']);
-            if($spk->service->status==='Published')$spk->service->update(['status'=>'In Progress']);
+
+    private function renderPublicSpk(Spk $spk, ?string $token = null, bool $numberUrl = false)
+    {
+        abort_if($spk->revoked_at, 404);
+
+        $this->expirePublicSpkIfNeeded($spk);
+        $spk->load(['service.driver', 'service.vehicle', 'service.serviceType', 'service.stops', 'events.stop']);
+
+        $canCheckIn = $this->publicWritable($spk);
+
+        return response()
+            ->view('public.spk', compact('spk', 'token', 'numberUrl', 'canCheckIn'))
+            ->header('Referrer-Policy', 'no-referrer')
+            ->header('Cache-Control', 'no-store, private');
+    }
+
+    public function publicSpk(string $token)
+    {
+        $spk = $this->validPublicSpk($token);
+        abort_unless($spk, 404);
+
+        return $this->renderPublicSpk($spk, $token, false);
+    }
+
+    public function publicSpkByNumber(Spk $spk, string $spkNumber)
+    {
+        abort_unless(hash_equals($spk->spk_number, $spkNumber), 404);
+
+        return $this->renderPublicSpk($spk, null, true);
+    }
+
+    private function storePublicCheckIn(Request $r, Spk $spk)
+    {
+        abort_unless($this->publicWritable($spk), 403, 'SPK sudah kedaluwarsa atau di luar tanggal layanan.');
+
+        $data = $r->validate([
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+            'accuracy_meters' => 'nullable|numeric|gt:0|max:100000',
+            'note' => 'nullable|string|max:1000',
+            'itinerary_stop_id' => 'nullable|integer|exists:service_itinerary_stops,id',
+            'idempotency_key' => 'required|uuid',
+        ]);
+
+        $duplicate = SpkEvent::where('spk_id', $spk->id)
+            ->where('metadata->idempotency_key', $data['idempotency_key'])
+            ->first();
+
+        if ($duplicate) {
+            return back()->with('success', 'Check-in ini sudah tersimpan.');
+        }
+
+        $stop = null;
+        if (!empty($data['itinerary_stop_id'])) {
+            $stop = ItineraryStop::where('transport_service_id', $spk->transport_service_id)
+                ->findOrFail($data['itinerary_stop_id']);
+
+            if ($stop->status === 'Cancelled') {
+                return back()->withErrors(['itinerary_stop_id' => 'Destinasi ini sudah dibatalkan.']);
+            }
+
+            if ($stop->status === 'Checked In') {
+                return back()->withErrors(['itinerary_stop_id' => 'Destinasi ini sudah check-in.']);
+            }
+        }
+
+        DB::transaction(function () use ($spk, $data, $stop) {
+            SpkEvent::create([
+                'spk_id' => $spk->id,
+                'transport_service_id' => $spk->transport_service_id,
+                'itinerary_stop_id' => $stop?->id,
+                'event_type' => 'check_in',
+                'latitude' => $data['latitude'],
+                'longitude' => $data['longitude'],
+                'accuracy_meters' => $data['accuracy_meters'] ?? null,
+                'note' => $data['note'] ?? null,
+                'actor_type' => 'driver_public',
+                'actor_id' => null,
+                'created_at' => now('UTC'),
+                'metadata' => ['idempotency_key' => $data['idempotency_key']],
+            ]);
+
+            if ($stop) {
+                $stop->update(['status' => 'Checked In']);
+            }
+
+            if ($spk->service->status === 'Published') {
+                $spk->service->update(['status' => 'In Progress']);
+            }
         });
-        return back()->with('success','Check-in berhasil disimpan.');
+
+        return back()->with('success', 'Check-in GPS berhasil disimpan.');
     }
-    public function publicAddDestination(Request $r,string $token){
-        $spk=$this->validPublicSpk($token);abort_unless($spk,404);abort_unless($this->publicWritable($spk),403,'SPK sudah tidak dapat diubah.');
-        $d=$r->validate(['name'=>'required|string|max:150','address'=>'required|string|max:500','note'=>'nullable|string|max:1000']);
-        DB::transaction(function()use($spk,$d){$max=(int)ItineraryStop::where('transport_service_id',$spk->transport_service_id)->max('sort_order');$stop=ItineraryStop::create(['transport_service_id'=>$spk->transport_service_id,'name'=>$d['name'],'address'=>$d['address'],'note'=>$d['note']??null,'sort_order'=>$max+1,'status'=>'Planned','added_by_driver'=>true]);SpkEvent::create(['spk_id'=>$spk->id,'transport_service_id'=>$spk->transport_service_id,'itinerary_stop_id'=>$stop->id,'event_type'=>'destination_added','actor_type'=>'driver_public','created_at'=>now('UTC'),'metadata'=>['note'=>$d['note']??null]]);});
-        return back()->with('success','Destinasi tambahan berhasil disimpan.');
+
+    public function publicCheckIn(Request $r, string $token)
+    {
+        $spk = $this->validPublicSpk($token);
+        abort_unless($spk, 404);
+
+        return $this->storePublicCheckIn($r, $spk);
     }
-    public function publicCancelDestination(Request $r,string $token,ItineraryStop $stop){
-        $spk=$this->validPublicSpk($token);abort_unless($spk,404);abort_unless($this->publicWritable($spk),403,'SPK sudah tidak dapat diubah.');
-        abort_unless((int)$stop->transport_service_id===(int)$spk->transport_service_id,404);
-        if($stop->status==='Checked In')return back()->withErrors(['stop'=>'Destinasi sudah check-in dan tidak dapat dibatalkan sebagai belum dikunjungi.']);
-        $d=$r->validate(['reason'=>'nullable|string|max:500']);
-        DB::transaction(function()use($spk,$stop,$d){$stop->update(['status'=>'Cancelled','cancelled_at'=>now('UTC')]);SpkEvent::create(['spk_id'=>$spk->id,'transport_service_id'=>$spk->transport_service_id,'itinerary_stop_id'=>$stop->id,'event_type'=>'destination_cancelled','note'=>$d['reason']??null,'actor_type'=>'driver_public','created_at'=>now('UTC'),'metadata'=>[]]);});
-        return back()->with('success','Kunjungan destinasi dibatalkan dan riwayat tetap disimpan.');
+
+    public function publicCheckInByNumber(Request $r, Spk $spk, string $spkNumber)
+    {
+        abort_unless(hash_equals($spk->spk_number, $spkNumber), 404);
+        $this->expirePublicSpkIfNeeded($spk);
+
+        return $this->storePublicCheckIn($r, $spk);
     }
-    public function publicComplete(string $token){
-        $spk=$this->validPublicSpk($token);abort_unless($spk,404);abort_unless($this->publicWritable($spk),403,'SPK sudah tidak dapat diubah.');
-        DB::transaction(function()use($spk){$spk->service->update(['status'=>'Completed']);SpkEvent::create(['spk_id'=>$spk->id,'transport_service_id'=>$spk->transport_service_id,'event_type'=>'service_completed','actor_type'=>'driver_public','created_at'=>now('UTC'),'metadata'=>[]]);});
-        return back()->with('success','Layanan ditandai selesai.');
+
+    private function storePublicDestination(Request $r, Spk $spk)
+    {
+        abort_unless($this->publicWritable($spk), 403, 'SPK sudah tidak dapat diubah.');
+        $data = $r->validate([
+            'name' => 'required|string|max:150',
+            'address' => 'required|string|max:500',
+            'note' => 'nullable|string|max:1000',
+        ]);
+
+        DB::transaction(function () use ($spk, $data) {
+            $max = (int) ItineraryStop::where('transport_service_id', $spk->transport_service_id)->max('sort_order');
+            $stop = ItineraryStop::create([
+                'transport_service_id' => $spk->transport_service_id,
+                'name' => $data['name'],
+                'address' => $data['address'],
+                'note' => $data['note'] ?? null,
+                'sort_order' => $max + 1,
+                'status' => 'Planned',
+                'added_by_driver' => true,
+            ]);
+
+            SpkEvent::create([
+                'spk_id' => $spk->id,
+                'transport_service_id' => $spk->transport_service_id,
+                'itinerary_stop_id' => $stop->id,
+                'event_type' => 'destination_added',
+                'actor_type' => 'driver_public',
+                'created_at' => now('UTC'),
+                'metadata' => ['note' => $data['note'] ?? null],
+            ]);
+        });
+
+        return back()->with('success', 'Destinasi tambahan berhasil disimpan.');
+    }
+
+    public function publicAddDestination(Request $r, string $token)
+    {
+        $spk = $this->validPublicSpk($token);
+        abort_unless($spk, 404);
+
+        return $this->storePublicDestination($r, $spk);
+    }
+
+    public function publicAddDestinationByNumber(Request $r, Spk $spk, string $spkNumber)
+    {
+        abort_unless(hash_equals($spk->spk_number, $spkNumber), 404);
+        $this->expirePublicSpkIfNeeded($spk);
+
+        return $this->storePublicDestination($r, $spk);
+    }
+
+    private function storePublicCancelDestination(Request $r, Spk $spk, ItineraryStop $stop)
+    {
+        abort_unless($this->publicWritable($spk), 403, 'SPK sudah tidak dapat diubah.');
+        abort_unless((int) $stop->transport_service_id === (int) $spk->transport_service_id, 404);
+
+        if ($stop->status === 'Checked In') {
+            return back()->withErrors(['stop' => 'Destinasi sudah check-in dan tidak dapat dibatalkan.']);
+        }
+
+        $data = $r->validate(['reason' => 'nullable|string|max:500']);
+
+        DB::transaction(function () use ($spk, $stop, $data) {
+            $stop->update(['status' => 'Cancelled', 'cancelled_at' => now('UTC')]);
+
+            SpkEvent::create([
+                'spk_id' => $spk->id,
+                'transport_service_id' => $spk->transport_service_id,
+                'itinerary_stop_id' => $stop->id,
+                'event_type' => 'destination_cancelled',
+                'note' => $data['reason'] ?? null,
+                'actor_type' => 'driver_public',
+                'created_at' => now('UTC'),
+                'metadata' => [],
+            ]);
+        });
+
+        return back()->with('success', 'Kunjungan destinasi dibatalkan dan riwayat tetap disimpan.');
+    }
+
+    public function publicCancelDestination(Request $r, string $token, ItineraryStop $stop)
+    {
+        $spk = $this->validPublicSpk($token);
+        abort_unless($spk, 404);
+
+        return $this->storePublicCancelDestination($r, $spk, $stop);
+    }
+
+    public function publicCancelDestinationByNumber(Request $r, Spk $spk, string $spkNumber, ItineraryStop $stop)
+    {
+        abort_unless(hash_equals($spk->spk_number, $spkNumber), 404);
+        $this->expirePublicSpkIfNeeded($spk);
+
+        return $this->storePublicCancelDestination($r, $spk, $stop);
+    }
+
+    private function storePublicComplete(Spk $spk)
+    {
+        abort_unless($this->publicWritable($spk), 403, 'SPK sudah tidak dapat diubah.');
+
+        DB::transaction(function () use ($spk) {
+            $spk->service->update(['status' => 'Completed']);
+
+            SpkEvent::create([
+                'spk_id' => $spk->id,
+                'transport_service_id' => $spk->transport_service_id,
+                'event_type' => 'service_completed',
+                'actor_type' => 'driver_public',
+                'created_at' => now('UTC'),
+                'metadata' => [],
+            ]);
+        });
+
+        return back()->with('success', 'Layanan ditandai selesai.');
+    }
+
+    public function publicComplete(string $token)
+    {
+        $spk = $this->validPublicSpk($token);
+        abort_unless($spk, 404);
+
+        return $this->storePublicComplete($spk);
+    }
+
+    public function publicCompleteByNumber(Spk $spk, string $spkNumber)
+    {
+        abort_unless(hash_equals($spk->spk_number, $spkNumber), 404);
+        $this->expirePublicSpkIfNeeded($spk);
+
+        return $this->storePublicComplete($spk);
     }
 }
-
