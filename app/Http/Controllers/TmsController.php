@@ -64,6 +64,8 @@ class TmsController extends Controller
             'driver_id'=>'required|exists:drivers,id','vehicle_id'=>'required|exists:vehicles,id',
             'notes'=>'nullable|string|max:2000','emergency_contact_id'=>'nullable|exists:emergency_contacts,id',
             'stops'=>'nullable|array|max:40','stops.*.name'=>'required_with:stops|string|max:150',
+            'stops.*.visit_time'=>'required_with:stops|date_format:H:i',
+            'stops.*.google_maps_url'=>['required_with:stops','url','max:500','regex:/^https?:\\/\\/(maps\\.app\\.goo\\.gl|goo\\.gl|www\\.google\\.com|maps\\.google\\.com)\\//i'],
             'stops.*.address'=>'nullable|string|max:500'
         ]);
         if($data['service_date'] < now('Asia/Makassar')->toDateString()) return back()->withInput()->withErrors(['service_date'=>'Tanggal layanan tidak boleh di masa lalu.']);
@@ -78,7 +80,7 @@ class TmsController extends Controller
                 'start_time'=>$data['start_time']??null,'end_time'=>$data['end_time']??null,'pickup_location'=>$data['pickup_location'],
                 'notes'=>$data['notes']??null,'driver_id'=>$data['driver_id'],'vehicle_id'=>$data['vehicle_id'],'status'=>'Published','created_by'=>$request->user()->id
             ]);
-            foreach(($data['stops']??[]) as $i=>$stop) if(!empty($stop['name'])) $service->stops()->create(['name'=>$stop['name'],'address'=>$stop['address']??null,'sort_order'=>$i+1,'status'=>'Planned','added_by_driver'=>false]);
+            foreach(($data['stops']??[]) as $i=>$stop) if(!empty($stop['name'])) $service->stops()->create(['name'=>$stop['name'],'visit_time'=>$stop['visit_time'],'address'=>$stop['address']??null,'google_maps_url'=>$stop['google_maps_url'],'sort_order'=>$i+1,'status'=>'Planned','added_by_driver'=>false]);
             $contact=isset($data['emergency_contact_id'])?EmergencyContact::find($data['emergency_contact_id']):EmergencyContact::where('is_active',1)->where('is_default',1)->first();
             $spk=Spk::create(['transport_service_id'=>$service->id,'spk_number'=>'SPK-'.now('Asia/Makassar')->format('Ymd').'-'.str_pad((string)$service->id,5,'0',STR_PAD_LEFT),'token_hash'=>hash('sha256',$rawToken),'published_at'=>now(),'emergency_name'=>$contact?->name??'Operasional Bali Kami Tour','emergency_phone'=>$contact?->phone,'emergency_whatsapp'=>$contact?->whatsapp]);
             session(['new_spk_url'=>route('public.spk.number.show', [$spk->id, $spk->spk_number])]);
@@ -313,7 +315,9 @@ class TmsController extends Controller
         abort_unless($this->publicWritable($spk), 403, 'SPK sudah tidak dapat diubah.');
         $data = $r->validate([
             'name' => 'required|string|max:150',
-            'address' => 'required|string|max:500',
+            'visit_time' => 'required|date_format:H:i',
+            'google_maps_url' => ['required', 'url', 'max:500', 'regex:/^https?:\\/\\/(maps\\.app\\.goo\\.gl|goo\\.gl|www\\.google\\.com|maps\\.google\\.com)\\//i'],
+            'address' => 'nullable|string|max:500',
             'note' => 'nullable|string|max:1000',
         ]);
 
@@ -322,7 +326,9 @@ class TmsController extends Controller
             $stop = ItineraryStop::create([
                 'transport_service_id' => $spk->transport_service_id,
                 'name' => $data['name'],
-                'address' => $data['address'],
+                'visit_time' => $data['visit_time'],
+                'google_maps_url' => $data['google_maps_url'],
+                'address' => $data['address'] ?? null,
                 'note' => $data['note'] ?? null,
                 'sort_order' => $max + 1,
                 'status' => 'Planned',
