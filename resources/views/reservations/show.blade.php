@@ -7,7 +7,7 @@
 <div class="resv-wrap"><div class="resv-head"><div><h1>{{ $reservation->reservation_number }}</h1><p class="resv-muted">Diajukan {{ $reservation->created_at?->format('d M Y H:i') }} · Pemohon: {{ $reservation->requester?->name }}</p></div><span class="resv-status {{ $reservation->status }}">{{ $reservation->status }}</span></div>
 <section class="resv-card"><h2 class="resv-section-title">Informasi Permintaan</h2><div class="resv-grid">
 <div><span class="resv-label">Pelanggan</span><div class="resv-value">{{ $reservation->customer_name }}</div></div><div><span class="resv-label">Telepon</span><div class="resv-value">{{ $reservation->customer_phone ?: '—' }}</div></div>
-<div><span class="resv-label">Tipe layanan</span><div class="resv-value">{{ $reservation->serviceType?->name ?? '—' }}</div></div><div><span class="resv-label">Lokasi penjemputan</span><div class="resv-value">{{ $reservation->pickup_location }}</div></div>
+<div><span class="resv-label">Tipe layanan</span><div class="resv-value">{{ $reservation->serviceType?->name ?? '—' }}</div></div>
 <div><span class="resv-label">Tanggal mulai</span><div class="resv-value">{{ $reservation->service_date->format('d M Y') }} {{ $reservation->start_time ? substr((string)$reservation->start_time,0,5) : '' }}</div></div><div><span class="resv-label">Tanggal selesai</span><div class="resv-value">{{ $reservation->service_end_date->format('d M Y') }} {{ $reservation->end_time ? substr((string)$reservation->end_time,0,5) : '' }}</div></div>
 <div style="grid-column:1/-1"><span class="resv-label">Daftar Tamu ({{ $reservation->guests->count() }})</span>
 @forelse($reservation->guests as $guest)
