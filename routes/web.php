@@ -1,32 +1,95 @@
-﻿<?php
+
+<?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TmsController;
+use App\Http\Controllers\ReservationController;
 
-Route::get('/login',[AuthController::class,'show'])->name('login');
-Route::post('/login',[AuthController::class,'login'])->middleware('throttle:10,1')->name('login.submit');
-Route::post('/logout',[AuthController::class,'logout'])->middleware('auth')->name('logout');
+Route::get('/login', [AuthController::class, 'show'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:10,1')
+    ->name('login.submit');
+Route::post('/logout', [AuthController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
 
-Route::prefix('public/spk')->name('public.spk.')->middleware('throttle:60,1')->group(function(){
-    Route::get('/{token}',[TmsController::class,'publicSpk'])->name('show');
-    Route::post('/{token}/check-in',[TmsController::class,'publicCheckIn'])->name('checkin');
-    Route::post('/{token}/destinations',[TmsController::class,'publicAddDestination'])->name('destinations.add');
-    Route::post('/{token}/destinations/{stop}/cancel',[TmsController::class,'publicCancelDestination'])->name('destinations.cancel');
-    Route::post('/{token}/complete',[TmsController::class,'publicComplete'])->name('complete');
-});
+Route::prefix('public/spk')
+    ->name('public.spk.')
+    ->middleware('throttle:60,1')
+    ->group(function () {
+        Route::get('/{token}', [TmsController::class, 'publicSpk'])->name('show');
+        Route::post('/{token}/check-in', [TmsController::class, 'publicCheckIn'])->name('checkin');
+        Route::post('/{token}/destinations', [TmsController::class, 'publicAddDestination'])->name('destinations.add');
+        Route::post('/{token}/destinations/{stop}/cancel', [TmsController::class, 'publicCancelDestination'])->name('destinations.cancel');
+        Route::post('/{token}/complete', [TmsController::class, 'publicComplete'])->name('complete');
+    });
 
-Route::middleware(['auth'])->group(function(){
-    Route::get('/',[TmsController::class,'dashboard'])->name('dashboard');
-    Route::get('/services',[TmsController::class,'services'])->name('services.index');
-    Route::get('/services/create',[TmsController::class,'createService'])->name('services.create');
-    Route::post('/services',[TmsController::class,'storeService'])->name('services.store');
-    Route::get('/services/{service}',[TmsController::class,'showService'])->name('services.show');
-    Route::get('/drivers',[TmsController::class,'drivers'])->name('drivers.index');
-    Route::post('/drivers',[TmsController::class,'storeDriver'])->name('drivers.store');
-    Route::get('/vehicles',[TmsController::class,'vehicles'])->name('vehicles.index');
-    Route::post('/vehicles',[TmsController::class,'storeVehicle'])->name('vehicles.store');
-    Route::get('/service-types',[TmsController::class,'types'])->name('types.index');
-    Route::post('/service-types',[TmsController::class,'storeType'])->name('types.store');
-    Route::get('/emergency-contacts',[TmsController::class,'contacts'])->name('contacts.index');
-    Route::post('/emergency-contacts',[TmsController::class,'storeContact'])->name('contacts.store');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/', [TmsController::class, 'dashboard'])->name('dashboard');
+
+    // Reservation: user dengan role reservation
+    Route::middleware('role:reservation')->group(function () {
+        Route::get('/reservations', [ReservationController::class, 'index'])
+            ->name('reservations.index');
+        Route::get('/reservations/create', [ReservationController::class, 'create'])
+            ->name('reservations.create');
+        Route::post('/reservations', [ReservationController::class, 'store'])
+            ->name('reservations.store');
+        Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])
+            ->name('reservations.show');
+        Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])
+            ->name('reservations.cancel');
+    });
+
+    // Reservation: admin, owner, dan manager
+    Route::middleware('role:admin,owner,manager')
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+            Route::get('/reservations', [ReservationController::class, 'adminIndex'])
+                ->name('reservations.index');
+            Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])
+                ->name('reservations.show');
+            Route::post('/reservations/{reservation}/approve', [ReservationController::class, 'approve'])
+                ->name('reservations.approve');
+            Route::post('/reservations/{reservation}/reject', [ReservationController::class, 'reject'])
+                ->name('reservations.reject');
+        });
+
+    // Transport Service dan SPK: admin, owner, dan manager
+    Route::middleware('role:admin,owner,manager')->group(function () {
+        Route::get('/services', [TmsController::class, 'services'])
+            ->name('services.index');
+        Route::get('/services/create', [TmsController::class, 'createService'])
+            ->name('services.create');
+        Route::post('/services', [TmsController::class, 'storeService'])
+            ->name('services.store');
+
+        // Harus diletakkan sebelum /services/{service}
+        Route::get('/services/{service}/spk-preview', [TmsController::class, 'previewSpk'])
+            ->name('services.spk.preview');
+        Route::get('/services/{service}', [TmsController::class, 'showService'])
+            ->name('services.show');
+
+        Route::get('/drivers', [TmsController::class, 'drivers'])
+            ->name('drivers.index');
+        Route::post('/drivers', [TmsController::class, 'storeDriver'])
+            ->name('drivers.store');
+
+        Route::get('/vehicles', [TmsController::class, 'vehicles'])
+            ->name('vehicles.index');
+        Route::post('/vehicles', [TmsController::class, 'storeVehicle'])
+            ->name('vehicles.store');
+
+        Route::get('/service-types', [TmsController::class, 'types'])
+            ->name('types.index');
+        Route::post('/service-types', [TmsController::class, 'storeType'])
+            ->name('types.store');
+
+        Route::get('/emergency-contacts', [TmsController::class, 'contacts'])
+            ->name('contacts.index');
+        Route::post('/emergency-contacts', [TmsController::class, 'storeContact'])
+            ->name('contacts.store');
+    });
 });
