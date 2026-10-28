@@ -291,6 +291,17 @@
                                     placeholder="Contoh: Uluwatu Temple">
                             </div>
                             <div class="service-create-field">
+                                <label for="stop-time-0">Waktu Kunjungan <span>*</span></label>
+                                <input id="stop-time-0" name="stops[0][visit_time]" type="time"
+                                    value="{{ old('stops.0.visit_time') }}" required>
+                            </div>
+                            <div class="service-create-field">
+                                <label for="stop-map-0">Short Link Google Maps <span>*</span></label>
+                                <input id="stop-map-0" name="stops[0][google_maps_url]" type="url"
+                                    value="{{ old('stops.0.google_maps_url') }}"
+                                    placeholder="https://maps.app.goo.gl/..." required>
+                            </div>
+                            <div class="service-create-field">
                                 <label for="stop-address-0">Alamat / Keterangan Lokasi</label>
                                 <input id="stop-address-0" name="stops[0][address]" type="text"
                                     value="{{ old('stops.0.address') }}"
@@ -366,6 +377,16 @@
                             <label for="stop-name-${index}">Nama Destinasi</label>
                             <input id="stop-name-${index}" name="stops[${index}][name]"
                                 type="text" placeholder="Nama destinasi">
+                        </div>
+                        <div class="service-create-field">
+                            <label for="stop-time-${index}">Waktu Kunjungan *</label>
+                            <input id="stop-time-${index}" name="stops[${index}][visit_time]"
+                                type="time" required>
+                        </div>
+                        <div class="service-create-field">
+                            <label for="stop-map-${index}">Short Link Google Maps *</label>
+                            <input id="stop-map-${index}" name="stops[${index}][google_maps_url]"
+                                type="url" required placeholder="https://maps.app.goo.gl/...">
                         </div>
                         <div class="service-create-field">
                             <label for="stop-address-${index}">Alamat / Keterangan Lokasi</label>
