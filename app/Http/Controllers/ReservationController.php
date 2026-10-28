@@ -45,9 +45,16 @@ class ReservationController extends Controller
             'start_time' => ['nullable', 'date_format:H:i'],
             'end_time' => ['nullable', 'date_format:H:i'],
             'pickup_location' => ['required', 'string', 'max:255'],
-            'itinerary' => ['nullable', 'string', 'max:10000'],
+            'itinerary_stops' => ['nullable', 'array', 'max:40'],
+            'itinerary_stops.*.name' => ['required_with:itinerary_stops.*.visit_time', 'string', 'max:150'],
+            'itinerary_stops.*.visit_time' => ['required_with:itinerary_stops.*.name', 'date_format:H:i'],
+            'itinerary_stops.*.google_maps_url' => ['required_with:itinerary_stops.*.name', 'url', 'max:500', 'regex:/^https?:\\/\\/(maps\\.app\\.goo\\.gl|goo\\.gl|www\\.google\\.com|maps\\.google\\.com)\\//i'],
             'notes' => ['nullable', 'string', 'max:3000'],
         ]);
+
+        $itineraryStops = $data['itinerary_stops'] ?? [];
+        unset($data['itinerary_stops']);
+        $data['itinerary'] = json_encode(array_values(array_filter($itineraryStops, fn ($stop) => !empty($stop['name'])), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         $reservation = Reservation::create($data + [
             'reservation_number' => 'RSV-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(6)),
@@ -149,17 +156,34 @@ class ReservationController extends Controller
                 'created_by' => $request->user()->id,
             ]);
 
-            $lines = preg_split('/\r\n|\r|\n/', (string) $locked->itinerary);
-            foreach ($lines as $i => $line) {
-                $line = trim($line);
-                if ($line !== '') {
+            $itineraryStops = json_decode((string) $locked->itinerary, true);
+            if (is_array($itineraryStops)) {
+                foreach ($itineraryStops as $i => $stop) {
+                    if (empty($stop['name'])) continue;
                     $service->stops()->create([
-                        'name' => Str::limit($line, 150, ''),
+                        'name' => $stop['name'],
+                        'visit_time' => $stop['visit_time'] ?? null,
+                        'google_maps_url' => $stop['google_maps_url'] ?? null,
                         'address' => null,
                         'sort_order' => $i + 1,
                         'status' => 'Planned',
                         'added_by_driver' => false,
                     ]);
+                }
+            } else {
+                // Backward compatibility for older requests saved as one destination per line.
+                $lines = preg_split('/\r\n|\r|\n/', (string) $locked->itinerary);
+                foreach ($lines as $i => $line) {
+                    $line = trim($line);
+                    if ($line !== '') {
+                        $service->stops()->create([
+                            'name' => Str::limit($line, 150, ''),
+                            'address' => null,
+                            'sort_order' => $i + 1,
+                            'status' => 'Planned',
+                            'added_by_driver' => false,
+                        ]);
+                    }
                 }
             }
 
