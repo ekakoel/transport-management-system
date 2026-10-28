@@ -49,11 +49,10 @@ class ReservationController extends Controller
             'service_end_date' => ['required', 'date', 'after_or_equal:service_date'],
             'start_time' => ['nullable', 'date_format:H:i'],
             'end_time' => ['nullable', 'date_format:H:i'],
-            'pickup_location' => ['required', 'string', 'max:255'],
-            'itinerary_stops' => ['nullable', 'array', 'max:40'],
-            'itinerary_stops.*.name' => ['nullable', 'required_with:itinerary_stops.*.visit_time', 'string', 'max:150'],
-            'itinerary_stops.*.visit_time' => ['nullable', 'required_with:itinerary_stops.*.name', 'date_format:H:i'],
-            'itinerary_stops.*.google_maps_url' => ['nullable', 'required_with:itinerary_stops.*.name', 'url', 'max:500', 'regex:#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i'],
+            'itinerary_stops' => ['required', 'array', 'min:1', 'max:40'],
+            'itinerary_stops.*.name' => ['required', 'string', 'max:150'],
+            'itinerary_stops.*.visit_time' => ['required', 'date_format:H:i'],
+            'itinerary_stops.*.google_maps_url' => ['required', 'url', 'max:500', 'regex:#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i'],
             'notes' => ['nullable', 'string', 'max:3000'],
         ]);
 
@@ -170,7 +169,6 @@ class ReservationController extends Controller
                 'service_end_date' => $end,
                 'start_time' => $locked->start_time,
                 'end_time' => $locked->end_time,
-                'pickup_location' => $locked->pickup_location,
                 'notes' => trim(($locked->notes ?? '') . (($data['admin_notes'] ?? '') ? "\nCatatan admin: " . $data['admin_notes'] : '')),
                 'driver_id' => $data['driver_id'],
                 'vehicle_id' => $data['vehicle_id'],
