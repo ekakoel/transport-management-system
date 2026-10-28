@@ -103,15 +103,7 @@
                         @enderror
                     </div>
 
-                    <div class="service-create-field">
-                        <label for="pickup_location">Lokasi Penjemputan <span>*</span></label>
-                        <input id="pickup_location" name="pickup_location" type="text"
-                            value="{{ old('pickup_location') }}" placeholder="Hotel, bandara, atau alamat"
-                            required>
-                        @error('pickup_location')
-                            <small class="service-create-error">{{ $message }}</small>
-                        @enderror
-                    </div>
+
 
                     <div class="service-create-field service-field-full">
                         <label for="notes">Catatan Layanan</label>
@@ -306,18 +298,18 @@
                             <div class="service-create-field">
                                 <label for="stop-name-0">Nama Destinasi</label>
                                 <input id="stop-name-0" name="stops[0][name]" type="text"
-                                    value="{{ old('stops.0.name') }}"
+                                    value="{{ old('stops.0.name') }}" required
                                     placeholder="Contoh: Uluwatu Temple">
                             </div>
                             <div class="service-create-field">
                                 <label for="stop-time-0">Waktu Kunjungan <span>*</span></label>
                                 <input id="stop-time-0" name="stops[0][visit_time]" type="time"
-                                    value="{{ old('stops.0.visit_time') }}">
+                                    value="{{ old('stops.0.visit_time') }}" required>
                             </div>
                             <div class="service-create-field">
                                 <label for="stop-map-0">Short Link Google Maps <span>*</span></label>
                                 <input id="stop-map-0" name="stops[0][google_maps_url]" type="url"
-                                    value="{{ old('stops.0.google_maps_url') }}"
+                                    value="{{ old('stops.0.google_maps_url') }}" required
                                     placeholder="https://maps.app.goo.gl/...">
                             </div>
                             <div class="service-create-field">
@@ -412,12 +404,12 @@
                         <div class="service-create-field">
                             <label for="stop-time-${index}">Waktu Kunjungan *</label>
                             <input id="stop-time-${index}" name="stops[${index}][visit_time]"
-                                type="time">
+                                type="time" required>
                         </div>
                         <div class="service-create-field">
                             <label for="stop-map-${index}">Short Link Google Maps *</label>
                             <input id="stop-map-${index}" name="stops[${index}][google_maps_url]"
-                                type="url" placeholder="https://maps.app.goo.gl/...">
+                                type="url" required placeholder="https://maps.app.goo.gl/...">
                         </div>
                         <div class="service-create-field">
                             <label for="stop-address-${index}">Alamat / Keterangan Lokasi</label>
