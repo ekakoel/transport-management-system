@@ -15,6 +15,7 @@ return new class extends Migration
             $table->foreignId('service_type_id')->constrained('service_types');
             $table->string('customer_name', 150);
             $table->string('customer_phone', 40)->nullable();
+            $table->unsignedSmallInteger('guest_count')->default(1);
             $table->date('service_date');
             $table->date('service_end_date');
             $table->time('start_time')->nullable();
