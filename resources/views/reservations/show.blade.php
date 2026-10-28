@@ -9,7 +9,19 @@
 <div><span class="resv-label">Pelanggan</span><div class="resv-value">{{ $reservation->customer_name }}</div></div><div><span class="resv-label">Telepon</span><div class="resv-value">{{ $reservation->customer_phone ?: '—' }}</div></div>
 <div><span class="resv-label">Tipe layanan</span><div class="resv-value">{{ $reservation->serviceType?->name ?? '—' }}</div></div><div><span class="resv-label">Lokasi penjemputan</span><div class="resv-value">{{ $reservation->pickup_location }}</div></div>
 <div><span class="resv-label">Tanggal mulai</span><div class="resv-value">{{ $reservation->service_date->format('d M Y') }} {{ $reservation->start_time ? substr((string)$reservation->start_time,0,5) : '' }}</div></div><div><span class="resv-label">Tanggal selesai</span><div class="resv-value">{{ $reservation->service_end_date->format('d M Y') }} {{ $reservation->end_time ? substr((string)$reservation->end_time,0,5) : '' }}</div></div>
-<div style="grid-column:1/-1"><span class="resv-label">Itinerary</span><div class="resv-value" style="white-space:pre-line">{{ $reservation->itinerary ?: '—' }}</div></div><div style="grid-column:1/-1"><span class="resv-label">Catatan pemohon</span><div class="resv-value" style="white-space:pre-line">{{ $reservation->notes ?: '—' }}</div></div>
+<div style="grid-column:1/-1"><span class="resv-label">Itinerary</span>
+@php($itineraryStops = json_decode((string) $reservation->itinerary, true))
+@if(is_array($itineraryStops))
+    @forelse($itineraryStops as $stop)
+        <div class="resv-value" style="border:1px solid var(--tms-border);border-radius:8px;padding:10px;margin:8px 0">
+            <strong>{{ $stop['visit_time'] ?? '—' }} · {{ $stop['name'] ?? 'Destinasi' }}</strong>
+            @if(!empty($stop['google_maps_url']))<div><a href="{{ $stop['google_maps_url'] }}" target="_blank" rel="noopener noreferrer">Buka Google Maps</a></div>@endif
+        </div>
+    @empty — @endforelse
+@else
+    <div class="resv-value" style="white-space:pre-line">{{ $reservation->itinerary ?: '—' }}</div>
+@endif
+</div><div style="grid-column:1/-1"><span class="resv-label">Catatan pemohon</span><div class="resv-value" style="white-space:pre-line">{{ $reservation->notes ?: '—' }}</div></div>
 @if($reservation->admin_notes)<div style="grid-column:1/-1"><span class="resv-label">Catatan admin</span><div class="resv-value" style="white-space:pre-line">{{ $reservation->admin_notes }}</div></div>@endif
 @if($reservation->transportService)<div style="grid-column:1/-1"><span class="resv-label">Transport Service</span><a href="{{ route('services.show',$reservation->transportService) }}">{{ $reservation->transportService->service_code }} · Buka detail layanan/SPK</a></div>@endif
 </div></section>
