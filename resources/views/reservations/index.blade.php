@@ -8,7 +8,7 @@
  <div class="resv-head"><div><h1>Permintaan Transportasi</h1><p class="resv-muted">Ajukan kebutuhan transportasi dan pantau keputusan admin.</p></div><a class="resv-btn" href="{{ route('reservations.create') }}">＋ Buat Permintaan</a></div>
  <section class="resv-card"><div class="resv-scroll"><table class="resv-table"><thead><tr><th>Nomor</th><th>Jadwal</th><th>Pelanggan</th><th>Layanan</th><th>Status</th><th></th></tr></thead><tbody>
  @forelse($reservations as $r)
- <tr><td><strong>{{ $r->reservation_number }}</strong><br><small class="resv-muted">{{ $r->created_at?->format('d M Y H:i') }}</small></td><td>{{ $r->service_date->format('d M Y') }}<br><small class="resv-muted">s/d {{ $r->service_end_date->format('d M Y') }}</small></td><td>{{ $r->customer_name }}<br><small class="resv-muted">{{ $r->pickup_location }}</small></td><td>{{ $r->serviceType?->name ?? '—' }}</td><td><span class="resv-status {{ $r->status }}">{{ $r->status }}</span></td><td><a class="resv-link" href="{{ route('reservations.show',$r) }}">Detail →</a></td></tr>
+ <tr><td><strong>{{ $r->reservation_number }}</strong><br><small class="resv-muted">{{ $r->created_at?->format('d M Y H:i') }}</small></td><td>{{ $r->service_date->format('d M Y') }}<br><small class="resv-muted">s/d {{ $r->service_end_date->format('d M Y') }}</small></td><td>{{ $r->customer_name }}</td><td>{{ $r->serviceType?->name ?? '—' }}</td><td><span class="resv-status {{ $r->status }}">{{ $r->status }}</span></td><td><a class="resv-link" href="{{ route('reservations.show',$r) }}">Detail →</a></td></tr>
  @empty<tr><td colspan="6" class="resv-muted">Belum ada permintaan transportasi.</td></tr>@endforelse
  </tbody></table></div><div style="margin-top:18px">{{ $reservations->links() }}</div></section>
 </div>
