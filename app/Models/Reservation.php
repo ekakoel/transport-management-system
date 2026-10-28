@@ -18,6 +18,7 @@ class Reservation extends Model
         return [
             'service_date' => 'date',
             'service_end_date' => 'date',
+            'guest_count' => 'integer',
             'reviewed_at' => 'datetime',
         ];
     }
