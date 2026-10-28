@@ -471,7 +471,7 @@
             submitButton.disabled = false;
             gpsButton.disabled = false;
         }, error => {
-            status(error.code === 1 ? 'Izin lokasi ditolak. Aktifkan izin lokasi pada browser.' : error.code === 2 ? 'Lokasi tidak tersedia. Aktifkan layanan lokasi perangkat.' : 'Permintaan GPS melewati batas waktu. Silakan coba lagi.', true);
+            status(error.code === 1 ? 'Izin lokasi ditolak. Buka pengaturan situs pada browser, ubah Lokasi menjadi Izinkan, lalu tekan Ambil GPS lagi.' : error.code === 2 ? 'Lokasi tidak tersedia. Aktifkan Location/GPS pada perangkat, pastikan sinyal tersedia, lalu coba lagi.' : 'GPS belum merespons. Pastikan layanan lokasi aktif, izinkan browser menggunakan lokasi, dan coba lagi. Halaman harus dibuka melalui HTTPS atau localhost.', true);
             gpsButton.disabled = false;
         }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
     };
