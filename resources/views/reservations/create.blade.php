@@ -16,7 +16,36 @@
 <div class="resv-field"><label for="service_end_date">Tanggal selesai *</label><input id="service_end_date" type="date" name="service_end_date" min="{{ now('Asia/Makassar')->toDateString() }}" value="{{ old('service_end_date') }}" required></div>
 <div class="resv-field"><label for="start_time">Jam mulai</label><input id="start_time" type="time" name="start_time" value="{{ old('start_time') }}"></div>
 <div class="resv-field"><label for="end_time">Jam selesai</label><input id="end_time" type="time" name="end_time" value="{{ old('end_time') }}"></div>
-<div class="resv-field full"><label for="itinerary">Itinerary / daftar tujuan</label><textarea id="itinerary" name="itinerary" rows="4" placeholder="Satu tujuan per baris">{{ old('itinerary') }}</textarea></div>
+<div class="resv-field full">
+<label>Itinerary / daftar tujuan</label>
+<p class="resv-muted">Setiap destinasi disimpan terpisah dengan waktu kunjungan, nama, dan short link Google Maps.</p>
+<div id="reservation-stops">
+<div class="resv-stop-row" style="border:1px solid var(--tms-border);border-radius:10px;padding:14px;margin-bottom:12px">
+<div class="resv-fields">
+<div class="resv-field"><label>Waktu kunjungan</label><input type="time" name="itinerary_stops[0][visit_time]" required></div>
+<div class="resv-field"><label>Nama destinasi</label><input type="text" name="itinerary_stops[0][name]" maxlength="150" placeholder="Ubud Palace" required></div>
+<div class="resv-field full"><label>Short link Google Maps</label><input type="url" name="itinerary_stops[0][google_maps_url]" maxlength="500" placeholder="https://maps.app.goo.gl/..." required></div>
+</div></div></div>
+<button type="button" class="resv-btn alt" id="addReservationStop">+ Tambah destinasi</button>
+</div>
 <div class="resv-field full"><label for="notes">Catatan / kebutuhan khusus</label><textarea id="notes" name="notes" rows="3">{{ old('notes') }}</textarea></div>
 </div><div class="resv-actions"><a class="resv-btn alt" href="{{ route('reservations.index') }}">Batal</a><button class="resv-btn" type="submit">Kirim Permintaan</button></div></form></div>
+<script>
+(() => {
+ const container = document.getElementById('reservation-stops');
+ const add = document.getElementById('addReservationStop');
+ if (!container || !add) return;
+ let index = 1;
+ add.addEventListener('click', () => {
+   if (container.querySelectorAll('.resv-stop-row').length >= 40) return;
+   const row = document.createElement('div');
+   row.className = 'resv-stop-row';
+   row.style.cssText = 'border:1px solid var(--tms-border);border-radius:10px;padding:14px;margin-bottom:12px';
+   row.innerHTML = '<div class="resv-fields"><div class="resv-field"><label>Waktu kunjungan</label><input type="time" name="itinerary_stops['+index+'][visit_time]" required></div><div class="resv-field"><label>Nama destinasi</label><input type="text" name="itinerary_stops['+index+'][name]" maxlength="150" required></div><div class="resv-field full"><label>Short link Google Maps</label><input type="url" name="itinerary_stops['+index+'][google_maps_url]" maxlength="500" placeholder="https://maps.app.goo.gl/..." required></div></div><button type="button" class="resv-btn alt remove-stop">Hapus destinasi</button>';
+   row.querySelector('.remove-stop').addEventListener('click', () => row.remove());
+   container.appendChild(row);
+   index++;
+ });
+})();
+</script>
 @endsection
