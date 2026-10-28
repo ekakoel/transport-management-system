@@ -203,20 +203,7 @@
                             </div>
                         </div>
 
-                        <div class="service-show-detail-item">
-                            <span class="service-show-detail-icon">
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" stroke="currentColor"
-                                        stroke-width="1.7" />
-                                    <circle cx="12" cy="10" r="2.5" stroke="currentColor"
-                                        stroke-width="1.7" />
-                                </svg>
-                            </span>
-                            <div>
-                                <span class="service-show-detail-label">Lokasi Penjemputan</span>
-                                <strong>{{ $service->pickup_location }}</strong>
-                            </div>
-                        </div>
+                        
 
                         <div class="service-show-detail-item">
                             <span class="service-show-detail-icon">
