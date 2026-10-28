@@ -295,9 +295,9 @@
 @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show" role="alert">{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
 @endif
-@if($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show" role="alert"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
-@endif
+@foreach($errors->all() as $error)
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">{{ $error }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+@endforeach
 
 <div class="spk-header">
     <h2>Surat Perintah Kerja (SPK)</h2>
@@ -310,9 +310,11 @@
 <h4 class="section-title">Pesanan (Order)</h4>
 <table>
     <tr><th>Nomor Pesanan (Order)</th><td>{{ $service->service_code }}</td></tr>
+    <tr><th>Nama Pelanggan / Pemesan</th><td>{{ $service->customer_name ?: '—' }}</td></tr>
+    <tr><th>Telepon Pelanggan</th><td>{{ $service->customer_phone ?: '—' }}</td></tr>
     <tr><th>Jenis Pesanan (Type)</th><td>{{ $service->serviceType?->name ?? 'Transport Service' }}</td></tr>
     <tr><th>Tanggal Layanan</th><td>{{ \Carbon\Carbon::parse($service->service_date)->locale('id')->translatedFormat('l, d M Y') }}@if($service->service_end_date && $service->service_end_date->format('Y-m-d') !== $service->service_date->format('Y-m-d')) – {{ \Carbon\Carbon::parse($service->service_end_date)->locale('id')->translatedFormat('l, d M Y') }}@endif</td></tr>
-    <tr><th>Jumlah Tamu</th><td>{{ $service->guest_count ?? '—' }}</td></tr>
+    <tr><th>Jumlah Tamu</th><td>{{ $service->guest_count ?? 1 }} orang</td></tr>
     <tr><th>Lokasi Penjemputan</th><td>{{ $service->pickup_location ?: '—' }}</td></tr>
     <tr><th>Waktu Penjemputan</th><td>{{ $service->start_time ? substr((string) $service->start_time, 0, 5).' WITA' : '—' }}</td></tr>
     @if($service->notes)<tr><th>Catatan</th><td>{{ $service->notes }}</td></tr>@endif
@@ -336,9 +338,19 @@
     </div>
 </div>
 
+<h4 class="section-title">Kontak Darurat</h4>
+<table>
+    <tr><th>Nama Kontak</th><td>{{ $spk->emergency_name ?: 'Operasional Bali Kami Tour' }}</td></tr>
+    <tr><th>Telepon</th><td>{{ $spk->emergency_phone ?: '—' }}</td></tr>
+    <tr><th>WhatsApp</th><td>{{ $spk->emergency_whatsapp ?: '—' }}</td></tr>
+</table>
+
 <div class="page-brake-avoid">
     <h4 class="section-title">Destinasi / Tujuan</h4>
-    @forelse($service->stops as $stop)
+    @if($service->stops->isEmpty())
+        <p class="text-muted">Belum ada destinasi yang tercatat.</p>
+    @else
+    @foreach($service->stops as $stop)
         <div class="destination-container page-brake-avoid">
             <div class="destination">
                 <div class="description">
@@ -357,7 +369,8 @@
                             <div class="description-item"><div class="icon">🗺️</div><div class="desc">Lokasi check-in: <a href="https://www.google.com/maps?q={{ $stopEvent->latitude }},{{ $stopEvent->longitude }}" target="_blank" rel="noreferrer">Lihat di Google Maps</a></div></div>
                             <p class="public-small">Koordinat: {{ $stopEvent->latitude }}, {{ $stopEvent->longitude }}@if($stopEvent->created_at) · {{ $stopEvent->created_at->timezone('Asia/Makassar')->format('d M Y H:i') }} WITA@endif</p>
                         @endif
-                    @elseif($canCheckIn && $stop->status !== 'Cancelled')
+                    @endif
+                    @if($stop->status !== 'Checked In' && $canCheckIn && $stop->status !== 'Cancelled')
                         <button type="button" class="public-action public-stop-checkin" data-stop-id="{{ $stop->id }}" data-stop-name="{{ $stop->name }}">📍 Check-in destinasi dengan GPS</button>
                         <form method="post" action="{{ $showNumberUrl ? route('public.spk.number.destinations.cancel', [$spk->id, $spk->spk_number, $stop->id]) : route('public.spk.destinations.cancel', [$token, $stop->id]) }}" class="mt-2">
                             @csrf
@@ -367,9 +380,8 @@
                 </div>
             </div>
         </div>
-    @empty
-        <p class="text-muted">Belum ada destinasi yang tercatat.</p>
-    @endforelse
+    @endforeach
+    @endif
 </div>
 
 @if($canCheckIn)
