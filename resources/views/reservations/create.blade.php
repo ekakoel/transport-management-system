@@ -9,6 +9,7 @@
 <div class="resv-fields">
 <div class="resv-field"><label for="customer_name">Nama pelanggan / pemesan *</label><input id="customer_name" name="customer_name" value="{{ old('customer_name',auth()->user()->name) }}" maxlength="150" required></div>
 <div class="resv-field"><label for="customer_phone">Telepon</label><input id="customer_phone" name="customer_phone" type="tel" value="{{ old('customer_phone') }}" maxlength="40"></div>
+<div class="resv-field"><label for="guest_count">Jumlah tamu *</label><input id="guest_count" name="guest_count" type="number" min="1" max="100" value="{{ old('guest_count', 1) }}" required></div>
 <div class="resv-field"><label for="service_type_id">Tipe layanan *</label><select id="service_type_id" name="service_type_id" required><option value="">Pilih tipe</option>@foreach($types as $type)<option value="{{ $type->id }}" @selected(old('service_type_id')==$type->id)>{{ $type->name }}</option>@endforeach</select></div>
 <div class="resv-field"><label for="pickup_location">Lokasi penjemputan *</label><input id="pickup_location" name="pickup_location" value="{{ old('pickup_location') }}" maxlength="255" required></div>
 <div class="resv-field"><label for="service_date">Tanggal mulai *</label><input id="service_date" type="date" name="service_date" min="{{ now('Asia/Makassar')->toDateString() }}" value="{{ old('service_date') }}" required></div>
