@@ -51,13 +51,19 @@ class TmsController extends Controller
             'drivers'=>Driver::where('is_active',1)->orderBy('name')->get(),
             'vehicles'=>Vehicle::where('status','Available')->orderBy('name')->get(),
             'types'=>ServiceType::where('is_active',1)->orderBy('name')->get(),
-            'contacts'=>EmergencyContact::where('is_active',1)->orderByDesc('is_default')->get(),\n            'reservationUsers'=>User::where('role','reservation')->where('is_active',1)->orderBy('name')->get()
+            'contacts'=>EmergencyContact::where('is_active',1)->orderByDesc('is_default')->get(),
+            'reservationUsers'=>User::where('role','reservation')->where('is_active',1)->orderBy('name')->get()
         ]);
     }
 
     public function storeService(Request $request){
         $data=$request->validate([
-            'reservation_user_id'=>['required', Rule::exists('users','id')->where(fn($q)=>$q->where('role','reservation')->where('is_active',1))],\n            'customer_name'=>'nullable|string|max:150','customer_phone'=>'nullable|string|max:40',\n            'guests'=>'nullable|array|max:100','guests.*.name'=>'required_with:guests.*.gender|string|max:150',\n            'guests.*.gender'=>['required_with:guests.*.name',Rule::in(['Male','Female'])],\n            'guests.*.age_category'=>['required_with:guests.*.name',Rule::in(['Adult','Children'])],\n            'guests.*.phone'=>'nullable|string|max:40',
+            'reservation_user_id'=>['required', Rule::exists('users','id')->where(fn($q)=>$q->where('role','reservation')->where('is_active',1))],
+            'customer_name'=>'nullable|string|max:150','customer_phone'=>'nullable|string|max:40',
+            'guests'=>'nullable|array|max:100','guests.*.name'=>'required_with:guests.*.gender|string|max:150',
+            'guests.*.gender'=>['required_with:guests.*.name',Rule::in(['Male','Female'])],
+            'guests.*.age_category'=>['required_with:guests.*.name',Rule::in(['Adult','Children'])],
+            'guests.*.phone'=>'nullable|string|max:40',
             'service_type_id'=>'required|exists:service_types,id','service_date'=>'required|date',
             'service_end_date'=>'required|date|after_or_equal:service_date','start_time'=>'nullable|date_format:H:i',
             'end_time'=>'nullable|date_format:H:i','pickup_location'=>'required|string|max:255',
@@ -75,12 +81,15 @@ class TmsController extends Controller
         $service=DB::transaction(function()use($data,$rawToken,$request){
             $service=TransportService::create([
                 'service_code'=>'TMS-'.now('Asia/Makassar')->format('ymd').'-'.Str::upper(Str::random(5)),
-                'customer_name'=>$data['customer_name']??null,'customer_phone'=>$data['customer_phone']??null,\n                'reservation_user_id'=>$data['reservation_user_id'],
-                'guest_count'=>max(1,count(array_filter($data['guests']??[],fn($g)=>!empty($g['name'])))),\n                'service_type_id'=>$data['service_type_id'],'service_date'=>$data['service_date'],'service_end_date'=>$data['service_end_date'],
+                'customer_name'=>$data['customer_name']??null,'customer_phone'=>$data['customer_phone']??null,
+                'reservation_user_id'=>$data['reservation_user_id'],
+                'guest_count'=>max(1,count(array_filter($data['guests']??[],fn($g)=>!empty($g['name'])))),
+                'service_type_id'=>$data['service_type_id'],'service_date'=>$data['service_date'],'service_end_date'=>$data['service_end_date'],
                 'start_time'=>$data['start_time']??null,'end_time'=>$data['end_time']??null,'pickup_location'=>$data['pickup_location'],
                 'notes'=>$data['notes']??null,'driver_id'=>$data['driver_id'],'vehicle_id'=>$data['vehicle_id'],'status'=>'Published','created_by'=>$request->user()->id
             ]);
-            foreach(($data['guests']??[]) as $guest) if(!empty($guest['name'])) $service->guests()->create($guest);\n            foreach(($data['stops']??[]) as $i=>$stop) if(!empty($stop['name'])) $service->stops()->create(['name'=>$stop['name'],'visit_time'=>$stop['visit_time'],'address'=>$stop['address']??null,'google_maps_url'=>$stop['google_maps_url'],'sort_order'=>$i+1,'status'=>'Planned','added_by_driver'=>false]);
+            foreach(($data['guests']??[]) as $guest) if(!empty($guest['name'])) $service->guests()->create($guest);
+            foreach(($data['stops']??[]) as $i=>$stop) if(!empty($stop['name'])) $service->stops()->create(['name'=>$stop['name'],'visit_time'=>$stop['visit_time'],'address'=>$stop['address']??null,'google_maps_url'=>$stop['google_maps_url'],'sort_order'=>$i+1,'status'=>'Planned','added_by_driver'=>false]);
             $contact=isset($data['emergency_contact_id'])?EmergencyContact::find($data['emergency_contact_id']):EmergencyContact::where('is_active',1)->where('is_default',1)->first();
             $spk=Spk::create(['transport_service_id'=>$service->id,'spk_number'=>'SPK-'.now('Asia/Makassar')->format('Ymd').'-'.str_pad((string)$service->id,5,'0',STR_PAD_LEFT),'token_hash'=>hash('sha256',$rawToken),'published_at'=>now(),'emergency_name'=>$contact?->name??'Operasional Bali Kami Tour','emergency_phone'=>$contact?->phone,'emergency_whatsapp'=>$contact?->whatsapp]);
             session(['new_spk_url'=>route('public.spk.number.show', [$spk->id, $spk->spk_number])]);
