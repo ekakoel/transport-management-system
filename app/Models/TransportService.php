@@ -11,6 +11,8 @@ class TransportService extends Model
         'customer_name',
         'customer_phone',
         'guest_count',
+        'reservation_user_id',
+        'reservation_id',
         'service_type_id',
         'service_date',
         'service_end_date',
@@ -33,7 +35,7 @@ class TransportService extends Model
         ];
     }
 
-    public function driver()
+    public function reservationOwner()\n    {\n        return $this->belongsTo(User::class, 'reservation_user_id');\n    }\n\n    public function reservation()\n    {\n        return $this->belongsTo(Reservation::class);\n    }\n\n    public function guests()\n    {\n        return $this->hasMany(ServiceGuest::class, 'transport_service_id');\n    }\n\n    public function driver()
     {
         return $this->belongsTo(Driver::class);
     }
