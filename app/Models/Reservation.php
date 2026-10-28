@@ -8,7 +8,7 @@ class Reservation extends Model
 {
     protected $fillable = [
         'reservation_number', 'user_id', 'service_type_id', 'customer_name',
-        'customer_phone', 'service_date', 'service_end_date', 'start_time',
+        'customer_phone', 'guest_count', 'service_date', 'service_end_date', 'start_time',
         'end_time', 'pickup_location', 'itinerary', 'notes', 'status',
         'admin_notes', 'transport_service_id', 'reviewed_by', 'reviewed_at',
     ];
