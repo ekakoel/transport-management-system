@@ -10,10 +10,10 @@ return new class extends Migration {
         if (Schema::hasTable('transport_services')) {
             Schema::table('transport_services', function (Blueprint $table) {
                 if (!Schema::hasColumn('transport_services', 'reservation_user_id')) {
-                    $table->unsignedBigInteger('reservation_user_id')->nullable()->index();
+                    $table->foreignId('reservation_user_id')->nullable()->constrained('users')->nullOnDelete();
                 }
                 if (!Schema::hasColumn('transport_services', 'reservation_id')) {
-                    $table->unsignedBigInteger('reservation_id')->nullable()->index();
+                    $table->foreignId('reservation_id')->nullable()->constrained('reservations')->nullOnDelete();
                 }
             });
         }
