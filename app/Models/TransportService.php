@@ -58,6 +58,6 @@ class TransportService extends Model
 
     public function spk()
     {
-        return $this->hasOne(Spk::class);
+        return $this->hasOne(Spk::class, 'transport_service_id', 'id');
     }
 }
