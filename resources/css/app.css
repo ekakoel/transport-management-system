@@ -2698,6 +2698,7 @@ body {
 
     .services-create-btn {
         width: 100%;
+        padding: 0;
     }
 
     .services-filter-panel {
@@ -2825,17 +2826,18 @@ body {
     height: 16px;
 }
 
-.service-create-notice {
+.main-notice {
     display: flex;
     align-items: flex-start;
     gap: 12px;
     padding: 16px 18px;
     border: 1px solid #dfe7ff;
     border-radius: 11px;
-    background: #f5f7ff;
+    background: #0d182d;
+    margin-bottom: 18px;
 }
 
-.service-create-notice-icon {
+.main-notice-icon {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2847,22 +2849,23 @@ body {
     color: #4263eb;
 }
 
-.service-create-notice-icon svg {
+.main-notice-icon svg {
     width: 19px;
     height: 19px;
 }
 
-.service-create-notice strong {
+.main-notice strong {
     display: block;
     margin: 1px 0 4px;
-    color: #2d427b;
-    font-size: 11px;
-    font-weight: 800;
+    color: #cdcdcd;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
 }
 
-.service-create-notice p {
+.main-notice p {
     margin: 0;
-    color: #6f7fa6;
+    color: #cfcfcf;
     font-size: 11px;
     line-height: 1.7;
 }
@@ -4438,6 +4441,7 @@ body {
         padding: 24px 16px;
         transform: translateX(0);
         visibility: visible;
+        z-index: 99;
     }
 
     .shell .sidebar-backdrop {
@@ -4474,3 +4478,27 @@ body {
     }
 }
 
+
+/* Fix: keep mobile sidebar backdrop disabled on desktop */
+.shell > .sidebar-backdrop {
+    display: none;
+}
+
+@media (max-width: 760px) {
+    .shell > .sidebar-backdrop {
+        display: block;
+    }
+
+    .shell:not(.sidebar-mobile-open) > .sidebar-backdrop {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .shell.sidebar-mobile-open > .sidebar-backdrop {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+    
+}

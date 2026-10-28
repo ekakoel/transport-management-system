@@ -3,11 +3,9 @@
 @section('title', 'Emergency Contacts')
 
 @section('content')
-    <div class="service-create-page">
-        <div class="tms-two-column">
-            <div class="tms-main-column">
-        {{-- Header --}}
-        <div class="service-create-header">
+<header>
+    {{-- Header --}}
+        <div class="main-header">
             <div>
                 <div class="service-create-eyebrow">
                     <span></span>
@@ -19,8 +17,8 @@
         </div>
 
         {{-- Information Banner --}}
-        <div class="service-create-notice">
-            <span class="service-create-notice-icon">
+        <div class="main-notice">
+            <span class="main-notice-icon">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/>
                     <path d="M12 11v5m0-8h.01" stroke="currentColor"
@@ -32,6 +30,11 @@
                 <p>Gunakan nomor telepon dan WhatsApp yang aktif. Kontak default akan digunakan sesuai mekanisme aplikasi ketika tidak ada kontak khusus yang dipilih.</p>
             </div>
         </div>
+</header>
+    <div class="service-create-page">
+        <div class="tms-two-column">
+            <div class="tms-main-column">
+        
 
         {{-- Form Tambah Kontak --}}
         <form id="contact-form" method="POST" action="{{ route('contacts.store') }}" class="service-create-form">

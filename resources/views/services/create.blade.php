@@ -25,8 +25,8 @@
         </div>
 
         {{-- Information Banner --}}
-        <div class="service-create-notice">
-            <span class="service-create-notice-icon">
+        <div class="main-notice">
+            <span class="main-notice-icon">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/>
                     <path d="M12 11v5m0-8h.01" stroke="currentColor"
