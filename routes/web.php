@@ -26,6 +26,7 @@ Route::middleware(['auth'])->group(function(){
     });
     Route::middleware('role:admin,owner,manager')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/reservations',[ReservationController::class,'adminIndex'])->name('reservations.index');
+        Route::get('/reservations/{reservation}',[ReservationController::class,'show'])->name('reservations.show');
         Route::post('/reservations/{reservation}/approve',[ReservationController::class,'approve'])->name('reservations.approve');
         Route::post('/reservations/{reservation}/reject',[ReservationController::class,'reject'])->name('reservations.reject');
     });
