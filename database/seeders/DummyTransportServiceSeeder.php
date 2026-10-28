@@ -38,7 +38,6 @@ class DummyTransportServiceSeeder extends Seeder
                 'day' => 1,
                 'start' => '09:00',
                 'end' => '10:30',
-                'pickup' => 'Ngurah Rai International Airport',
                 'status' => 'Confirmed',
                 'notes' => 'Airport pickup to hotel in Nusa Dua.',
                 'stops' => [
@@ -54,7 +53,6 @@ class DummyTransportServiceSeeder extends Seeder
                 'day' => 2,
                 'start' => '10:00',
                 'end' => '11:00',
-                'pickup' => 'Seminyak',
                 'status' => 'Draft',
                 'notes' => 'Transfer from Seminyak to Ubud.',
                 'stops' => [
@@ -70,7 +68,6 @@ class DummyTransportServiceSeeder extends Seeder
                 'day' => 3,
                 'start' => '09:00',
                 'end' => '13:00',
-                'pickup' => 'Sanur Hotel',
                 'status' => 'Assigned',
                 'notes' => 'Four-hour private charter.',
                 'stops' => [
@@ -87,7 +84,6 @@ class DummyTransportServiceSeeder extends Seeder
                 'day' => 4,
                 'start' => '08:00',
                 'end' => '18:00',
-                'pickup' => 'Ubud Hotel',
                 'status' => 'Confirmed',
                 'notes' => 'Full-day private transportation.',
                 'stops' => [
@@ -105,7 +101,6 @@ class DummyTransportServiceSeeder extends Seeder
                 'day' => 5,
                 'start' => '08:30',
                 'end' => '16:30',
-                'pickup' => 'Kuta Hotel',
                 'status' => 'Draft',
                 'notes' => 'South Bali sightseeing tour.',
                 'stops' => [
@@ -143,7 +138,6 @@ class DummyTransportServiceSeeder extends Seeder
                     'service_end_date' => $date->toDateString(),
                     'start_time' => $sample['start'] . ':00',
                     'end_time' => $sample['end'] . ':00',
-                    'pickup_location' => $sample['pickup'],
                     'notes' => $sample['notes'],
                     'driver_id' => $driver->id,
                     'vehicle_id' => $vehicle->id,
