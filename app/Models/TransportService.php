@@ -18,7 +18,6 @@ class TransportService extends Model
         'service_end_date',
         'start_time',
         'end_time',
-        'pickup_location',
         'notes',
         'driver_id',
         'vehicle_id',
