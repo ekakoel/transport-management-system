@@ -110,7 +110,6 @@ return new class extends Migration
                 service_end_date DATE NOT NULL,
                 start_time TIME NULL,
                 end_time TIME NULL,
-                pickup_location VARCHAR(255) NOT NULL,
                 notes TEXT NULL,
                 driver_id BIGINT UNSIGNED NOT NULL,
                 vehicle_id BIGINT UNSIGNED NOT NULL,
