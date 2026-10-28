@@ -67,12 +67,12 @@ class TmsController extends Controller
             'guests.*.phone'=>'nullable|string|max:40',
             'service_type_id'=>'required|exists:service_types,id','service_date'=>'required|date',
             'service_end_date'=>'required|date|after_or_equal:service_date','start_time'=>'nullable|date_format:H:i',
-            'end_time'=>'nullable|date_format:H:i','pickup_location'=>'required|string|max:255',
+            'end_time'=>'nullable|date_format:H:i',
             'driver_id'=>'required|exists:drivers,id','vehicle_id'=>'required|exists:vehicles,id',
             'notes'=>'nullable|string|max:2000','emergency_contact_id'=>'nullable|exists:emergency_contacts,id',
-            'stops'=>'nullable|array|max:40','stops.*.name'=>'required_with:stops.*.visit_time|string|max:150',
-            'stops.*.visit_time'=>'required_with:stops.*.name|date_format:H:i',
-            'stops.*.google_maps_url'=>['required_with:stops.*.name','url','max:500','regex:#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i'],
+            'stops'=>'required|array|min:1|max:40','stops.*.name'=>'required|string|max:150',
+            'stops.*.visit_time'=>'required|date_format:H:i',
+            'stops.*.google_maps_url'=>['required','url','max:500','regex:#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i'],
             'stops.*.address'=>'nullable|string|max:500'
         ]);
         if($data['service_date'] < now('Asia/Makassar')->toDateString()) return back()->withInput()->withErrors(['service_date'=>'Tanggal layanan tidak boleh di masa lalu.']);
@@ -86,7 +86,7 @@ class TmsController extends Controller
                 'reservation_user_id'=>$data['reservation_user_id'],
                 'guest_count'=>max(1,count(array_filter($data['guests']??[],fn($g)=>!empty($g['name'])))),
                 'service_type_id'=>$data['service_type_id'],'service_date'=>$data['service_date'],'service_end_date'=>$data['service_end_date'],
-                'start_time'=>$data['start_time']??null,'end_time'=>$data['end_time']??null,'pickup_location'=>$data['pickup_location'],
+                'start_time'=>$data['start_time']??null,'end_time'=>$data['end_time']??null,
                 'notes'=>$data['notes']??null,'driver_id'=>$data['driver_id'],'vehicle_id'=>$data['vehicle_id'],'status'=>'Published','created_by'=>$request->user()->id
             ]);
             foreach(($data['guests']??[]) as $guest) if(!empty($guest['name'])) $service->guests()->create($guest);
