@@ -373,7 +373,7 @@
                     @if($stop->added_by_driver)<p class="public-small">Destinasi tambahan dari driver.</p>@endif
                     @if($stop->status === 'Checked In')
                         <p class="caption"><strong>✓ Check-in tercatat</strong></p>
-                        @php $stopEvent = $spk->events->firstWhere('stop_id', $stop->id); @endphp
+                        @php $stopEvent = $spk->events->firstWhere('itinerary_stop_id', $stop->id); @endphp
                         @if($stopEvent && $stopEvent->latitude !== null && $stopEvent->longitude !== null)
                             <div class="description-item"><div class="icon">🗺️</div><div class="desc">Lokasi check-in: <a href="https://www.google.com/maps?q={{ $stopEvent->latitude }},{{ $stopEvent->longitude }}" target="_blank" rel="noreferrer">Lihat di Google Maps</a></div></div>
                             <p class="public-small">Koordinat: {{ $stopEvent->latitude }}, {{ $stopEvent->longitude }}@if($stopEvent->created_at) · {{ $stopEvent->created_at->timezone('Asia/Makassar')->format('d M Y H:i') }} WITA@endif</p>
