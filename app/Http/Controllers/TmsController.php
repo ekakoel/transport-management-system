@@ -63,9 +63,9 @@ class TmsController extends Controller
             'end_time'=>'nullable|date_format:H:i','pickup_location'=>'required|string|max:255',
             'driver_id'=>'required|exists:drivers,id','vehicle_id'=>'required|exists:vehicles,id',
             'notes'=>'nullable|string|max:2000','emergency_contact_id'=>'nullable|exists:emergency_contacts,id',
-            'stops'=>'nullable|array|max:40','stops.*.name'=>'required_with:stops|string|max:150',
-            'stops.*.visit_time'=>'required_with:stops|date_format:H:i',
-            'stops.*.google_maps_url'=>['required_with:stops','url','max:500','regex:/^https?:\\/\\/(maps\\.app\\.goo\\.gl|goo\\.gl|www\\.google\\.com|maps\\.google\\.com)\\//i'],
+            'stops'=>'nullable|array|max:40','stops.*.name'=>'required_with:stops.*.visit_time|string|max:150',
+            'stops.*.visit_time'=>'required_with:stops.*.name|date_format:H:i',
+            'stops.*.google_maps_url'=>['required_with:stops.*.name','url','max:500','regex:/^https?:\\/\\/(maps\\.app\\.goo\\.gl|goo\\.gl|www\\.google\\.com|maps\\.google\\.com)\\//i'],
             'stops.*.address'=>'nullable|string|max:500'
         ]);
         if($data['service_date'] < now('Asia/Makassar')->toDateString()) return back()->withInput()->withErrors(['service_date'=>'Tanggal layanan tidak boleh di masa lalu.']);
