@@ -152,6 +152,19 @@ class ReservationController extends Controller
             return back()->withInput()->withErrors(['driver_id' => 'Driver atau kendaraan sudah memiliki layanan pada tanggal tersebut.']);
         }
 
+        $itineraryStops = json_decode((string) $reservation->itinerary, true);
+        if (!is_array($itineraryStops) || count($itineraryStops) < 1) {
+            return back()->withErrors(['itinerary' => 'Permintaan harus memiliki minimal satu destinasi dengan waktu kunjungan dan short link Google Maps.']);
+        }
+        foreach ($itineraryStops as $stop) {
+            $mapUrl = (string) ($stop['google_maps_url'] ?? '');
+            if (empty($stop['name']) || !preg_match('/^\d{2}:\d{2}$/', (string) ($stop['visit_time'] ?? '')) ||
+                !filter_var($mapUrl, FILTER_VALIDATE_URL) ||
+                !preg_match('#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i', $mapUrl)) {
+                return back()->withErrors(['itinerary' => 'Setiap destinasi harus memiliki nama, waktu kunjungan, dan short link Google Maps yang valid.']);
+            }
+        }
+
         $rawToken = Str::random(64);
         $service = DB::transaction(function () use ($reservation, $data, $request, $rawToken, $start, $end) {
             $locked = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
@@ -180,35 +193,17 @@ class ReservationController extends Controller
                 $service->guests()->create(['name'=>$guest->name,'gender'=>$guest->gender,'age_category'=>$guest->age_category,'phone'=>$guest->phone]);
             }
 
-            $itineraryStops = json_decode((string) $locked->itinerary, true);
-            if (is_array($itineraryStops)) {
-                foreach ($itineraryStops as $i => $stop) {
-                    if (empty($stop['name'])) continue;
-                    $service->stops()->create([
-                        'name' => $stop['name'],
-                        'visit_time' => $stop['visit_time'] ?? null,
-                        'google_maps_url' => $stop['google_maps_url'] ?? null,
-                        'address' => null,
-                        'sort_order' => $i + 1,
-                        'status' => 'Planned',
-                        'added_by_driver' => false,
-                    ]);
-                }
-            } else {
-                // Backward compatibility for older requests saved as one destination per line.
-                $lines = preg_split('/\r\n|\r|\n/', (string) $locked->itinerary);
-                foreach ($lines as $i => $line) {
-                    $line = trim($line);
-                    if ($line !== '') {
-                        $service->stops()->create([
-                            'name' => Str::limit($line, 150, ''),
-                            'address' => null,
-                            'sort_order' => $i + 1,
-                            'status' => 'Planned',
-                            'added_by_driver' => false,
-                        ]);
-                    }
-                }
+            $lockedStops = json_decode((string) $locked->itinerary, true);
+            foreach ($lockedStops as $i => $stop) {
+                $service->stops()->create([
+                    'name' => $stop['name'],
+                    'visit_time' => $stop['visit_time'],
+                    'google_maps_url' => $stop['google_maps_url'],
+                    'address' => null,
+                    'sort_order' => $i + 1,
+                    'status' => 'Planned',
+                    'added_by_driver' => false,
+                ]);
             }
 
             $contact = !empty($data['emergency_contact_id'])
