@@ -41,9 +41,9 @@ class ReservationController extends Controller
             'customer_phone' => ['nullable', 'string', 'max:40'],
             'guest_count' => ['required', 'integer', 'min:1', 'max:100'],
             'guests' => ['nullable', 'array', 'max:100'],
-            'guests.*.name' => ['required_with:guests.*.gender', 'string', 'max:150'],
-            'guests.*.gender' => ['required_with:guests.*.name', Rule::in(['Male','Female'])],
-            'guests.*.age_category' => ['required_with:guests.*.name', Rule::in(['Adult','Children'])],
+            'guests.*.name' => ['nullable', 'required_with:guests.*.gender', 'string', 'max:150'],
+            'guests.*.gender' => ['nullable', 'required_with:guests.*.name', Rule::in(['Male', 'Female'])],
+            'guests.*.age_category' => ['nullable', 'required_with:guests.*.name', Rule::in(['Adult', 'Children'])],
             'guests.*.phone' => ['nullable', 'string', 'max:40'],
             'service_date' => ['required', 'date', 'after_or_equal:today'],
             'service_end_date' => ['required', 'date', 'after_or_equal:service_date'],
@@ -51,29 +51,38 @@ class ReservationController extends Controller
             'end_time' => ['nullable', 'date_format:H:i'],
             'pickup_location' => ['required', 'string', 'max:255'],
             'itinerary_stops' => ['nullable', 'array', 'max:40'],
-            'itinerary_stops.*.name' => ['required_with:itinerary_stops.*.visit_time', 'string', 'max:150'],
-            'itinerary_stops.*.visit_time' => ['required_with:itinerary_stops.*.name', 'date_format:H:i'],
-            'itinerary_stops.*.google_maps_url' => ['required_with:itinerary_stops.*.name', 'url', 'max:500', 'regex:/^https?:\\/\\/(maps\\.app\\.goo\\.gl|goo\\.gl|www\\.google\\.com|maps\\.google\\.com)\\//i'],
+            'itinerary_stops.*.name' => ['nullable', 'required_with:itinerary_stops.*.visit_time', 'string', 'max:150'],
+            'itinerary_stops.*.visit_time' => ['nullable', 'required_with:itinerary_stops.*.name', 'date_format:H:i'],
+            'itinerary_stops.*.google_maps_url' => ['nullable', 'required_with:itinerary_stops.*.name', 'url', 'max:500', 'regex:#^https?://(maps\\.app\\.goo\\.gl|goo\\.gl|www\\.google\\.com|maps\\.google\\.com)/#i'],
             'notes' => ['nullable', 'string', 'max:3000'],
         ]);
 
-        $guests = $data['guests'] ?? [];
+        $guests = array_values(array_filter($data['guests'] ?? [], fn ($guest) => !empty($guest['name'])));
         unset($data['guests']);
-        $validGuests = array_values(array_filter($guests, fn ($guest) => !empty($guest['name'])));
-        if ($validGuests) $data['guest_count'] = count($validGuests);
+        if ($guests) {
+            $data['guest_count'] = count($guests);
+        }
 
-        $itineraryStops = $data['itinerary_stops'] ?? [];
+        $itineraryStops = array_values(array_filter($data['itinerary_stops'] ?? [], fn ($stop) => !empty($stop['name'])));
         unset($data['itinerary_stops']);
-        $data['itinerary'] = json_encode(array_values(array_filter($itineraryStops, fn ($stop) => !empty($stop['name']))), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $data['itinerary'] = json_encode($itineraryStops, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        $reservation = DB::transaction(function () use ($data, $validGuests, $request) {
+        $reservation = DB::transaction(function () use ($data, $guests, $request) {
             $reservation = Reservation::create($data + [
-            'reservation_number' => 'RSV-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(6)),
-            'user_id' => $request->user()->id,
-            'status' => 'Pending',
-        ]);
+                'reservation_number' => 'RSV-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(6)),
+                'user_id' => $request->user()->id,
+                'status' => 'Pending',
+            ]);
 
-        return redirect()->route('reservations.show', $reservation)->with('success', 'Permintaan transportasi berhasil dikirim untuk ditinjau admin.');
+            foreach ($guests as $guest) {
+                $reservation->guests()->create($guest);
+            }
+
+            return $reservation;
+        });
+
+        return redirect()->route('reservations.show', $reservation)
+            ->with('success', 'Permintaan transportasi berhasil dikirim untuk ditinjau admin.');
     }
 
     public function show(Request $request, Reservation $reservation)
