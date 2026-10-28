@@ -76,7 +76,7 @@ class TmsController extends Controller
             $service=TransportService::create([
                 'service_code'=>'TMS-'.now('Asia/Makassar')->format('ymd').'-'.Str::upper(Str::random(5)),
                 'customer_name'=>$data['customer_name']??null,'customer_phone'=>$data['customer_phone']??null,\n                'reservation_user_id'=>$data['reservation_user_id'],
-                'guest_count'=>count(array_filter($data['guests']??[],fn($g)=>!empty($g['name']))),\n                'service_type_id'=>$data['service_type_id'],'service_date'=>$data['service_date'],'service_end_date'=>$data['service_end_date'],
+                'guest_count'=>max(1,count(array_filter($data['guests']??[],fn($g)=>!empty($g['name'])))),\n                'service_type_id'=>$data['service_type_id'],'service_date'=>$data['service_date'],'service_end_date'=>$data['service_end_date'],
                 'start_time'=>$data['start_time']??null,'end_time'=>$data['end_time']??null,'pickup_location'=>$data['pickup_location'],
                 'notes'=>$data['notes']??null,'driver_id'=>$data['driver_id'],'vehicle_id'=>$data['vehicle_id'],'status'=>'Published','created_by'=>$request->user()->id
             ]);
@@ -103,7 +103,7 @@ class TmsController extends Controller
     
     public function previewSpk(TransportService $service)
     {
-        $service->load(['driver', 'vehicle', 'serviceType', 'stops', 'spk.events.stop']);
+        $service->load(['driver', 'vehicle', 'serviceType', 'stops', 'spk.events.stop', 'reservationOwner', 'reservation', 'guests']);
 
         abort_unless($service->spk, 404);
 
