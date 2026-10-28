@@ -11,7 +11,7 @@
 <div class="resv-field"><label for="customer_phone">Telepon</label><input id="customer_phone" name="customer_phone" type="tel" value="{{ old('customer_phone') }}" maxlength="40"></div>
 <div class="resv-field"><label for="guest_count">Jumlah tamu *</label><input id="guest_count" name="guest_count" type="number" min="1" max="100" value="{{ old('guest_count', 1) }}" required></div>
 <div class="resv-field"><label for="service_type_id">Tipe layanan *</label><select id="service_type_id" name="service_type_id" required><option value="">Pilih tipe</option>@foreach($types as $type)<option value="{{ $type->id }}" @selected(old('service_type_id')==$type->id)>{{ $type->name }}</option>@endforeach</select></div>
-<div class="resv-field"><label for="pickup_location">Lokasi penjemputan *</label><input id="pickup_location" name="pickup_location" value="{{ old('pickup_location') }}" maxlength="255" required></div>
+
 <div class="resv-field"><label for="service_date">Tanggal mulai *</label><input id="service_date" type="date" name="service_date" min="{{ now('Asia/Makassar')->toDateString() }}" value="{{ old('service_date') }}" required></div>
 <div class="resv-field"><label for="service_end_date">Tanggal selesai *</label><input id="service_end_date" type="date" name="service_end_date" min="{{ now('Asia/Makassar')->toDateString() }}" value="{{ old('service_end_date') }}" required></div>
 <div class="resv-field"><label for="start_time">Jam mulai</label><input id="start_time" type="time" name="start_time" value="{{ old('start_time') }}"></div>
@@ -22,9 +22,9 @@
 <div id="reservation-stops">
 <div class="resv-stop-row" style="border:1px solid var(--tms-border);border-radius:10px;padding:14px;margin-bottom:12px">
 <div class="resv-fields">
-<div class="resv-field"><label>Waktu kunjungan</label><input type="time" name="itinerary_stops[0][visit_time]"></div>
-<div class="resv-field"><label>Nama destinasi</label><input type="text" name="itinerary_stops[0][name]" maxlength="150" placeholder="Ubud Palace"></div>
-<div class="resv-field full"><label>Short link Google Maps</label><input type="url" name="itinerary_stops[0][google_maps_url]" maxlength="500" placeholder="https://maps.app.goo.gl/..."></div>
+<div class="resv-field"><label>Waktu kunjungan</label><input type="time" name="itinerary_stops[0][visit_time]" required></div>
+<div class="resv-field"><label>Nama destinasi</label><input type="text" name="itinerary_stops[0][name]" maxlength="150" placeholder="Ubud Palace" required></div>
+<div class="resv-field full"><label>Short link Google Maps</label><input type="url" name="itinerary_stops[0][google_maps_url]" maxlength="500" placeholder="https://maps.app.goo.gl/..." required></div>
 </div></div></div>
 <button type="button" class="resv-btn alt" id="addReservationStop">+ Tambah destinasi</button>
 </div>
@@ -60,7 +60,7 @@
    const row = document.createElement('div');
    row.className = 'resv-stop-row';
    row.style.cssText = 'border:1px solid var(--tms-border);border-radius:10px;padding:14px;margin-bottom:12px';
-   row.innerHTML = '<div class="resv-fields"><div class="resv-field"><label>Waktu kunjungan</label><input type="time" name="itinerary_stops['+index+'][visit_time]"></div><div class="resv-field"><label>Nama destinasi</label><input type="text" name="itinerary_stops['+index+'][name]" maxlength="150"></div><div class="resv-field full"><label>Short link Google Maps</label><input type="url" name="itinerary_stops['+index+'][google_maps_url]" maxlength="500" placeholder="https://maps.app.goo.gl/..."></div></div><button type="button" class="resv-btn alt remove-stop">Hapus destinasi</button>';
+   row.innerHTML = '<div class="resv-fields"><div class="resv-field"><label>Waktu kunjungan</label><input type="time" name="itinerary_stops['+index+'][visit_time]" required></div><div class="resv-field"><label>Nama destinasi</label><input type="text" name="itinerary_stops['+index+'][name]" maxlength="150" required></div><div class="resv-field full"><label>Short link Google Maps</label><input type="url" name="itinerary_stops['+index+'][google_maps_url]" maxlength="500" placeholder="https://maps.app.goo.gl/..." required></div></div><button type="button" class="resv-btn alt remove-stop">Hapus destinasi</button>';
    row.querySelector('.remove-stop').addEventListener('click', () => row.remove());
    container.appendChild(row);
    index++;
