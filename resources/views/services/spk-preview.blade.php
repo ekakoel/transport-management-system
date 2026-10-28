@@ -260,6 +260,16 @@
                     </div>
                 </section>
 
+                <section class="service-show-panel">
+                    <div class="service-show-panel-header"><div class="service-show-panel-heading"><div><h2>Pemilik Reservation &amp; Daftar Tamu</h2><p>Informasi internal kasus layanan.</p></div></div></div>
+                    <p><strong>Pemilik Reservation:</strong> {{ $service->reservationOwner?->name ?? 'Belum ditetapkan' }} @if($service->reservationOwner?->email) ({{ $service->reservationOwner->email }}) @endif</p>
+                    @if($service->reservation)<p><strong>Nomor Reservation:</strong> {{ $service->reservation->reservation_number }}</p>@endif
+                    <h3>Daftar Tamu ({{ $service->guests->count() }})</h3>
+                    @forelse($service->guests as $guest)
+                        <p>{{ $guest->name }} · {{ $guest->gender }} · {{ $guest->age_category }} · {{ $guest->phone ?: '—' }}</p>
+                    @empty <p>Belum ada data tamu.</p> @endforelse
+                </section>
+
                 {{-- Itinerary --}}
                 <section class="service-show-panel">
                     <div class="service-show-panel-header">
