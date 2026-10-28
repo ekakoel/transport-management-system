@@ -10,6 +10,7 @@ class TransportService extends Model
         'service_code',
         'customer_name',
         'customer_phone',
+        'guest_count',
         'service_type_id',
         'service_date',
         'service_end_date',
