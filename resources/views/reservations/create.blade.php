@@ -28,10 +28,29 @@
 </div></div></div>
 <button type="button" class="resv-btn alt" id="addReservationStop">+ Tambah destinasi</button>
 </div>
-<div class="resv-field full"><label for="notes">Catatan / kebutuhan khusus</label><textarea id="notes" name="notes" rows="3">{{ old('notes') }}</textarea></div>
+<div class="resv-field full"><label>Daftar tamu / wisatawan</label><p class="resv-muted">Opsional bila data belum tersedia. Pemohon Reservation tidak otomatis menjadi tamu.</p>
+<div id="reservation-guests"><div class="resv-guest-row" style="border:1px solid var(--tms-border);border-radius:10px;padding:12px;margin-bottom:10px"><div class="resv-fields">
+<div class="resv-field"><label>Nama</label><input name="guests[0][name]" maxlength="150"></div>
+<div class="resv-field"><label>Jenis kelamin</label><select name="guests[0][gender]"><option value="">Pilih</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+<div class="resv-field"><label>Kategori usia</label><select name="guests[0][age_category]"><option value="">Pilih</option><option value="Adult">Adult</option><option value="Children">Children</option></select></div>
+<div class="resv-field"><label>Kontak (opsional)</label><input name="guests[0][phone]" type="tel" maxlength="40"></div>
+</div></div></div><button type="button" class="resv-btn alt" id="addReservationGuest">+ Tambah tamu</button></div><div class="resv-field full"><label for="notes">Catatan / kebutuhan khusus</label><textarea id="notes" name="notes" rows="3">{{ old('notes') }}</textarea></div>
 </div><div class="resv-actions"><a class="resv-btn alt" href="{{ route('reservations.index') }}">Batal</a><button class="resv-btn" type="submit">Kirim Permintaan</button></div></form></div>
 <script>
 (() => {
+ const guestContainer = document.getElementById('reservation-guests');
+ const addGuest = document.getElementById('addReservationGuest');
+ let guestIndex = 1;
+ addGuest?.addEventListener('click', () => {
+   if (!guestContainer || guestContainer.querySelectorAll('.resv-guest-row').length >= 100) return;
+   const i = guestIndex++;
+   const row = document.createElement('div');
+   row.className = 'resv-guest-row';
+   row.style.cssText = 'border:1px solid var(--tms-border);border-radius:10px;padding:12px;margin-bottom:10px';
+   row.innerHTML = '<div class="resv-fields"><div class="resv-field"><label>Nama</label><input name="guests['+i+'][name]" maxlength="150"></div><div class="resv-field"><label>Jenis kelamin</label><select name="guests['+i+'][gender]"><option value="">Pilih</option><option value="Male">Male</option><option value="Female">Female</option></select></div><div class="resv-field"><label>Kategori usia</label><select name="guests['+i+'][age_category]"><option value="">Pilih</option><option value="Adult">Adult</option><option value="Children">Children</option></select></div><div class="resv-field"><label>Kontak (opsional)</label><input name="guests['+i+'][phone]" maxlength="40"></div></div><button type="button" class="resv-btn alt remove-guest">Hapus tamu</button>';
+   row.querySelector('.remove-guest').addEventListener('click', () => row.remove());
+   guestContainer.appendChild(row);
+ });
  const container = document.getElementById('reservation-stops');
  const add = document.getElementById('addReservationStop');
  if (!container || !add) return;
