@@ -81,7 +81,7 @@ class TmsController extends Controller
             foreach(($data['stops']??[]) as $i=>$stop) if(!empty($stop['name'])) $service->stops()->create(['name'=>$stop['name'],'address'=>$stop['address']??null,'sort_order'=>$i+1,'status'=>'Planned','added_by_driver'=>false]);
             $contact=isset($data['emergency_contact_id'])?EmergencyContact::find($data['emergency_contact_id']):EmergencyContact::where('is_active',1)->where('is_default',1)->first();
             $spk=Spk::create(['transport_service_id'=>$service->id,'spk_number'=>'SPK-'.now('Asia/Makassar')->format('Ymd').'-'.str_pad((string)$service->id,5,'0',STR_PAD_LEFT),'token_hash'=>hash('sha256',$rawToken),'published_at'=>now(),'emergency_name'=>$contact?->name??'Operasional Bali Kami Tour','emergency_phone'=>$contact?->phone,'emergency_whatsapp'=>$contact?->whatsapp]);
-            session(['new_spk_url'=>route('public.spk.show',['token'=>$rawToken])]);
+            session(['new_spk_url'=>route('public.spk.number.show', [$spk->id, $spk->spk_number])]);
             return $service;
         });
         return redirect()->route('services.show',$service)->with('success','Layanan dan SPK berhasil diterbitkan. Simpan tautan publik SPK yang ditampilkan satu kali.');
