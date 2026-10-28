@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Show / hide password
     const passwordInput = document.querySelector('#password');
     const passwordToggle = document.querySelector('[data-password-toggle]');
     const loginForm = document.querySelector('.login-form');
@@ -8,44 +7,79 @@ document.addEventListener('DOMContentLoaded', () => {
     if (passwordInput && passwordToggle) {
         passwordToggle.addEventListener('click', () => {
             const showPassword = passwordInput.type === 'password';
-
             passwordInput.type = showPassword ? 'text' : 'password';
             passwordToggle.classList.toggle('is-visible', showPassword);
             passwordToggle.setAttribute('aria-pressed', String(showPassword));
-            passwordToggle.setAttribute(
-                'aria-label',
-                showPassword ? 'Hide password' : 'Show password'
-            );
+            passwordToggle.setAttribute('aria-label', showPassword ? 'Hide password' : 'Show password');
         });
     }
 
     if (loginForm && loginButton) {
         loginForm.addEventListener('submit', () => {
-            if (!loginForm.checkValidity() || loginButton.disabled) {
-                return;
-            }
-
+            if (!loginForm.checkValidity() || loginButton.disabled) return;
             loginButton.disabled = true;
-
             const buttonText = loginButton.querySelector('span');
-
-            if (buttonText) {
-                buttonText.textContent = 'Signing in...';
-            }
-
+            if (buttonText) buttonText.textContent = 'Signing in...';
             loginButton.setAttribute('aria-busy', 'true');
         });
     }
 
-    // Expand / collapse sidebar
     const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
     const shell = document.querySelector('.shell');
+    const sidebar = shell?.querySelector('.sidebar');
+    if (!sidebarToggle || !shell || !sidebar) return;
 
-    if (sidebarToggle && shell) {
-        sidebarToggle.addEventListener('click', () => {
-            const isCollapsed = shell.classList.toggle('sidebar-collapsed');
+    const navLinks = sidebar.querySelectorAll('.nav a');
+    const mobileQuery = window.matchMedia('(max-width: 760px)');
+    const backdrop = document.createElement('button');
+    backdrop.type = 'button';
+    backdrop.className = 'sidebar-backdrop';
+    backdrop.setAttribute('aria-label', 'Tutup menu navigasi');
+    backdrop.tabIndex = -1;
+    shell.appendChild(backdrop);
 
-            sidebarToggle.setAttribute('aria-expanded', String(!isCollapsed));
-        });
+    const setMobileState = (open) => {
+        shell.classList.toggle('sidebar-mobile-open', open);
+        sidebarToggle.setAttribute('aria-expanded', String(open));
+        sidebarToggle.setAttribute('aria-label', open ? 'Tutup navigasi' : 'Buka navigasi');
+        document.body.classList.toggle('sidebar-drawer-open', open);
+    };
+    const closeMobileSidebar = () => setMobileState(false);
+
+    const syncViewport = () => {
+        if (mobileQuery.matches) {
+            shell.classList.remove('sidebar-collapsed');
+            closeMobileSidebar();
+        } else {
+            closeMobileSidebar();
+            sidebarToggle.setAttribute('aria-expanded', String(!shell.classList.contains('sidebar-collapsed')));
+            sidebarToggle.setAttribute('aria-label', 'Perlebar atau persempit navigasi');
+        }
+    };
+
+    sidebarToggle.addEventListener('click', () => {
+        if (mobileQuery.matches) {
+            setMobileState(!shell.classList.contains('sidebar-mobile-open'));
+        } else {
+            const collapsed = shell.classList.toggle('sidebar-collapsed');
+            sidebarToggle.setAttribute('aria-expanded', String(!collapsed));
+        }
+    });
+    backdrop.addEventListener('click', closeMobileSidebar);
+    navLinks.forEach(link => link.addEventListener('click', () => {
+        if (mobileQuery.matches) closeMobileSidebar();
+    }));
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && shell.classList.contains('sidebar-mobile-open')) {
+            closeMobileSidebar();
+            sidebarToggle.focus();
+        }
+    });
+
+    if (typeof mobileQuery.addEventListener === 'function') {
+        mobileQuery.addEventListener('change', syncViewport);
+    } else {
+        mobileQuery.addListener(syncViewport);
     }
+    syncViewport();
 });

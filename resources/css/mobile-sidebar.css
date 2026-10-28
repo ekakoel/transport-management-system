@@ -1,0 +1,61 @@
+/* Mobile navigation drawer fix */
+@media (max-width: 760px) {
+    .shell .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 50;
+        width: min(280px, 86vw);
+        height: 100vh;
+        height: 100dvh;
+        max-height: 100dvh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 24px 16px;
+        transform: translateX(-105%);
+        visibility: hidden;
+        transition: transform .24s ease, visibility .24s ease;
+        box-shadow: 12px 0 30px rgb(0 0 0 / 18%);
+        will-change: transform;
+    }
+
+    .shell.sidebar-mobile-open .sidebar {
+        width: min(280px, 86vw);
+        padding: 24px 16px;
+        transform: translateX(0);
+        visibility: visible;
+    }
+
+    .shell .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: rgb(7 21 37 / 52%);
+        opacity: 0;
+        visibility: hidden;
+        cursor: pointer;
+        transition: opacity .24s ease, visibility .24s ease;
+    }
+
+    .shell.sidebar-mobile-open .sidebar-backdrop {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .shell.sidebar-toggle { position: relative; }
+    .shell.sidebar-mobile-open .topbar { z-index: 60; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shell .sidebar,
+    .shell .sidebar-backdrop {
+        transition: none !important;
+    }
+}

@@ -12,24 +12,9 @@
 <body>
     @if (auth()->check())
         <div class="shell">
-
             <aside class="sidebar">
                 <a href="{{ route('dashboard') }}" class="brand brand-link" aria-label="Bali Kami TMS">
                     <img src="{{ asset('images/bali_kami_icon.png') }}" alt="Bali Kami Logo">
-                    {{-- <span class="brand-mark">
-                        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                            <rect width="48" height="48" rx="14" fill="#4263EB" />
-                            <path d="M10 29h28l-4-10H14l-4 10Z" stroke="white" stroke-width="2.4"
-                                stroke-linejoin="round" />
-                            <path d="M15 29v5m18-5v5M13 34h22" stroke="white" stroke-width="2.4"
-                                stroke-linecap="round" />
-                            <path d="M18 19l3-5h6l3 5" stroke="#A9C4FF" stroke-width="2.4" stroke-linecap="round"
-                                stroke-linejoin="round" />
-                            <circle cx="17" cy="34" r="2.5" fill="white" />
-                            <circle cx="31" cy="34" r="2.5" fill="white" />
-                        </svg>
-                    </span> --}}
-
                     <span class="brand-copy">
                         <span class="brand-name">BALI KAMI <b>TMS</b></span>
                         <span class="brand-caption">TRANSPORT MANAGEMENT</span>
@@ -37,7 +22,6 @@
                 </a>
 
                 <div class="sidebar-section-label">WORKSPACE</div>
-
                 <nav class="nav">
                     <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"
                         @if (request()->routeIs('dashboard')) aria-current="page" @endif title="Dashboard">
@@ -91,10 +75,8 @@
                     <a href="{{ route('types.index') }}" class="{{ request()->routeIs('types.*') ? 'active' : '' }}"
                         @if (request()->routeIs('types.*')) aria-current="page" @endif title="Service Types">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M4 5h16v14H4z" stroke="currentColor" stroke-width="1.8"
-                                stroke-linejoin="round" />
-                            <path d="M8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8"
-                                stroke-linecap="round" />
+                            <path d="M4 5h16v14H4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                            <path d="M8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
                         </svg>
                         <span>Service Types</span>
                     </a>
@@ -176,6 +158,10 @@
         </div>
     @endif
     @yield('content')
+    <footer class="footer">
+        <span>Bali Kami TMS</span>
+        <span>Transport Management System</span>
+    </footer>
     @if (auth()->check())
         </main>
         </section>
