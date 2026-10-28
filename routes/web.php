@@ -14,6 +14,18 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
+// Tautan publik SPK dengan format yang mudah dibagikan seperti /spk/{id}/{nomor-spk}.
+Route::prefix('spk/{spk}/{spkNumber}')
+    ->name('public.spk.number.')
+    ->middleware('throttle:60,1')
+    ->group(function () {
+        Route::get('/', [TmsController::class, 'publicSpkByNumber'])->name('show');
+        Route::post('/check-in', [TmsController::class, 'publicCheckInByNumber'])->name('checkin');
+        Route::post('/destinations', [TmsController::class, 'publicAddDestinationByNumber'])->name('destinations.add');
+        Route::post('/destinations/{stop}/cancel', [TmsController::class, 'publicCancelDestinationByNumber'])->name('destinations.cancel');
+        Route::post('/complete', [TmsController::class, 'publicCompleteByNumber'])->name('complete');
+    });
+
 Route::prefix('public/spk')
     ->name('public.spk.')
     ->middleware('throttle:60,1')
