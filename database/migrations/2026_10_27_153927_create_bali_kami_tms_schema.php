@@ -104,6 +104,7 @@ return new class extends Migration
                 service_code VARCHAR(40) NOT NULL UNIQUE,
                 customer_name VARCHAR(150) NOT NULL,
                 customer_phone VARCHAR(40) NULL,
+                guest_count SMALLINT UNSIGNED NOT NULL DEFAULT 1,
                 service_type_id BIGINT UNSIGNED NOT NULL,
                 service_date DATE NOT NULL,
                 service_end_date DATE NOT NULL,
