@@ -39,7 +39,7 @@ class ReservationController extends Controller
             'service_type_id' => ['required', 'exists:service_types,id'],
             'customer_name' => ['required', 'string', 'max:150'],
             'customer_phone' => ['nullable', 'string', 'max:40'],
-            'guest_count' => ['required', 'integer', 'min:1', 'max:100'],
+            'guest_count' => ['required', 'integer', 'min:1', 'max:100'],\n            'guests' => ['nullable', 'array', 'max:100'],\n            'guests.*.name' => ['required_with:guests.*.gender', 'string', 'max:150'],\n            'guests.*.gender' => ['required_with:guests.*.name', Rule::in(['Male','Female'])],\n            'guests.*.age_category' => ['required_with:guests.*.name', Rule::in(['Adult','Children'])],\n            'guests.*.phone' => ['nullable', 'string', 'max:40'],
             'service_date' => ['required', 'date', 'after_or_equal:today'],
             'service_end_date' => ['required', 'date', 'after_or_equal:service_date'],
             'start_time' => ['nullable', 'date_format:H:i'],
@@ -52,11 +52,11 @@ class ReservationController extends Controller
             'notes' => ['nullable', 'string', 'max:3000'],
         ]);
 
-        $itineraryStops = $data['itinerary_stops'] ?? [];
+        $guests = $data['guests'] ?? [];\n        unset($data['guests']);\n        $validGuests = array_values(array_filter($guests, fn ($guest) => !empty($guest['name'])));\n        if ($validGuests) $data['guest_count'] = count($validGuests);\n\n        $itineraryStops = $data['itinerary_stops'] ?? [];
         unset($data['itinerary_stops']);
         $data['itinerary'] = json_encode(array_values(array_filter($itineraryStops, fn ($stop) => !empty($stop['name']))), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        $reservation = Reservation::create($data + [
+        $reservation = DB::transaction(function () use ($data, $validGuests, $request) {\n            $reservation = Reservation::create($data + [
             'reservation_number' => 'RSV-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(6)),
             'user_id' => $request->user()->id,
             'status' => 'Pending',
@@ -70,7 +70,7 @@ class ReservationController extends Controller
         $isAdmin = in_array(strtolower((string) $request->user()->role), ['admin', 'owner', 'manager'], true);
         abort_unless($isAdmin || $reservation->user_id === $request->user()->id, 403);
 
-        $reservation->load(['serviceType', 'requester', 'transportService', 'reviewer']);
+        $reservation->load(['serviceType', 'requester', 'transportService', 'reviewer', 'guests']);
         return view('reservations.show', [
             'reservation' => $reservation,
             'isAdmin' => $isAdmin,
@@ -140,7 +140,7 @@ class ReservationController extends Controller
 
             $service = TransportService::create([
                 'service_code' => 'TMS-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(5)),
-                'customer_name' => $locked->customer_name,
+                'customer_name' => $locked->customer_name,\n                'reservation_user_id' => $locked->user_id,\n                'reservation_id' => $locked->id,
                 'customer_phone' => $locked->customer_phone,
                 'guest_count' => $locked->guest_count,
                 'service_type_id' => $locked->service_type_id,
@@ -156,7 +156,7 @@ class ReservationController extends Controller
                 'created_by' => $request->user()->id,
             ]);
 
-            $itineraryStops = json_decode((string) $locked->itinerary, true);
+            foreach ($locked->guests as $guest) {\n                $service->guests()->create(['name'=>$guest->name,'gender'=>$guest->gender,'age_category'=>$guest->age_category,'phone'=>$guest->phone]);\n            }\n\n            $itineraryStops = json_decode((string) $locked->itinerary, true);
             if (is_array($itineraryStops)) {
                 foreach ($itineraryStops as $i => $stop) {
                     if (empty($stop['name'])) continue;
