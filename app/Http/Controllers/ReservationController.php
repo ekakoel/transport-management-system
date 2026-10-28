@@ -54,7 +54,7 @@ class ReservationController extends Controller
 
         $itineraryStops = $data['itinerary_stops'] ?? [];
         unset($data['itinerary_stops']);
-        $data['itinerary'] = json_encode(array_values(array_filter($itineraryStops, fn ($stop) => !empty($stop['name'])), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $data['itinerary'] = json_encode(array_values(array_filter($itineraryStops, fn ($stop) => !empty($stop['name']))), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         $reservation = Reservation::create($data + [
             'reservation_number' => 'RSV-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(6)),
