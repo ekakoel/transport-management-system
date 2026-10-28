@@ -322,6 +322,10 @@
                                     </div>
                                 </div>
 
+                                <p><strong>Waktu kunjungan:</strong> {{ $stop->visit_time ? substr((string) $stop->visit_time, 0, 5) : 'Belum ditentukan' }} WITA</p>
+                                @if ($stop->google_maps_url)
+                                    <p><a href="{{ $stop->google_maps_url }}" target="_blank" rel="noopener noreferrer">Buka destinasi di Google Maps</a></p>
+                                @endif
                                 <p>{{ $stop->address ?: 'Tidak ada keterangan lokasi.' }}</p>
                                 <span class="service-show-stop-sequence">
                                     DESTINASI {{ str_pad((string) $stop->sort_order, 2, '0', STR_PAD_LEFT) }}
