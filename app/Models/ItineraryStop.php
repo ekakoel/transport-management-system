@@ -11,7 +11,9 @@ class ItineraryStop extends Model
     protected $fillable = [
         'transport_service_id',
         'name',
+        'visit_time',
         'address',
+        'google_maps_url',
         'latitude',
         'longitude',
         'sort_order',
