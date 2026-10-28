@@ -8,7 +8,8 @@ use App\Models\ServiceType;
 use App\Models\Spk;
 use App\Models\SpkEvent;
 use App\Models\TransportService;
-use App\Models\Vehicle;\nuse App\Models\User;
+use App\Models\Vehicle;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -71,7 +72,7 @@ class TmsController extends Controller
             'notes'=>'nullable|string|max:2000','emergency_contact_id'=>'nullable|exists:emergency_contacts,id',
             'stops'=>'nullable|array|max:40','stops.*.name'=>'required_with:stops.*.visit_time|string|max:150',
             'stops.*.visit_time'=>'required_with:stops.*.name|date_format:H:i',
-            'stops.*.google_maps_url'=>['required_with:stops.*.name','url','max:500','regex:/^https?:\\/\\/(maps\\.app\\.goo\\.gl|goo\\.gl|www\\.google\\.com|maps\\.google\\.com)\\//i'],
+            'stops.*.google_maps_url'=>['required_with:stops.*.name','url','max:500','regex:#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i'],
             'stops.*.address'=>'nullable|string|max:500'
         ]);
         if($data['service_date'] < now('Asia/Makassar')->toDateString()) return back()->withInput()->withErrors(['service_date'=>'Tanggal layanan tidak boleh di masa lalu.']);
@@ -325,7 +326,7 @@ class TmsController extends Controller
         $data = $r->validate([
             'name' => 'required|string|max:150',
             'visit_time' => 'required|date_format:H:i',
-            'google_maps_url' => ['required', 'url', 'max:500', 'regex:/^https?:\\/\\/(maps\\.app\\.goo\\.gl|goo\\.gl|www\\.google\\.com|maps\\.google\\.com)\\//i'],
+            'google_maps_url' => ['required', 'url', 'max:500', 'regex:#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i'],
             'address' => 'nullable|string|max:500',
             'note' => 'nullable|string|max:1000',
         ]);
