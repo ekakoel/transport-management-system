@@ -312,6 +312,8 @@
     <tr><th>Nomor Pesanan (Order)</th><td>{{ $service->service_code }}</td></tr>
     <tr><th>Nama Pelanggan / Pemesan</th><td>{{ $service->customer_name ?: '—' }}</td></tr>
     <tr><th>Telepon Pelanggan</th><td>{{ $service->customer_phone ?: '—' }}</td></tr>
+    <tr><th>Nama Pelanggan / Pemesan</th><td>{{ $service->customer_name ?: '—' }}</td></tr>
+    <tr><th>Telepon Pelanggan</th><td>{{ $service->customer_phone ?: '—' }}</td></tr>
     <tr><th>Jenis Pesanan (Type)</th><td>{{ $service->serviceType?->name ?? 'Transport Service' }}</td></tr>
     <tr><th>Tanggal Layanan</th><td>{{ \Carbon\Carbon::parse($service->service_date)->locale('id')->translatedFormat('l, d M Y') }}@if($service->service_end_date && $service->service_end_date->format('Y-m-d') !== $service->service_date->format('Y-m-d')) – {{ \Carbon\Carbon::parse($service->service_end_date)->locale('id')->translatedFormat('l, d M Y') }}@endif</td></tr>
     <tr><th>Jumlah Tamu</th><td>{{ $service->guest_count ?? 1 }} orang</td></tr>
@@ -337,6 +339,13 @@
         </table>
     </div>
 </div>
+
+<h4 class="section-title">Kontak Darurat</h4>
+<table>
+    <tr><th>Nama Kontak</th><td>{{ $spk->emergency_name ?: 'Operasional Bali Kami Tour' }}</td></tr>
+    <tr><th>Telepon</th><td>{{ $spk->emergency_phone ?: '—' }}</td></tr>
+    <tr><th>WhatsApp</th><td>{{ $spk->emergency_whatsapp ?: '—' }}</td></tr>
+</table>
 
 <h4 class="section-title">Kontak Darurat</h4>
 <table>
