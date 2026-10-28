@@ -8,7 +8,7 @@ use App\Models\ServiceType;
 use App\Models\Spk;
 use App\Models\SpkEvent;
 use App\Models\TransportService;
-use App\Models\Vehicle;
+use App\Models\Vehicle;\nuse App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
