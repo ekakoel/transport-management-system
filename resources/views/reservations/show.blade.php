@@ -9,6 +9,11 @@
 <div><span class="resv-label">Pelanggan</span><div class="resv-value">{{ $reservation->customer_name }}</div></div><div><span class="resv-label">Telepon</span><div class="resv-value">{{ $reservation->customer_phone ?: '—' }}</div></div>
 <div><span class="resv-label">Tipe layanan</span><div class="resv-value">{{ $reservation->serviceType?->name ?? '—' }}</div></div><div><span class="resv-label">Lokasi penjemputan</span><div class="resv-value">{{ $reservation->pickup_location }}</div></div>
 <div><span class="resv-label">Tanggal mulai</span><div class="resv-value">{{ $reservation->service_date->format('d M Y') }} {{ $reservation->start_time ? substr((string)$reservation->start_time,0,5) : '' }}</div></div><div><span class="resv-label">Tanggal selesai</span><div class="resv-value">{{ $reservation->service_end_date->format('d M Y') }} {{ $reservation->end_time ? substr((string)$reservation->end_time,0,5) : '' }}</div></div>
+<div style="grid-column:1/-1"><span class="resv-label">Daftar Tamu ({{ $reservation->guests->count() }})</span>
+@forelse($reservation->guests as $guest)
+<div class="resv-value" style="border:1px solid var(--tms-border);border-radius:8px;padding:10px;margin:8px 0">{{ $guest->name }} · {{ $guest->gender }} · {{ $guest->age_category }} @if($guest->phone) · {{ $guest->phone }} @endif</div>
+@empty <div class="resv-value">Belum ada data tamu.</div> @endforelse
+</div>
 <div style="grid-column:1/-1"><span class="resv-label">Itinerary</span>
 @php($itineraryStops = json_decode((string) $reservation->itinerary, true))
 @if(is_array($itineraryStops))
