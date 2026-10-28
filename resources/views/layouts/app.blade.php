@@ -38,6 +38,13 @@
                         <span>Dashboard</span>
                     </a>
 
+                    <a href="{{ auth()->user()->role === 'reservation' ? route('reservations.index') : route('admin.reservations.index') }}"
+                        class="{{ request()->routeIs('reservations.*') || request()->routeIs('admin.reservations.*') ? 'active' : '' }}"
+                        title="Reservation Requests">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span>{{ auth()->user()->role === 'reservation' ? 'My Requests' : 'Reservation Review' }}</span>
+                    </a>
+                    @if(in_array(strtolower((string) auth()->user()->role), ['admin','owner','manager'], true))
                     <a href="{{ route('services.index') }}"
                         class="{{ request()->routeIs('services.*') ? 'active' : '' }}"
                         @if (request()->routeIs('services.*')) aria-current="page" @endif title="Transport Services / SPK">
@@ -92,6 +99,8 @@
                         </svg>
                         <span>Emergency Contacts</span>
                     </a>
+                    @endif
+
                 </nav>
 
                 <div class="sidebar-bottom">
