@@ -17,6 +17,8 @@ use Illuminate\Validation\Rule;
 class TmsController extends Controller
 {
     public function dashboard(){
+        if (strtolower((string) auth()->user()->role) === 'reservation') return redirect()->route('reservations.index');
+        abort_unless(in_array(strtolower((string) auth()->user()->role), ['admin', 'owner', 'manager'], true), 403);
         $today=now('Asia/Makassar')->toDateString();
         return view('dashboard',[
             'todayCount'=>TransportService::whereDate('service_date',$today)->count(),
