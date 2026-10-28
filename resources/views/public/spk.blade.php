@@ -307,17 +307,12 @@
     <hr>
 </div>
 
-<h4 class="section-title">Pesanan (Order)</h4>
+<h4 class="section-title">Informasi Layanan</h4>
 <table>
-    <tr><th>Nomor Pesanan (Order)</th><td>{{ $service->service_code }}</td></tr>
-    <tr><th>Nama Pelanggan / Pemesan</th><td>{{ $service->customer_name ?: '—' }}</td></tr>
-    <tr><th>Telepon Pelanggan</th><td>{{ $service->customer_phone ?: '—' }}</td></tr>
-    <tr><th>Jenis Pesanan (Type)</th><td>{{ $service->serviceType?->name ?? 'Transport Service' }}</td></tr>
+    <tr><th>Jenis Layanan</th><td>{{ $service->serviceType?->name ?? 'Transport Service' }}</td></tr>
     <tr><th>Tanggal Layanan</th><td>{{ \Carbon\Carbon::parse($service->service_date)->locale('id')->translatedFormat('l, d M Y') }}@if($service->service_end_date && $service->service_end_date->format('Y-m-d') !== $service->service_date->format('Y-m-d')) – {{ \Carbon\Carbon::parse($service->service_end_date)->locale('id')->translatedFormat('l, d M Y') }}@endif</td></tr>
     <tr><th>Jumlah Tamu</th><td>{{ $service->guest_count ?? 1 }} orang</td></tr>
-    <tr><th>Lokasi Penjemputan</th><td>{{ $service->pickup_location ?: '—' }}</td></tr>
-    <tr><th>Waktu Penjemputan</th><td>{{ $service->start_time ? substr((string) $service->start_time, 0, 5).' WITA' : '—' }}</td></tr>
-    @if($service->notes)<tr><th>Catatan</th><td>{{ $service->notes }}</td></tr>@endif
+    @if($service->notes)<tr><th>Catatan Operasional</th><td>{{ $service->notes }}</td></tr>@endif
 </table>
 
 <div class="row">
@@ -337,13 +332,6 @@
         </table>
     </div>
 </div>
-
-<h4 class="section-title">Kontak Darurat</h4>
-<table>
-    <tr><th>Nama Kontak</th><td>{{ $spk->emergency_name ?: 'Operasional Bali Kami Tour' }}</td></tr>
-    <tr><th>Telepon</th><td>{{ $spk->emergency_phone ?: '—' }}</td></tr>
-    <tr><th>WhatsApp</th><td>{{ $spk->emergency_whatsapp ?: '—' }}</td></tr>
-</table>
 
 <div class="page-brake-avoid">
     <h4 class="section-title">Destinasi / Tujuan</h4>
@@ -446,6 +434,13 @@
         <li>Jaga sikap profesional dan nama baik perusahaan.</li>
     </ul>
 </div>
+<h4 class="section-title">Kontak Darurat</h4>
+<table>
+    <tr><th>Nama Kontak</th><td>{{ $spk->emergency_name ?: 'Operasional Bali Kami Tour' }}</td></tr>
+    <tr><th>Telepon</th><td>{{ $spk->emergency_phone ?: '—' }}</td></tr>
+    <tr><th>WhatsApp</th><td>{{ $spk->emergency_whatsapp ?: '—' }}</td></tr>
+</table>
+
 <div class="public-footer">BALI KAMI TOUR · TRANSPORT MANAGEMENT SYSTEM · Waktu operasional WITA</div>
 
 <script>
