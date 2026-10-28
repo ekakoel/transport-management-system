@@ -358,8 +358,10 @@
                         <h5><strong>{{ $stop->name }}</strong></h5>
                         <span class="public-destination-state {{ $stop->status === 'Checked In' ? 'public-destination-state-checked' : ($stop->status === 'Cancelled' ? 'public-destination-state-cancelled' : '') }}">{{ $stop->status }}</span>
                     </div>
-                    <div class="description-item"><div class="icon">📍</div><div class="desc">Alamat / lokasi: {{ $stop->address ?: 'Belum dicatat' }}</div></div>
-                    <div class="description-item"><div class="icon">🕒</div><div class="desc">Urutan destinasi: {{ $stop->sort_order }}</div></div>
+                    <div class="description-item"><div class="icon">🕒</div><div class="desc">Waktu kunjungan: {{ $stop->visit_time ? substr((string) $stop->visit_time, 0, 5).' WITA' : 'Belum ditentukan' }}</div></div>
+                    @if($stop->google_maps_url)<div class="description-item"><div class="icon">🗺️</div><div class="desc">Google Maps: <a href="{{ $stop->google_maps_url }}" target="_blank" rel="noopener noreferrer">Buka destinasi</a></div></div>@endif
+                    @if($stop->address)<div class="description-item"><div class="icon">📍</div><div class="desc">Alamat / lokasi: {{ $stop->address }}</div></div>@endif
+                    <div class="description-item"><div class="icon">🔢</div><div class="desc">Urutan destinasi: {{ $stop->sort_order }}</div></div>
                     @if($stop->note)<div class="description-item"><div class="icon">📋</div><div class="desc"><i>Catatan: {{ $stop->note }}</i></div></div>@endif
                     @if($stop->added_by_driver)<p class="public-small">Destinasi tambahan dari driver.</p>@endif
                     @if($stop->status === 'Checked In')
@@ -414,7 +416,9 @@
         <form method="post" action="{{ $addDestinationUrl }}">
             @csrf
             <div class="public-field"><label for="destination-name">Nama Lokasi / Destinasi <span>*</span></label><input id="destination-name" name="name" required maxlength="150" placeholder="Contoh: Monkey Forest"></div>
-            <div class="public-field"><label for="destination-address">Alamat / Lokasi <span>*</span></label><input id="destination-address" name="address" required maxlength="500" placeholder="Alamat atau lokasi destinasi"></div>
+            <div class="public-field"><label for="destination-time">Waktu Kunjungan <span>*</span></label><input id="destination-time" type="time" name="visit_time" required></div>
+            <div class="public-field"><label for="destination-map">Short Link Google Maps <span>*</span></label><input id="destination-map" type="url" name="google_maps_url" required maxlength="500" placeholder="https://maps.app.goo.gl/..."></div>
+            <div class="public-field"><label for="destination-address">Alamat / Keterangan Lokasi</label><input id="destination-address" name="address" maxlength="500" placeholder="Alamat atau area destinasi"></div>
             <div class="public-field"><label for="destination-note">Deskripsi / Catatan</label><textarea id="destination-note" name="note" rows="2" maxlength="1000"></textarea></div>
             <button type="submit" class="public-action">Simpan Destinasi</button>
         </form>
