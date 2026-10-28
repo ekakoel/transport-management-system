@@ -224,7 +224,7 @@ class TmsController extends Controller
 
     public function publicSpkByNumber(Spk $spk, string $spkNumber)
     {
-        abort_unless(hash_equals($spk->spk_number, $spkNumber), 404);
+        abort_unless(!$spk->revoked_at && hash_equals($spk->spk_number, $spkNumber), 404);
 
         return $this->renderPublicSpk($spk, null, true);
     }
@@ -302,7 +302,7 @@ class TmsController extends Controller
 
     public function publicCheckInByNumber(Request $r, Spk $spk, string $spkNumber)
     {
-        abort_unless(hash_equals($spk->spk_number, $spkNumber), 404);
+        abort_unless(!$spk->revoked_at && hash_equals($spk->spk_number, $spkNumber), 404);
         $this->expirePublicSpkIfNeeded($spk);
 
         return $this->storePublicCheckIn($r, $spk);
@@ -353,7 +353,7 @@ class TmsController extends Controller
 
     public function publicAddDestinationByNumber(Request $r, Spk $spk, string $spkNumber)
     {
-        abort_unless(hash_equals($spk->spk_number, $spkNumber), 404);
+        abort_unless(!$spk->revoked_at && hash_equals($spk->spk_number, $spkNumber), 404);
         $this->expirePublicSpkIfNeeded($spk);
 
         return $this->storePublicDestination($r, $spk);
@@ -398,7 +398,7 @@ class TmsController extends Controller
 
     public function publicCancelDestinationByNumber(Request $r, Spk $spk, string $spkNumber, ItineraryStop $stop)
     {
-        abort_unless(hash_equals($spk->spk_number, $spkNumber), 404);
+        abort_unless(!$spk->revoked_at && hash_equals($spk->spk_number, $spkNumber), 404);
         $this->expirePublicSpkIfNeeded($spk);
 
         return $this->storePublicCancelDestination($r, $spk, $stop);
@@ -434,7 +434,7 @@ class TmsController extends Controller
 
     public function publicCompleteByNumber(Spk $spk, string $spkNumber)
     {
-        abort_unless(hash_equals($spk->spk_number, $spkNumber), 404);
+        abort_unless(!$spk->revoked_at && hash_equals($spk->spk_number, $spkNumber), 404);
         $this->expirePublicSpkIfNeeded($spk);
 
         return $this->storePublicComplete($spk);
