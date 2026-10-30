@@ -18,12 +18,40 @@ class ReservationController extends Controller
 {
     public function index(Request $request)
     {
-        $reservations = Reservation::with('serviceType')
+        $today = now('Asia/Makassar')->toDateString();
+        $query = Reservation::with(['requester', 'serviceType'])->latest();
+        if ($request->filled('status')) $query->where('status', $request->string('status')->toString());
+        if ($request->filled('q')) {
+            $term = $request->string('q')->toString();
+            $query->where(function ($q) use ($term) {
+                $q->where('reservation_number', 'like', "%{$term}%")
+                  ->orWhere('customer_name', 'like', "%{$term}%")
+                  ->orWhereHas('requester', fn ($u) => $u->where('name', 'like', "%{$term}%"));
+            });
+        }
+        $reservations = $query
             ->where('user_id', $request->user()->id)
             ->latest()
-            ->paginate(15);
-
-        return view('reservations.index', compact('reservations'));
+            ->paginate(15)
+            ->withQueryString();
+        $pendingReservation = Reservation::whereDate('service_date',">=", $today)
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', ['Pending'])
+            ->get();
+        $approvedReservation = Reservation::whereDate('service_date',">=", $today)
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', ['Approved'])
+            ->get();
+        $rejectedReservation = Reservation::whereDate('service_date',">=", $today)
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', ['Rejected'])
+            ->get();
+        return view('reservations.index', compact(
+            'reservations',
+            'pendingReservation',
+            'approvedReservation',
+            'rejectedReservation'
+        ));
     }
 
     public function create()
@@ -110,6 +138,7 @@ class ReservationController extends Controller
 
     public function adminIndex(Request $request)
     {
+        $today = now('Asia/Makassar')->toDateString();
         $query = Reservation::with(['requester', 'serviceType'])->latest();
         if ($request->filled('status')) $query->where('status', $request->string('status')->toString());
         if ($request->filled('q')) {
@@ -121,7 +150,31 @@ class ReservationController extends Controller
             });
         }
         $reservations = $query->paginate(20)->withQueryString();
-        return view('reservations.admin-index', compact('reservations'));
+        $todayActiveReservations = Reservation::whereDate('service_date', $today)
+            ->whereIn('status', ['Approved'])
+            ->with(['requester', 'serviceType', 'transportService'])
+            ->orderBy('service_date')
+            ->get();
+        $layananReservationsAkanDatang = Reservation::whereDate('service_date','>', $today)
+            ->whereIn('status', ['Approved'])
+            ->with(['requester', 'serviceType', 'transportService'])
+            ->orderBy('service_date')
+            ->get();
+        $layananReservationsMenungguDiproses= Reservation::where('status', 'Pending')
+            ->whereDate('service_date','>', $today)
+            ->with(['requester', 'serviceType', 'transportService'])
+            ->get();
+        $layananReservationsExpired = Reservation::whereDate('service_date','<', $today)
+            ->with(['requester', 'serviceType', 'transportService'])
+            ->paginate(20)
+            ->withQueryString();
+        return view('reservations.admin-index', compact(
+            'reservations', 
+            'todayActiveReservations',
+            'layananReservationsAkanDatang',
+            'layananReservationsMenungguDiproses',
+            'layananReservationsExpired'
+        ));
     }
 
     public function approve(Request $request, Reservation $reservation)
@@ -238,11 +291,11 @@ class ReservationController extends Controller
     public function reject(Request $request, Reservation $reservation)
     {
         abort_unless($reservation->status === 'Pending', 422, 'Permintaan ini sudah diproses.');
-        $data = $request->validate(['admin_notes' => ['required', 'string', 'max:3000']]);
+        $data = $request->validate(['reject_admin_notes' => ['required', 'string', 'max:3000']]);
 
         $reservation->update([
             'status' => 'Rejected',
-            'admin_notes' => $data['admin_notes'],
+            'admin_notes' => $data['reject_admin_notes'],
             'reviewed_by' => $request->user()->id,
             'reviewed_at' => now(),
         ]);

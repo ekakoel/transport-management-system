@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="referrer" content="no-referrer">
     <title>@yield('title', 'Dashboard') · {{ config('app.name') }}</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/bali_kami_logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -14,7 +15,7 @@
         <div class="shell">
             <aside class="sidebar">
                 <a href="{{ route('dashboard') }}" class="brand brand-link" aria-label="Bali Kami TMS">
-                    <img src="{{ asset('images/bali_kami_icon.png') }}" alt="Bali Kami Logo">
+                    <img src="{{ asset('images/bali_kami_icon_white.png') }}" alt="Bali Kami Logo">
                     <span class="brand-copy">
                         <span class="brand-name">BALI KAMI <b>TMS</b></span>
                         <span class="brand-caption">TRANSPORT MANAGEMENT</span>
@@ -147,8 +148,8 @@
                     </div>
                 </header>
                 <main class="content">
-                @else
-                    <main>
+    @else
+                <main>
     @endif
     @if (session('success'))
         <div class="alert">{{ session('success') }} @if (session('new_spk_url'))

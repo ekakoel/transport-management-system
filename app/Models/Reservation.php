@@ -20,6 +20,7 @@ class Reservation extends Model
             'service_end_date' => 'date',
             'guest_count' => 'integer',
             'reviewed_at' => 'datetime',
+            'itinerary' => 'array',
         ];
     }
 

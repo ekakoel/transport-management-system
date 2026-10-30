@@ -126,10 +126,10 @@
 
                         <div class="service-show-detail-label">Periode Layanan</div>
                         <div class="service-show-summary-value">
-                            {{ $service->service_date->format('d M Y') }}
+                            {{ \App\Support\DateFormatter::format($service->service_date) }}
                         </div>
                         <div class="service-show-summary-sub">
-                            sampai {{ $service->service_end_date->format('d M Y') }}
+                            sampai {{ \App\Support\DateFormatter::format($service->service_end_date) }}
                         </div>
 
                         <div class="service-show-card-bottom">
@@ -222,9 +222,9 @@
                             <div>
                                 <span class="service-show-detail-label">Waktu Layanan</span>
                                 <strong>
-                                    {{ $service->start_time ?: 'â€”' }}
+                                    {{ \App\Support\DateFormatter::format($service->service_date, $service->start_time) ?: 'â€”' }}
                                     <span class="service-show-time-separator">â€“</span>
-                                    {{ $service->end_time ?: 'â€”' }}
+                                    {{ \App\Support\DateFormatter::format($service->service_end_date, $service->end_time) ?: 'â€”' }}
                                 </strong>
                                 <small>Waktu setempat Bali (WITA)</small>
                             </div>
@@ -309,7 +309,7 @@
                                     </div>
                                 </div>
 
-                                <p><strong>Waktu kunjungan:</strong> {{ $stop->visit_time ? substr((string) $stop->visit_time, 0, 5) : 'Belum ditentukan' }} WITA</p>
+                                <p><strong>Waktu kunjungan:</strong> {{ $stop->visit_time ? \App\Support\DateFormatter::format($stop->visit_time, null, 'H:i') . ' WITA' : 'Belum ditentukan' }}</p>
                                 @if ($stop->google_maps_url)
                                     <p><a href="{{ $stop->google_maps_url }}" target="_blank" rel="noopener noreferrer">Buka destinasi di Google Maps</a></p>
                                 @endif
@@ -373,10 +373,10 @@
                                     <tr>
                                         <td>
                                             <div class="service-show-event-date">
-                                                {{ $e->created_at?->timezone('Asia/Makassar')->format('d M Y') ?? 'â€”' }}
+                                                {{ \App\Support\DateFormatter::format($e->created_at) ?? 'â€”' }}
                                             </div>
                                             <div class="service-show-event-time">
-                                                {{ $e->created_at?->timezone('Asia/Makassar')->format('H:i:s') ?? 'â€”' }}
+                                                {{ \App\Support\DateFormatter::format($e->created_at, null, 'H:i:s') ?? 'â€”' }}
                                             </div>
                                         </td>
 
@@ -451,12 +451,12 @@
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Tanggal mulai</span>
-                        <strong class="tms-info-value">{{ $service->service_date?->format('d M Y') ?? 'â€”' }}</strong>
+                        <strong class="tms-info-value">{{ \App\Support\DateFormatter::format($service->service_date) ?? 'â€”' }}</strong>
                         <span class="tms-info-description">Tanggal layanan.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Tanggal selesai</span>
-                        <strong class="tms-info-value">{{ $service->service_end_date?->format('d M Y') ?? 'â€”' }}</strong>
+                        <strong class="tms-info-value">{{ \App\Support\DateFormatter::format($service->service_end_date) ?? 'â€”' }}</strong>
                         <span class="tms-info-description">Tanggal akhir layanan.</span>
                     </div>
                     <div class="tms-info-item">

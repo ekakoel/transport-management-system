@@ -27,7 +27,7 @@
                     stroke-width="1.7" />
                 <path d="M16 3v4M8 3v4M3 10h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
             </svg>
-            <span>{{ now()->translatedFormat('l, d F Y') }}</span>
+            <span>{{ \App\Support\DateFormatter::format(now()) }}</span>
         </div>
     </header>
     <div class="dashboard-page">
@@ -145,7 +145,7 @@
                                             </div>
                                         </td>
                                         <td class="table-date">
-                                            {{ $s->service_date->format('d M Y') }}
+                                            {{ \App\Support\DateFormatter::format($s->service_date) }}
                                         </td>
                                         <td class="table-customer">
                                             {{ $s->customer_name }}

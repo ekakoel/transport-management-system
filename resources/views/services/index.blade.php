@@ -116,7 +116,7 @@
                                     <th>Pelanggan</th>
                                     <th>Driver / Kendaraan</th>
                                     <th>Status</th>
-                                    <th class="services-action-heading">Aksi</th>
+                                    <th class="services-action-heading"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -142,11 +142,11 @@
 
                                         <td>
                                             <div class="services-date">
-                                                {{ $s->service_date->format('d M Y') }}
+                                                {{ \App\Support\DateFormatter::format($s->service_date) }}
                                             </div>
                                             @if ($s->service_end_date->format('Y-m-d') !== $s->service_date->format('Y-m-d'))
                                                 <div class="services-subtext">
-                                                    s/d {{ $s->service_end_date->format('d M Y') }}
+                                                    s/d {{ \App\Support\DateFormatter::format($s->service_end_date) }}
                                                 </div>
                                             @else
                                                 <div class="services-subtext">Satu hari</div>

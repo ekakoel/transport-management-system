@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>Surat Perintah Kerja (SPK) {{ $spk->spk_number }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/bali_kami_icon.jpg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -302,7 +303,7 @@
 <div class="spk-header">
     <h2>Surat Perintah Kerja (SPK)</h2>
     <p><strong>Nomor:</strong> {{ $spk->spk_number }}</p>
-    <p><strong>Tanggal:</strong> {{ \Carbon\Carbon::parse($service->service_date)->locale('id')->translatedFormat('l, d M Y') }}</p>
+    <p><strong>Tanggal:</strong> {{ \App\Support\DateFormatter::format($service->service_date) }}</p>
     <p class="mt-2"><span class="public-status {{ $statusClass }}">{{ $service->status ?: 'Published' }}</span></p>
     <hr>
 </div>
@@ -310,7 +311,7 @@
 <h4 class="section-title">Informasi Layanan</h4>
 <table>
     <tr><th>Jenis Layanan</th><td>{{ $service->serviceType?->name ?? 'Transport Service' }}</td></tr>
-    <tr><th>Tanggal Layanan</th><td>{{ \Carbon\Carbon::parse($service->service_date)->locale('id')->translatedFormat('l, d M Y') }}@if($service->service_end_date && $service->service_end_date->format('Y-m-d') !== $service->service_date->format('Y-m-d')) – {{ \Carbon\Carbon::parse($service->service_end_date)->locale('id')->translatedFormat('l, d M Y') }}@endif</td></tr>
+    <tr><th>Tanggal Layanan</th><td>{{ \App\Support\DateFormatter::format($service->service_date) }}@if($service->service_end_date && $service->service_end_date->format('Y-m-d') !== $service->service_date->format('Y-m-d')) – {{ \App\Support\DateFormatter::format($service->service_end_date) }}@endif</td></tr>
     <tr><th>Jumlah Tamu</th><td>{{ $service->guest_count ?? 1 }} orang</td></tr>
     @if($service->notes)<tr><th>Catatan Operasional</th><td>{{ $service->notes }}</td></tr>@endif
 </table>
@@ -346,7 +347,7 @@
                         <h5><strong>{{ $stop->name }}</strong></h5>
                         <span class="public-destination-state {{ $stop->status === 'Checked In' ? 'public-destination-state-checked' : ($stop->status === 'Cancelled' ? 'public-destination-state-cancelled' : '') }}">{{ $stop->status }}</span>
                     </div>
-                    <div class="description-item"><div class="icon">🕒</div><div class="desc">Waktu kunjungan: {{ $stop->visit_time ? substr((string) $stop->visit_time, 0, 5).' WITA' : 'Belum ditentukan' }}</div></div>
+                    <div class="description-item"><div class="icon">🕒</div><div class="desc">Waktu kunjungan: {{ $stop->visit_time ? \App\Support\DateFormatter::format($stop->visit_time, null, 'H:i') . ' WITA' : 'Belum ditentukan' }}</div></div>
                     @if($stop->google_maps_url)<div class="description-item"><div class="icon">🗺️</div><div class="desc">Google Maps: <a href="{{ $stop->google_maps_url }}" target="_blank" rel="noopener noreferrer">Buka destinasi</a></div></div>@endif
                     @if($stop->address)<div class="description-item"><div class="icon">📍</div><div class="desc">Alamat / lokasi: {{ $stop->address }}</div></div>@endif
                     <div class="description-item"><div class="icon">🔢</div><div class="desc">Urutan destinasi: {{ $stop->sort_order }}</div></div>
@@ -361,7 +362,7 @@
                             <div class="description-item"><div class="icon">🗺️</div><div class="desc">Lokasi check-in: <a href="https://www.google.com/maps?q={{ $stopEvent->latitude }},{{ $stopEvent->longitude }}" target="_blank" rel="noreferrer">Lihat di Google Maps</a></div></div>
                             <p class="public-small">Koordinat: {{ $stopEvent->latitude }}, {{ $stopEvent->longitude }}
                                 @if($stopEvent->created_at)
-                                    · {{ $stopEvent->created_at->timezone('Asia/Makassar')->format('d M Y H:i') }} WITA
+                                    · {{ \App\Support\DateFormatter::format($stopEvent->created_at, null, 'd M Y H:i') }} WITA
                                 @endif
                             </p>
                         @endif
