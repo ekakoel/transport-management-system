@@ -64,7 +64,7 @@
     @endphp
 
     <section class="vehicle-calendar-panel">
-        <div class="vehicle-calendar-toolbar">
+        {{-- <div class="vehicle-calendar-toolbar">
             <div>
                 <span class="vehicle-calendar-kicker">KETERSEDIAAN ARMADA</span>
                 <h2>Kalender Ketersediaan Kendaraan</h2>
@@ -91,113 +91,9 @@
                     <a href="{{ route('vehicles.index') }}" class="vehicle-calendar-today-btn">Bulan ini</a>
                 @endif
             </div>
-        </div>
+        </div> --}}
 
-        <div class="vehicle-calendar-split">
-            <div class="vehicle-calendar-main">
-                <div class="vehicle-calendar-weekdays">
-                    @foreach (['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $weekday)
-                        <span>{{ $weekday }}</span>
-                    @endforeach
-                </div>
-
-                <div class="vehicle-calendar-grid">
-                    @for ($i = 0; $i < $leadingDays; $i++)
-                        <div class="vehicle-calendar-day is-empty"></div>
-                    @endfor
-
-                    @for ($day = 1; $day <= $daysInMonth; $day++)
-                        @php
-                            $calendarDate = $calendarMonth->copy()->day($day);
-                            $dayEvents = $calendarEvents[$calendarDate->format('Y-m-d')] ?? [];
-                            $isToday = $calendarDate->isToday();
-                            $isPastDay = ! $isToday && $calendarDate->toDateString() < $todayString;
-                        @endphp
-                        <div
-                            class="vehicle-calendar-day {{ $isPastDay ? 'is-past' : '' }} {{ $isToday ? 'is-today' : '' }} {{ !empty($dayEvents) ? 'has-events' : '' }}"
-                            @if ($isToday) aria-current="date" @endif>
-                            <div class="vehicle-calendar-day-head">
-                                <span class="vehicle-calendar-date">{{ $day }}</span>
-                                @if ($isToday)
-                                    <span class="vehicle-calendar-today-label">Hari ini</span>
-                                @endif
-                                @if (!empty($dayEvents))
-                                    <span class="vehicle-calendar-badge">{{ count($dayEvents) }}</span>
-                                @endif
-                            </div>
-
-                            @if (!empty($dayEvents))
-                                <div class="vehicle-calendar-events">
-                                    @foreach (array_slice($dayEvents, 0, 3) as $event)
-                                        <a href="{{ $event['url'] }}" class="vehicle-calendar-event"
-                                            data-calendar-event
-                                            data-vehicle="{{ $event['vehicle'] }}"
-                                            data-plate="{{ $event['plate'] }}"
-                                            data-type="{{ $event['type'] }}"
-                                            data-driver="{{ $event['driver'] }}"
-                                            data-start="{{ $event['start'] }}"
-                                            data-end="{{ $event['end'] }}"
-                                            data-code="{{ $event['code'] }}"
-                                            data-url="{{ $event['url'] }}"
-                                            title="{{ $event['vehicle'] }} ({{ $event['plate'] }}) : {{ $event['type'] }} ({{ $event['code'] }})">
-                                            <span class="vehicle-calendar-event-dot"
-                                                style="background: {{ $vehicleColors[$event['vehicle_id']] ?? '#94a3b8' }}"></span>
-                                            <span class="vehicle-calendar-event-text">
-                                                {{ $event['vehicle'] }} ({{ $event['plate'] }}) : {{ $event['type'] }}
-                                            </span>
-                                        </a>
-                                    @endforeach
-
-                                    @if (count($dayEvents) > 3)
-                                        <div class="vehicle-calendar-more">+{{ count($dayEvents) - 3 }} jadwal lainnya
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-                    @endfor
-
-                    @for ($i = 0; $i < $trailingDays; $i++)
-                        <div class="vehicle-calendar-day is-empty"></div>
-                    @endfor
-                </div>
-            </div>
-
-            <aside class="vehicle-calendar-legend" aria-label="Informasi Kendaraan">
-                <div class="vehicle-calendar-legend-heading">
-                    <span class="vehicle-calendar-kicker">KODE WARNA</span>
-                    <h2>Informasi Kendaraan</h2>
-                    <p>Warna berikut digunakan pada kalender untuk menandai kendaraan yang memiliki jadwal.</p>
-                </div>
-
-                <div class="vehicle-calendar-legend-summary">
-                    {{ number_format(count($vehicleCalendarCounts)) }} kendaraan memiliki jadwal pada bulan ini.
-                </div>
-
-                <div class="vehicle-calendar-legend-list">
-                    @forelse ($calendarVehicles as $calendarVehicle)
-                        <div class="vehicle-calendar-legend-item">
-                            <span class="vehicle-calendar-swatch"
-                                style="background: {{ $vehicleColors[$calendarVehicle->id] }}"></span>
-                            <div class="vehicle-calendar-legend-text">
-                                <strong>{{ $calendarVehicle->name }}</strong>
-                                <span>{{ $calendarVehicle->plate_number }} &middot; {{ $calendarVehicle->status }}</span>
-                            </div>
-                            <span class="vehicle-calendar-legend-count">
-                                {{ $vehicleCalendarCounts[$calendarVehicle->id] ?? 0 }} hari
-                            </span>
-                        </div>
-                    @empty
-                        <p class="vehicle-calendar-legend-empty">Belum ada kendaraan terdaftar.</p>
-                    @endforelse
-                </div>
-
-                <div class="vehicle-calendar-legend-footer">
-                    Jadwal berstatus Cancelled atau Expired tidak ditampilkan pada kalender.
-                    Tanggal yang sudah lewat ditampilkan dengan latar lebih gelap.
-                </div>
-            </aside>
-        </div>
+        
     </section>
 
     <div class="tms-modal" id="calendarEventModal" hidden>
@@ -342,7 +238,119 @@
     <div class="service-create-page">
         <div class="tms-two-column">
             <div class="tms-main-column">
+                <section class="service-create-card mb-3">
+                    <div class="service-create-section-header">
+                        <div class="service-create-section-icon service-icon-green">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="m5 11 2-5h10l2 5M4 11h16v7H4z" stroke="currentColor" stroke-width="1.7"
+                                    stroke-linejoin="round" />
+                                <path d="M7 18v2m10-2v2" stroke="currentColor" stroke-width="1.7"
+                                    stroke-linecap="round" />
+                                <circle cx="7.5" cy="14.5" r="1.3" stroke="currentColor"
+                                    stroke-width="1.5" />
+                                <circle cx="16.5" cy="14.5" r="1.3" stroke="currentColor"
+                                    stroke-width="1.5" />
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="vehicle-calendar-kicker">KETERSEDIAAN ARMADA</span>
+                            <h2>Kalender Ketersediaan Kendaraan</h2>
+                            <p>Jadwal layanan transportasi per bulan untuk melihat kendaraan yang sudah terpakai.</p>
+                        </div>
 
+                        <div class="vehicle-calendar-toolbar-actions">
+                            <a href="{{ route('vehicles.index', ['month' => $prevMonth->format('Y-m')]) }}"
+                                class="vehicle-calendar-nav-btn" aria-label="Bulan sebelumnya">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="m15 6-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </a>
+                            <span class="vehicle-calendar-month">{{ $calendarLabel }}</span>
+                            <a href="{{ route('vehicles.index', ['month' => $nextMonth->format('Y-m')]) }}"
+                                class="vehicle-calendar-nav-btn" aria-label="Bulan berikutnya">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </a>
+                            @if (! $calendarMonth->isSameMonth(now('Asia/Makassar')))
+                                <a href="{{ route('vehicles.index') }}" class="vehicle-calendar-today-btn">Bulan ini</a>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    
+                        <div class="vehicle-calendar-weekdays">
+                            @foreach (['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $weekday)
+                                <span>{{ $weekday }}</span>
+                            @endforeach
+                        </div>
+
+                        <div class="vehicle-calendar-grid">
+                            @for ($i = 0; $i < $leadingDays; $i++)
+                                <div class="vehicle-calendar-day is-empty"></div>
+                            @endfor
+
+                            @for ($day = 1; $day <= $daysInMonth; $day++)
+                                @php
+                                    $calendarDate = $calendarMonth->copy()->day($day);
+                                    $dayEvents = $calendarEvents[$calendarDate->format('Y-m-d')] ?? [];
+                                    $isToday = $calendarDate->isToday();
+                                    $isPastDay = ! $isToday && $calendarDate->toDateString() < $todayString;
+                                @endphp
+                                <div
+                                    class="vehicle-calendar-day {{ $isPastDay ? 'is-past' : '' }} {{ $isToday ? 'is-today' : '' }} {{ !empty($dayEvents) ? 'has-events' : '' }}"
+                                    @if ($isToday) aria-current="date" @endif>
+                                    <div class="vehicle-calendar-day-head">
+                                        <span class="vehicle-calendar-date">{{ $day }}</span>
+                                        @if ($isToday)
+                                            <span class="vehicle-calendar-today-label">Hari ini</span>
+                                        @endif
+                                        @if (!empty($dayEvents))
+                                            <span class="vehicle-calendar-badge">{{ count($dayEvents) }}</span>
+                                        @endif
+                                    </div>
+
+                                    @if (!empty($dayEvents))
+                                        <div class="vehicle-calendar-events">
+                                            @foreach (array_slice($dayEvents, 0, 3) as $event)
+                                                <a href="{{ $event['url'] }}" class="vehicle-calendar-event"
+                                                    data-calendar-event
+                                                    data-vehicle="{{ $event['vehicle'] }}"
+                                                    data-plate="{{ $event['plate'] }}"
+                                                    data-type="{{ $event['type'] }}"
+                                                    data-driver="{{ $event['driver'] }}"
+                                                    data-start="{{ $event['start'] }}"
+                                                    data-end="{{ $event['end'] }}"
+                                                    data-code="{{ $event['code'] }}"
+                                                    data-url="{{ $event['url'] }}"
+                                                    title="{{ $event['vehicle'] }} ({{ $event['plate'] }}) : {{ $event['type'] }} ({{ $event['code'] }})">
+                                                    <span class="vehicle-calendar-event-dot {{ $event['status'] }}"
+                                                        style="background: {{ $vehicleColors[$event['vehicle_id']] ?? '#94a3b8' }}"></span>
+                                                    <span class="vehicle-calendar-event-text">
+                                                        {{ $event['vehicle'] }} ({{ $event['plate'] }}) : {{ $event['type'] }}
+                                                    </span>
+                                                </a>
+                                            @endforeach
+
+                                            @if (count($dayEvents) > 3)
+                                                <div class="vehicle-calendar-more">+{{ count($dayEvents) - 3 }} jadwal lainnya
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            @endfor
+
+                            @for ($i = 0; $i < $trailingDays; $i++)
+                                <div class="vehicle-calendar-day is-empty"></div>
+                            @endfor
+                        </div>
+                    
+
+                        
+                </section>
                 {{-- Daftar Kendaraan --}}
                 <section class="service-create-card">
                     <div class="service-create-section-header">
@@ -364,21 +372,8 @@
                         </div>
                         <span class="service-create-step">{{ $vehicles->total() }}</span>
                     </div>
-
-                    <div class="service-create-fields" style="margin-bottom: 20px;">
-                        <div class="service-create-field">
-                            <label>Total Kendaraan</label>
-                            <input type="text" value="{{ $vehicles->total() }} kendaraan terdaftar" readonly>
-                        </div>
-                        <div class="service-create-field">
-                            <label>Halaman</label>
-                            <input type="text"
-                                value="{{ $vehicles->currentPage() }} dari {{ $vehicles->lastPage() }}" readonly>
-                        </div>
-                    </div>
-
-                    <div class="tablewrap">
-                        <table>
+                    <div class="services-table-scroll">
+                        <table class="services-table">
                             <thead>
                                 <tr>
                                     <th>Kendaraan</th>
@@ -423,7 +418,36 @@
                 </section>
             </div>
 
+            
+            
             <aside class="tms-info-panel" aria-label="Informasi Kendaraan">
+                <div class="vehicle-calendar-legend-heading">
+                    <h2>Informasi Kendaraan</h2>
+                    <p>Warna berikut digunakan pada kalender untuk menandai kendaraan yang memiliki jadwal.</p>
+                </div>
+    
+                <div class="vehicle-calendar-legend-summary">
+                    {{ number_format(count($vehicleCalendarCounts)) }} kendaraan memiliki jadwal pada bulan ini.
+                </div>
+    
+                <div class="vehicle-calendar-legend-list mb-4">
+                    @forelse ($calendarVehicles as $calendarVehicle)
+                        <div class="vehicle-calendar-legend-item">
+                            <span class="vehicle-calendar-swatch"
+                                style="background: {{ $vehicleColors[$calendarVehicle->id] }}"></span>
+                            <div class="vehicle-calendar-legend-text">
+                                <strong>{{ $calendarVehicle->name }}</strong>
+                                <span>{{ $calendarVehicle->plate_number }} &middot; {{ $calendarVehicle->status }}</span>
+                            </div>
+                            <span class="vehicle-calendar-legend-count">
+                                {{ $vehicleCalendarCounts[$calendarVehicle->id] ?? 0 }} hari
+                            </span>
+                        </div>
+                    @empty
+                        <p class="vehicle-calendar-legend-empty">Belum ada kendaraan terdaftar.</p>
+                    @endforelse
+                </div>
+
                 <div class="tms-info-panel-heading">
                     <span class="tms-info-panel-kicker">INFORMASI</span>
                     <h2>Kendaraan</h2>
@@ -449,11 +473,6 @@
                         <span class="tms-info-label">Maintenance</span>
                         <strong class="tms-info-value">{{ number_format($vehicleStats['Maintenance']) }}</strong>
                         <span class="tms-info-description">Kendaraan dalam perawatan.</span>
-                    </div>
-                    <div class="tms-info-item">
-                        <span class="tms-info-label">Inactive</span>
-                        <strong class="tms-info-value">{{ number_format($vehicleStats['Inactive']) }}</strong>
-                        <span class="tms-info-description">Kendaraan nonaktif.</span>
                     </div>
                 </div>
                 <div class="tms-info-panel-footer">

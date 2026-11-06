@@ -148,8 +148,8 @@
                         <span class="service-create-step">{{ $reservationUsers->total() }}</span>
                     </div>
 
-                    <div class="tablewrap">
-                        <table>
+                    <div class="services-table-scroll">
+                        <table class="services-table">
                             <thead>
                                 <tr>
                                     <th>Nama</th>

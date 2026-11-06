@@ -85,7 +85,7 @@
                             <table class="services-table">
                                 <thead>
                                     <tr>
-                                        <th>Nomor</th>
+                                        <th>Nomor / Reservasi</th>
                                         <th>Jadwal</th>
                                         <th>Pelanggan</th>
                                         <th>Layanan</th>
@@ -95,14 +95,18 @@
                                 </thead>
                                 <tbody>
                                     @forelse($reservations as $r)
-                                        <tr>
+                                        @php
+                                            $statusReservasi = $r->service_date >= $today ? "active" :"expired";
+                                        @endphp
+                                        <tr class="{{ $statusReservasi }}">
                                             <td>
+                                                <span>{{ $r->requester?->name }}</span><br>
                                                 <strong>{{ $r->reservation_number }}</strong><br>
                                                 <small class="resv-muted">{{ \App\Support\DateFormatter::format($r->created_at, null, 'd M Y H:i') }}</small>
                                             </td>
                                             <td>
-                                                {{ \App\Support\DateFormatter::format($r->service_date) }}<br>
-                                                <small class="resv-muted">s/d {{ \App\Support\DateFormatter::format($r->service_end_date) }}</small>
+                                                {{ \App\Support\DateFormatter::format($r->service_date) }}
+                                                {{-- <small class="resv-muted">s/d {{ \App\Support\DateFormatter::format($r->service_end_date) }}</small> --}}
                                             </td>
                                             <td>
                                                 {{ $r->customer_name }}

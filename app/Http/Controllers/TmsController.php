@@ -571,6 +571,7 @@ class TmsController extends Controller
                     'end' => DateFormatter::format($service->service_end_date, $service->end_time),
                     'code' => $service->service_code,
                     'url' => route('services.show', $service),
+                    'status' => $service->status,
                 ];
             }
         }

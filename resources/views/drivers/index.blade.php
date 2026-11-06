@@ -14,6 +14,13 @@
                 <h1>Manajemen Driver</h1>
                 <p>Kelola data pengemudi, informasi SIM, dan status operasional driver.</p>
             </div>
+            <button type="button" class="services-create-btn" data-driver-create-open
+                aria-haspopup="dialog" aria-controls="driverCreateModal">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span>Tambah Driver</span>
+            </button>
         </div>
         {{-- Information Banner --}}
         <div class="main-notice mb-2">
@@ -143,20 +150,8 @@
                         <span class="service-create-step">{{ $drivers->total() }}</span>
                     </div>
 
-                    <div class="service-create-fields" style="margin-bottom: 20px;">
-                        <div class="service-create-field">
-                            <label>Total Driver</label>
-                            <input type="text" value="{{ $drivers->total() }} driver terdaftar" readonly>
-                        </div>
-                        <div class="service-create-field">
-                            <label>Halaman</label>
-                            <input type="text" value="{{ $drivers->currentPage() }} dari {{ $drivers->lastPage() }}"
-                                readonly>
-                        </div>
-                    </div>
-
-                    <div class="tablewrap">
-                        <table>
+                    <div class="services-table-scroll">
+                        <table class="services-table">
                             <thead>
                                 <tr>
                                     <th>Nama Driver</th>
@@ -236,13 +231,8 @@
                         <strong class="tms-info-value">{{ number_format($driverStats['inactive']) }}</strong>
                         <span class="tms-info-description">Driver yang tidak aktif.</span>
                     </div>
-                    <div class="tms-info-item">
-                        <span class="tms-info-label">Nomor SIM terisi</span>
-                        <strong class="tms-info-value">{{ number_format($driverStats['with_license']) }}</strong>
-                        <span class="tms-info-description">Data nomor SIM yang telah diisi.</span>
-                    </div>
                 </div>
-                <div class="tms-info-panel-footer"><a href="#driver-form">Tambah driver melalui formulir</a></div>
+                <div class="tms-info-panel-footer"><a href="#driver-form">+ Tambah driver</a></div>
             </aside>
         </div>
     </div>

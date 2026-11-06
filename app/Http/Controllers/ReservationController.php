@@ -50,7 +50,8 @@ class ReservationController extends Controller
             'reservations',
             'pendingReservation',
             'approvedReservation',
-            'rejectedReservation'
+            'rejectedReservation',
+            'today'
         ));
     }
 
@@ -218,7 +219,7 @@ class ReservationController extends Controller
     public function adminIndex(Request $request)
     {
         $today = now('Asia/Makassar')->toDateString();
-        $query = Reservation::with(['requester', 'serviceType'])->latest();
+        $query = Reservation::with(['requester', 'serviceType']);
         if ($request->filled('status')) $query->where('status', $request->string('status')->toString());
         if ($request->filled('q')) {
             $term = $request->string('q')->toString();
@@ -228,23 +229,36 @@ class ReservationController extends Controller
                   ->orWhereHas('requester', fn ($u) => $u->where('name', 'like', "%{$term}%"));
             });
         }
-        $reservations = $query->paginate(20)->withQueryString();
+        $reservations = $query
+            ->where('service_date','>=',$today)
+            ->orderByRaw('CASE WHEN service_date >= ? THEN 0 ELSE 1 END', [$today])
+            ->orderByRaw('CASE WHEN service_date >= ? THEN service_date END ASC', [$today])
+            ->orderByRaw('CASE WHEN service_date < ? THEN service_date END DESC', [$today])
+            ->orderBy('start_time')
+            ->paginate(20)
+            ->withQueryString();
         $todayActiveReservations = Reservation::whereDate('service_date', $today)
             ->whereIn('status', ['Approved'])
             ->with(['requester', 'serviceType', 'transportService'])
             ->orderBy('service_date')
+            ->orderBy('start_time')
             ->get();
         $layananReservationsAkanDatang = Reservation::whereDate('service_date','>', $today)
             ->whereIn('status', ['Approved'])
             ->with(['requester', 'serviceType', 'transportService'])
             ->orderBy('service_date')
+            ->orderBy('start_time')
             ->get();
         $layananReservationsMenungguDiproses= Reservation::where('status', 'Pending')
             ->whereDate('service_date','>', $today)
             ->with(['requester', 'serviceType', 'transportService'])
+            ->orderBy('service_date')
+            ->orderBy('start_time')
             ->get();
         $layananReservationsExpired = Reservation::whereDate('service_date','<', $today)
             ->with(['requester', 'serviceType', 'transportService'])
+            ->orderByDesc('service_date')
+            ->orderByDesc('start_time')
             ->paginate(20)
             ->withQueryString();
         return view('reservations.admin-index', compact(
