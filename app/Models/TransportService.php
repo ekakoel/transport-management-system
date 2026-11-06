@@ -11,7 +11,6 @@ class TransportService extends Model
         'customer_name',
         'customer_phone',
         'guest_count',
-        'reservation_user_id',
         'reservation_id',
         'service_type_id',
         'service_date',
@@ -34,14 +33,26 @@ class TransportService extends Model
         ];
     }
 
-    public function reservationOwner()
+    public function isPast(): bool
     {
-        return $this->belongsTo(User::class, 'reservation_user_id');
+        $endDate = $this->service_end_date ?? $this->service_date;
+
+        return $endDate !== null
+            && now('Asia/Makassar')->toDateString() > $endDate->format('Y-m-d');
+    }
+
+    public function isLocked(): bool
+    {
+        $endDate = $this->service_end_date ?? $this->service_date;
+
+        return $endDate === null
+            || $this->isPast()
+            || in_array($this->status, ['Completed', 'Cancelled', 'Expired'], true);
     }
 
     public function reservation()
     {
-        return $this->belongsTo(Reservation::class);
+        return $this->hasOne(Reservation::class, 'transport_service_id');
     }
 
     public function guests()

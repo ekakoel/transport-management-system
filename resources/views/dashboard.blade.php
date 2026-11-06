@@ -38,17 +38,19 @@
                         <div class="stat-card-top">
                             <div class="stat-icon">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <rect x="3" y="5" width="18" height="16" rx="3" stroke="currentColor"
+                                    <rect x="5" y="4" width="14" height="17" rx="2.5" stroke="currentColor"
                                         stroke-width="1.7" />
-                                    <path d="M16 3v4M8 3v4M3 10h18" stroke="currentColor" stroke-width="1.7"
-                                        stroke-linecap="round" />
+                                    <path d="M9 3h6v3H9z" stroke="currentColor" stroke-width="1.7"
+                                        stroke-linejoin="round" />
+                                    <path d="m8.5 13 2 2 4-4" stroke="currentColor" stroke-width="1.7"
+                                        stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
-                            <span class="stat-label">HARI INI</span>
+                            <span class="stat-label">RESERVASI</span>
                         </div>
-                        <div class="stat-value">{{ $todayCount }}</div>
-                        <div class="stat-title">Layanan hari ini</div>
-                        <div class="stat-foot">Total layanan berdasarkan tanggal hari ini</div>
+                        <div class="stat-value">{{ number_format($todayReservationCount) }}</div>
+                        <div class="stat-title">Reservasi / pesanan hari ini</div>
+                        <div class="stat-foot">Pending dan Approved yang berlangsung hari ini.</div>
                     </article>
 
                     <article class="stat-card stat-green">
@@ -60,55 +62,56 @@
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
-                            <span class="stat-label">ACTIVE</span>
+                            <span class="stat-label">LAYANAN</span>
                         </div>
-                        <div class="stat-value">{{ $activeCount }}</div>
-                        <div class="stat-title">SPK aktif</div>
-                        <div class="stat-foot">Surat perintah kerja yang masih aktif</div>
+                        <div class="stat-value">{{ number_format($todayActiveServiceCount) }}</div>
+                        <div class="stat-title">Transportasi aktif hari ini</div>
+                        <div class="stat-foot">Published atau In Progress yang berlangsung hari ini.</div>
                     </article>
 
                     <article class="stat-card stat-orange">
                         <div class="stat-card-top">
                             <div class="stat-icon">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7" />
-                                    <path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
-                                        stroke-linejoin="round" />
+                                    <path d="m5 11 2-5h10l2 5M4 11h16v7H4z" stroke="currentColor"
+                                        stroke-width="1.7" stroke-linejoin="round" />
+                                    <path d="M7 18v2m10-2v2M4 14h3m10 0h3" stroke="currentColor"
+                                        stroke-width="1.7" stroke-linecap="round" />
+                                    <circle cx="7.5" cy="14.5" r=".8" fill="currentColor" />
+                                    <circle cx="16.5" cy="14.5" r=".8" fill="currentColor" />
                                 </svg>
                             </div>
-                            <span class="stat-label">EXPIRED</span>
+                            <span class="stat-label">KENDARAAN</span>
                         </div>
-                        <div class="stat-value">{{ $expiredCount }}</div>
-                        <div class="stat-title">SPK expired</div>
-                        <div class="stat-foot">SPK yang telah melewati masa berlaku</div>
+                        <div class="stat-value">{{ number_format($activeVehicleCount) }}</div>
+                        <div class="stat-title">Kendaraan aktif</div>
+                        <div class="stat-foot">Kendaraan yang sedang digunakan pada layanan operasional hari ini.</div>
                     </article>
 
                     <article class="stat-card stat-purple">
                         <div class="stat-card-top">
                             <div class="stat-icon">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <circle cx="9" cy="8" r="3.5" stroke="currentColor"
-                                        stroke-width="1.7" />
+                                    <circle cx="9" cy="8" r="3.5" stroke="currentColor" stroke-width="1.7" />
                                     <path
                                         d="M2.5 20v-1.5a6.5 6.5 0 0 1 13 0V20M16 5a3.5 3.5 0 0 1 0 6.8M18 14a5 5 0 0 1 3.5 4.8V20"
                                         stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
                                 </svg>
                             </div>
-                            <span class="stat-label">TEAM</span>
+                            <span class="stat-label">DRIVER</span>
                         </div>
-                        <div class="stat-value">{{ $driverCount }}</div>
+                        <div class="stat-value">{{ number_format($activeDriverCount) }}</div>
                         <div class="stat-title">Driver aktif</div>
-                        <div class="stat-foot">Jumlah driver aktif pada sistem</div>
+                        <div class="stat-foot">Driver yang sedang mengerjakan layanan operasional hari ini.</div>
                     </article>
-
                 </div>
 
                 <section class="dashboard-panel">
                     <div class="panel-heading">
                         <div>
-                            <div class="panel-title">Layanan terbaru</div>
+                            <div class="panel-title">Layanan aktif &amp; mendatang</div>
                             <div class="panel-subtitle">
-                                Daftar layanan transportasi yang tercatat di sistem
+                                Layanan yang belum terlewat dan masih harus dikerjakan
                             </div>
                         </div>
 
@@ -180,8 +183,8 @@
                                                             stroke-linecap="round" />
                                                     </svg>
                                                 </div>
-                                                <strong>Belum ada layanan</strong>
-                                                <span>Layanan terbaru akan muncul di sini setelah dibuat.</span>
+                                                <strong>Belum ada layanan aktif atau mendatang</strong>
+                                                <span>Layanan yang masih harus dikerjakan akan muncul di sini.</span>
                                                 <a href="{{ route('services.create') }}">
                                                     Buat layanan pertama
                                                 </a>
@@ -194,7 +197,7 @@
                     </div>
 
                     <div class="panel-footer">
-                        Menampilkan {{ $services->count() }} layanan terbaru
+                        Menampilkan {{ $services->count() }} layanan aktif dan mendatang
                     </div>
                 </section>
             </div>
@@ -207,27 +210,30 @@
                 </div>
                 <div class="tms-info-list">
                     <div class="tms-info-item">
-                        <span class="tms-info-label">Layanan hari ini</span>
-                        <strong class="tms-info-value">{{ number_format($todayCount) }}</strong>
-                        <span class="tms-info-description">Berdasarkan tanggal layanan hari ini.</span>
+                        <span class="tms-info-label">Reservasi menunggu persetujuan</span>
+                        <strong class="tms-info-value">{{ number_format($todayPendingReservationCount) }}</strong>
+                        <span class="tms-info-description">Permintaan hari ini yang masih berstatus Pending.</span>
                     </div>
                     <div class="tms-info-item">
-                        <span class="tms-info-label">SPK aktif</span>
-                        <strong class="tms-info-value">{{ number_format($activeCount) }}</strong>
-                        <span class="tms-info-description">Status Published atau In Progress.</span>
+                        <span class="tms-info-label">Layanan sedang berjalan</span>
+                        <strong class="tms-info-value">{{ number_format($todayInProgressServiceCount) }}</strong>
+                        <span class="tms-info-description">Layanan hari ini dengan status In Progress.</span>
                     </div>
                     <div class="tms-info-item">
-                        <span class="tms-info-label">SPK expired</span>
-                        <strong class="tms-info-value">{{ number_format($expiredCount) }}</strong>
-                        <span class="tms-info-description">Layanan dengan status Expired.</span>
+                        <span class="tms-info-label">Kendaraan ditugaskan</span>
+                        <strong class="tms-info-value">{{ number_format($activeVehicleCount) }}</strong>
+                        <span class="tms-info-description">Kendaraan yang dipakai pada layanan aktif hari ini.</span>
                     </div>
                     <div class="tms-info-item">
-                        <span class="tms-info-label">Driver aktif</span>
-                        <strong class="tms-info-value">{{ number_format($driverCount) }}</strong>
-                        <span class="tms-info-description">Driver yang dapat dipilih pada operasional.</span>
+                        <span class="tms-info-label">Driver bertugas</span>
+                        <strong class="tms-info-value">{{ number_format($activeDriverCount) }}</strong>
+                        <span class="tms-info-description">Driver yang ditugaskan pada layanan aktif hari ini.</span>
                     </div>
                 </div>
-                <div class="tms-info-panel-footer"><a href="{{ route('services.index') }}">Buka daftar layanan →</a>
+                <div class="tms-info-panel-footer">
+                    <a href="{{ route('admin.reservations.index') }}">Buka reservasi →</a>
+                    <span aria-hidden="true"> · </span>
+                    <a href="{{ route('services.index') }}">Daftar layanan →</a>
                 </div>
             </aside>
         </div>

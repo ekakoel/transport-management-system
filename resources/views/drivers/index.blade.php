@@ -16,7 +16,7 @@
             </div>
         </div>
         {{-- Information Banner --}}
-        <div class="main-notice">
+        <div class="main-notice mb-2">
             <span class="main-notice-icon">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7" />

@@ -41,23 +41,23 @@
 
                     <a href="{{ auth()->user()->role === 'reservation' ? route('reservations.index') : route('admin.reservations.index') }}"
                         class="{{ request()->routeIs('reservations.*') || request()->routeIs('admin.reservations.*') ? 'active' : '' }}"
-                        title="Reservation Requests">
+                        title="Reservasi Requests">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        <span>{{ auth()->user()->role === 'reservation' ? 'My Requests' : 'Reservation Review' }}</span>
+                        <span>{{ auth()->user()->role === 'reservation' ? 'Reservasi Saya' : 'Reservasi / Pesanan' }}</span>
                     </a>
-                    @if(in_array(strtolower((string) auth()->user()->role), ['admin','owner','manager'], true))
                     <a href="{{ route('services.index') }}"
                         class="{{ request()->routeIs('services.*') ? 'active' : '' }}"
-                        @if (request()->routeIs('services.*')) aria-current="page" @endif title="Transport Services / SPK">
+                        @if (request()->routeIs('services.*')) aria-current="page" @endif title="Layanan Transportasi / SPK">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <rect x="3" y="7" width="18" height="13" rx="3" stroke="currentColor"
                                 stroke-width="1.8" />
                             <path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M3 12h18m-11 0v2h4v-2" stroke="currentColor"
                                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <span>Transport Services / SPK</span>
+                        <span>Layanan Transportasi / SPK</span>
                     </a>
 
+                    @if(strtolower((string) auth()->user()->role) === 'admin')
                     <a href="{{ route('drivers.index') }}" class="{{ request()->routeIs('drivers.*') ? 'active' : '' }}"
                         @if (request()->routeIs('drivers.*')) aria-current="page" @endif title="Drivers">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -70,23 +70,23 @@
 
                     <a href="{{ route('vehicles.index') }}"
                         class="{{ request()->routeIs('vehicles.*') ? 'active' : '' }}"
-                        @if (request()->routeIs('vehicles.*')) aria-current="page" @endif title="Vehicles">
+                        @if (request()->routeIs('vehicles.*')) aria-current="page" @endif title="Kendaraan">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M5 11 7 5h10l2 6M3 11h18v8H3z" stroke="currentColor" stroke-width="1.8"
                                 stroke-linejoin="round" />
                             <path d="M6 19v2m12-2v2M6 15h2m8 0h2" stroke="currentColor" stroke-width="1.8"
                                 stroke-linecap="round" />
                         </svg>
-                        <span>Vehicles</span>
+                        <span>Kendaraan</span>
                     </a>
 
                     <a href="{{ route('types.index') }}" class="{{ request()->routeIs('types.*') ? 'active' : '' }}"
-                        @if (request()->routeIs('types.*')) aria-current="page" @endif title="Service Types">
+                        @if (request()->routeIs('types.*')) aria-current="page" @endif title="Tipe Layanan">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M4 5h16v14H4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
                             <path d="M8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
                         </svg>
-                        <span>Service Types</span>
+                        <span>Tipe Layanan</span>
                     </a>
 
                     <a href="{{ route('contacts.index') }}"
@@ -99,6 +99,19 @@
                                 stroke-linecap="round" />
                         </svg>
                         <span>Emergency Contacts</span>
+                    </a>
+
+                    <a href="{{ route('reservation-users.index') }}"
+                        class="{{ request()->routeIs('reservation-users.*') ? 'active' : '' }}"
+                        @if (request()->routeIs('reservation-users.*')) aria-current="page" @endif title="Reservasi ">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <circle cx="9" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8" />
+                            <path d="M2.5 20v-1.5A6.5 6.5 0 0 1 9 12h1" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" />
+                            <path d="M17 12v6m-3-3h6" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" />
+                        </svg>
+                        <span>Reservasi </span>
                     </a>
                     @endif
 

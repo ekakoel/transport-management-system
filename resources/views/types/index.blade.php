@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Service Types')
+@section('title', 'Tipe Layanan')
 
 @section('content')
     <header>
@@ -59,7 +59,7 @@
 
                         <div class="service-create-fields">
                             <div class="service-create-field">
-                                <label for="name">Nama Tipe Layanan <span>*</span></label>
+                                <label for="name">Tipe Layanan <span>*</span></label>
                                 <input id="name" type="text" name="name" value="{{ old('name') }}"
                                     placeholder="Contoh: Airport Transfer" required>
                                 @error('name')
@@ -129,9 +129,10 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Nama Tipe Layanan</th>
+                                    <th>Tipe Layanan</th>
                                     <th>Deskripsi</th>
                                     <th>Status</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
 
@@ -145,10 +146,15 @@
                                                 {{ $t->is_active ? 'Aktif' : 'Nonaktif' }}
                                             </span>
                                         </td>
+                                        <td>
+                                            <a href="{{ route('types.edit', $t) }}" class="services-detail-btn">
+                                                Edit
+                                            </a>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" style="text-align: center; padding: 28px;">
+                                        <td colspan="4" style="text-align: center; padding: 28px;">
                                             Belum ada tipe layanan. Gunakan formulir di atas untuk menambahkannya.
                                         </td>
                                     </tr>

@@ -50,7 +50,7 @@
         <div class="tms-two-column">
             <div class="tms-main-column">
                 {{-- Public SPK Link --}}
-                @if ($newUrl)
+                @if ($newUrl && strtolower((string) auth()->user()->role) === 'admin')
                     <section class="service-show-public-link">
                         <div class="service-show-public-icon">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -67,22 +67,11 @@
 
                             <div class="service-show-url-row">
                                 <a href="{{ $newUrl }}" target="_blank" rel="noopener noreferrer"
-                                    class="service-show-url" id="publicSpkUrl">{{ $newUrl }}</a>
+                                    class="service-show-copy-btn" id="publicSpkUrl">
+                                    <span>Buka SPK</span>
+                                </a>
 
-                                <button type="button" class="service-show-copy-btn" id="copyPublicSpkUrl"
-                                    data-url="{{ $newUrl }}">
-                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <rect x="8" y="8" width="12" height="12" rx="2" stroke="currentColor"
-                                            stroke-width="1.7" />
-                                        <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"
-                                            stroke="currentColor" stroke-width="1.7" />
-                                    </svg>
-                                    <span>Salin Tautan</span>
-                                </button>
                             </div>
-
-                            <div class="service-show-copy-feedback" id="copyPublicSpkFeedback" role="status"
-                                aria-live="polite"></div>
 
                             <div class="service-show-security-note">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -91,8 +80,8 @@
                                     <path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
                                         stroke-linejoin="round" />
                                 </svg>
-                                Demi keamanan, token mentah hanya ditampilkan saat SPK baru dibuat.
-                                Simpan dan bagikan tautan ini dengan aman.
+                                Tautan ini terhubung langsung ke SPK milik service yang sedang ditampilkan.
+                                Bagikan tautan hanya kepada driver yang bertugas.
                             </div>
                         </div>
                     </section>
@@ -134,7 +123,7 @@
 
                         <div class="service-show-card-bottom">
                             <span>Tipe Layanan</span>
-                            <strong>{{ $service->serviceType?->name ?? 'â€”' }}</strong>
+                            <strong>{{ $service->serviceType?->name ?? '-' }}</strong>
                         </div>
                     </section>
 
@@ -208,7 +197,7 @@
                             </div>
                         </div>
 
-                        
+
 
                         <div class="service-show-detail-item">
                             <span class="service-show-detail-icon">
@@ -222,9 +211,9 @@
                             <div>
                                 <span class="service-show-detail-label">Waktu Layanan</span>
                                 <strong>
-                                    {{ \App\Support\DateFormatter::format($service->service_date, $service->start_time) ?: 'â€”' }}
+                                    {{ \App\Support\DateFormatter::format($service->service_date, $service->start_time) ?: '-' }}
                                     <span class="service-show-time-separator">â€“</span>
-                                    {{ \App\Support\DateFormatter::format($service->service_end_date, $service->end_time) ?: 'â€”' }}
+                                    {{ \App\Support\DateFormatter::format($service->service_end_date, $service->end_time) ?: '-' }}
                                 </strong>
                                 <small>Waktu setempat Bali (WITA)</small>
                             </div>
@@ -248,13 +237,28 @@
                 </section>
 
                 <section class="service-show-panel">
-                    <div class="service-show-panel-header"><div class="service-show-panel-heading"><div><h2>Pemilik Reservation &amp; Daftar Tamu</h2><p>Informasi internal kasus layanan.</p></div></div></div>
-                    <p><strong>Pemilik Reservation:</strong> {{ $service->reservationOwner?->name ?? 'Belum ditetapkan' }} @if($service->reservationOwner?->email) ({{ $service->reservationOwner->email }}) @endif</p>
-                    @if($service->reservation)<p><strong>Nomor Reservation:</strong> {{ $service->reservation->reservation_number }}</p>@endif
+                    <div class="service-show-panel-header">
+                        <div class="service-show-panel-heading">
+                            <div>
+                                <h2>Pemilik Reservasi &amp; Daftar Tamu</h2>
+                                <p>Informasi internal kasus layanan.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p><strong>Pemilik Reservation:</strong>
+                        {{ $service->reservation?->requester?->name ?? 'Belum ditetapkan' }} @if ($service->reservation?->requester?->email)
+                            ({{ $service->reservation->requester->email }}{{ $service->reservation->requester?->phone ? ' · ' . $service->reservation->requester->phone : '' }})
+                        @endif
+                    </p>
+                    @if ($service->reservation)
+                        <p><strong>Nomor Reservation:</strong> {{ $service->reservation->reservation_number }}</p>
+                    @endif
                     <h3>Daftar Tamu ({{ $service->guests->count() }})</h3>
                     @forelse($service->guests as $guest)
-                        <p>{{ $guest->name }} · {{ $guest->gender }} · {{ $guest->age_category }} · {{ $guest->phone ?: '—' }}</p>
-                    @empty <p>Belum ada data tamu.</p> @endforelse
+                        <p>{{ $guest->name }} · {{ $guest->gender }} · {{ $guest->age_category }} ·
+                            {{ $guest->phone ?: '—' }}</p>
+                    @empty <p>Belum ada data tamu.</p>
+                    @endforelse
                 </section>
 
                 {{-- Itinerary --}}
@@ -309,9 +313,12 @@
                                     </div>
                                 </div>
 
-                                <p><strong>Waktu kunjungan:</strong> {{ $stop->visit_time ? \App\Support\DateFormatter::format($stop->visit_time, null, 'H:i') . ' WITA' : 'Belum ditentukan' }}</p>
+                                <p><strong>Waktu kunjungan:</strong>
+                                    {{ $stop->visit_time ? \App\Support\DateFormatter::format($stop->visit_time, null, 'H:i') . ' WITA' : 'Belum ditentukan' }}
+                                </p>
                                 @if ($stop->google_maps_url)
-                                    <p><a href="{{ $stop->google_maps_url }}" target="_blank" rel="noopener noreferrer">Buka destinasi di Google Maps</a></p>
+                                    <p><a href="{{ $stop->google_maps_url }}" target="_blank"
+                                            rel="noopener noreferrer">Buka destinasi di Google Maps</a></p>
                                 @endif
                                 <p>{{ $stop->address ?: 'Tidak ada keterangan lokasi.' }}</p>
                                 <span class="service-show-stop-sequence">
@@ -373,10 +380,10 @@
                                     <tr>
                                         <td>
                                             <div class="service-show-event-date">
-                                                {{ \App\Support\DateFormatter::format($e->created_at) ?? 'â€”' }}
+                                                {{ \App\Support\DateFormatter::format($e->created_at) ?? '-' }}
                                             </div>
                                             <div class="service-show-event-time">
-                                                {{ \App\Support\DateFormatter::format($e->created_at, null, 'H:i:s') ?? 'â€”' }}
+                                                {{ \App\Support\DateFormatter::format($e->created_at, null, 'H:i:s') ?? '-' }}
                                             </div>
                                         </td>
 
@@ -386,7 +393,7 @@
                                             </span>
                                         </td>
 
-                                        <td>{{ $e->stop?->name ?: 'â€”' }}</td>
+                                        <td>{{ $e->stop?->name ?: '-' }}</td>
 
                                         <td>
                                             @if ($e->latitude !== null && $e->longitude !== null)
@@ -407,11 +414,11 @@
                                         </td>
 
                                         <td>
-                                            {{ $e->accuracy_meters !== null ? number_format((float) $e->accuracy_meters, 0) . ' m' : 'â€”' }}
+                                            {{ $e->accuracy_meters !== null ? number_format((float) $e->accuracy_meters, 0) . ' m' : '-' }}
                                         </td>
 
                                         <td class="service-show-event-note">
-                                            {{ $e->note ?: 'â€”' }}
+                                            {{ $e->note ?: '-' }}
                                         </td>
                                     </tr>
                                 @empty
@@ -451,12 +458,14 @@
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Tanggal mulai</span>
-                        <strong class="tms-info-value">{{ \App\Support\DateFormatter::format($service->service_date) ?? 'â€”' }}</strong>
+                        <strong
+                            class="tms-info-value">{{ \App\Support\DateFormatter::format($service->service_date) ?? '-' }}</strong>
                         <span class="tms-info-description">Tanggal layanan.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Tanggal selesai</span>
-                        <strong class="tms-info-value">{{ \App\Support\DateFormatter::format($service->service_end_date) ?? 'â€”' }}</strong>
+                        <strong
+                            class="tms-info-value">{{ \App\Support\DateFormatter::format($service->service_end_date) ?? '-' }}</strong>
                         <span class="tms-info-description">Tanggal akhir layanan.</span>
                     </div>
                     <div class="tms-info-item">
@@ -481,56 +490,12 @@
                         <span class="tms-info-description">Riwayat event SPK yang tersedia.</span>
                     </div>
                 </div>
-                <div class="tms-info-panel-footer"><a href="{{ route('services.index') }}">&#8592; Kembali ke Daftar Layanan</a></div>
-                        layanan</a></div>
-            </aside>
+                <div class="tms-info-panel-footer"><a href="{{ route('services.index') }}">&#8592; Kembali ke Daftar
+                        Layanan</a></div>
+                layanan</a>
         </div>
+        </aside>
+    </div>
     </div>
 
-    @if ($newUrl)
-        <script>
-            (() => {
-                const copyButton = document.getElementById('copyPublicSpkUrl');
-                const feedback = document.getElementById('copyPublicSpkFeedback');
-
-                if (!copyButton || !feedback) return;
-
-                copyButton.addEventListener('click', async () => {
-                    const url = copyButton.dataset.url;
-                    const label = copyButton.querySelector('span');
-
-                    try {
-                        if (navigator.clipboard && window.isSecureContext) {
-                            await navigator.clipboard.writeText(url);
-                        } else {
-                            const temporaryInput = document.createElement('textarea');
-                            temporaryInput.value = url;
-                            temporaryInput.setAttribute('readonly', '');
-                            temporaryInput.style.position = 'fixed';
-                            temporaryInput.style.opacity = '0';
-                            document.body.appendChild(temporaryInput);
-                            temporaryInput.select();
-
-                            const copied = document.execCommand('copy');
-                            temporaryInput.remove();
-
-                            if (!copied) throw new Error('Copy failed');
-                        }
-
-                        feedback.textContent = 'Tautan berhasil disalin.';
-                        label.textContent = 'Tersalin!';
-                    } catch {
-                        feedback.textContent =
-                            'Tidak dapat menyalin otomatis. Silakan salin tautan secara manual.';
-                    }
-
-                    window.setTimeout(() => {
-                        feedback.textContent = '';
-                        label.textContent = 'Salin Tautan';
-                    }, 3500);
-                });
-            })();
-        </script>
-    @endif
 @endsection
-

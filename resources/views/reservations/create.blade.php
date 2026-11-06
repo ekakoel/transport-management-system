@@ -37,13 +37,15 @@
                 {{-- Section 1: Customer and Service --}}
                 <section class="service-create-card">
                     <div class="service-create-section-header">
-                        <div class="service-create-section-icon service-icon-blue">
+                        
+                        <div class="service-create-section-icon service-icon-green">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 18.5V20"
-                                    stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-                                <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.7"/>
-                                <path d="M16 4.5a4 4 0 0 1 0 7.5m2 3a4.5 4.5 0 0 1 2 3.5V20"
-                                    stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                <rect x="5" y="4" width="14" height="17" rx="2.5" stroke="currentColor"
+                                    stroke-width="1.7" />
+                                <path d="M9 3h6v3H9z" stroke="currentColor" stroke-width="1.7"
+                                    stroke-linejoin="round" />
+                                <path d="m8.5 13 2 2 4-4" stroke="currentColor" stroke-width="1.7"
+                                    stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
                         <div>
@@ -56,8 +58,15 @@
                   <div class="service-create-fields">
                     <div class="service-create-field">
                       <label for="customer_name">Nama pelanggan / Nama Agent <span>*</span></label>
-                      <input id="customer_name" name="customer_name" type="text" value="{{ old('customer_name') }}" placeholder="Nama pelanggan / Nama Agent" required>
+                      <input id="customer_name" name="customer_name" type="text" value="{{ old('customer_name', auth()->user()->name) }}" placeholder="Nama pelanggan / Nama Agent" required>
                       @error('customer_name')
+                          <small class="service-create-error">{{ $message }}</small>
+                      @enderror
+                    </div>
+                    <div class="service-create-field">
+                      <label for="customer_phone">Nomor WhatsApp / Telepon <span>*</span></label>
+                      <input id="customer_phone" name="customer_phone" type="tel" maxlength="40" value="{{ old('customer_phone', auth()->user()->phone) }}" placeholder="Contoh: +62 812..." required>
+                      @error('customer_phone')
                           <small class="service-create-error">{{ $message }}</small>
                       @enderror
                     </div>
@@ -121,7 +130,85 @@
                     </div>
                   </div>
                 </section>
-                {{-- Section 4: Itinerary --}}
+                {{-- Section 2: Guests List --}}
+                <section class="service-create-card">
+                    <div class="service-create-section-header">
+                        <div class="service-create-section-icon service-icon-blue">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 18.5V20"
+                                    stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.7"/>
+                                <path d="M16 4.5a4 4 0 0 1 0 7.5m2 3a4.5 4.5 0 0 1 2 3.5V20"
+                                    stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Daftar Tamu</h2>
+                            <p>Tambahkan daftar tamu sesuai dengan jumlah pax</p>
+                        </div>
+                        <span class="service-create-step">02</span>
+                    </div>
+                    <div id="reservation-guests" class="service-stops">
+                        <div class="service-stop-row">
+                            <div class="service-stop-number">1</div>
+                            <div class="service-stop-fields">
+                                <div class="service-create-field">
+                                    <label for="guests-name-0">Nama Tamu <span>*</span></label>
+                                    <input id="guests-name-0" name="guests[0][name]" type="text"
+                                        value="{{ old('guests[0][name]') }}" required
+                                        placeholder="Masukan nama tamu">
+                                    @error('guests[0][name]')
+                                        <small class="service-create-error">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="service-create-field">
+                                    <div class="service-create-field">
+                                        <label for="guests-gender-0">Jenis Kelamin <span>*</span></label>
+                                        <select id="guests-gender-0" name="guests[0][gender]" required>
+                                            <option value="" selected>Pilih jenis kelamin</option>
+                                            <option value="Male" @selected(old('guests[0][gender]') == "Male")>Male (Pria)</option>
+                                            <option value="Female" @selected(old('guests[0][gender]') == "Female")>Female (Wanita)</option>
+                                        </select>
+                                        @error('guests[0][gender]')
+                                            <small class="service-create-error">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="service-create-field">
+                                    <div class="service-create-field">
+                                        <label for="guests-age-category-0">Kategori Usia<span>*</span></label>
+                                        <select id="guests-age-category-0" name="guests[0][age_category]" required>
+                                            <option value="" selected>Pilih kategori usia</option>
+                                            <option value="Children" @selected(old('guests[0][age_category]') == "Children")>Children (Anak-anak)</option>
+                                            <option value="Adult" @selected(old('guests[0][age_category]') == "Adult")>Adult (Dewasa)</option>
+                                        </select>
+                                        @error('guests[0][age_category]')
+                                            <small class="service-create-error">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+                                </div>
+                                
+                                <div class="service-create-field">
+                                    <label for="guests-kontak-0">Kontak (opsional)</label>
+                                    <input id="guests-kontak-0" name="guests[0][phone]" type="text"
+                                        value="{{ old('guests[0][phone]') }}"
+                                        placeholder="Nomor telepon tamu">
+                                    @error('guests[0][phone]')
+                                        <small class="service-create-error">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="service-add-stop-btn" type="button" id="addReservationGuest">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 5v14M5 12h14" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                        Tambah Tamu
+                    </button>
+                </section>
+                {{-- Section 3: Itinerary --}}
                 <section class="service-create-card">
                     <div class="service-create-section-header">
                         <div class="service-create-section-icon service-icon-orange">
@@ -132,10 +219,10 @@
                             </svg>
                         </div>
                         <div>
-                            <h2>Itinerary Awal</h2>
+                            <h2>Itinerary</h2>
                             <p>Susun destinasi yang direncanakan selama layanan berlangsung.</p>
                         </div>
-                        <span class="service-create-step">04</span>
+                        <span class="service-create-step">03</span>
                     </div>
 
                     <div class="service-itinerary-info">
@@ -148,9 +235,9 @@
                         Maksimal 40 destinasi awal.
                     </div>
 
-                    <div id="stops" class="service-stops">
+                    <div id="reservation-stops" class="service-stops">
                         <div class="service-stop-row">
-                            <div class="service-stop-number">01</div>
+                            <div class="service-stop-number">1</div>
                             <div class="service-stop-fields">
                                 <div class="service-create-field">
                                     <label for="stop-name-0">Nama Destinasi</label>
@@ -170,16 +257,15 @@
                                         placeholder="https://maps.app.goo.gl/...">
                                 </div>
                                 <div class="service-create-field">
-                                    <label for="stop-address-0">Alamat / Keterangan Lokasi</label>
-                                    <input id="stop-address-0" name="stops[0][address]" type="text"
-                                        value="{{ old('stops.0.address') }}"
-                                        placeholder="Alamat atau area destinasi">
+                                    <label for="stop-note-0">Keterangan</label>
+                                    <input id="stop-note-0" name="stops[0][note]" type="text"
+                                        value="{{ old('stops.0.note') }}"
+                                        placeholder="Tambahkan keternangan untuk destinasi ini">
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <button class="service-add-stop-btn" type="button" id="addStop">
+                    <button class="service-add-stop-btn" type="button" id="addReservationStop">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M12 5v14M5 12h14" stroke="currentColor"
                                 stroke-width="1.8" stroke-linecap="round"/>
@@ -188,6 +274,35 @@
                     </button>
                     <p class="service-stop-counter" id="stopCounter">1 dari 40 destinasi</p>
                 </section>
+                {{-- Section 4: Note --}}
+                <section class="service-create-card">
+                    <div class="service-create-section-header">
+                        <div class="service-create-section-icon service-show-blue">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M7 3.5h7l5 5V14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M14 3.5v5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7 3.5H5a1.5 1.5 0 0 0-1.5 1.5v14A1.5 1.5 0 0 0 5 20.5h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7 12h7M7 15.5h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                <circle cx="17.5" cy="17.5" r="3.5" stroke="currentColor" stroke-width="1.7"/>
+                                <path d="M17.5 15.8v3.4M15.8 17.5h3.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Note</h2>
+                            <p>Tambahkan note untuk admin</p>
+                        </div>
+                        <span class="service-create-step">04</span>
+                    </div>
+                    <div class="service-create-field">
+                        <label for="notes"></label>
+                            <label for="notes">Catatan / kebutuhan khusus</label>
+                            <textarea id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
+                    </div>
+                </section>
+                <div class="service-create-card text-right">
+                    <a class="service-cancel-btn" href="{{ route('reservations.index') }}">Batal</a>
+                    <button class="service-wizard-btn service-wizard-btn-primary" type="submit">Kirim Permintaan</button>
+                </div>
               </form>
             </div>
         </div>
@@ -195,87 +310,17 @@
     </div>
     <div class="resv-form-wrap">
         
-        <form method="POST" action="{{ route('reservations.store') }}" class="resv-form-card">@csrf
+        {{-- <form method="POST" action="{{ route('reservations.store') }}" class="resv-form-card">@csrf
             <div class="resv-fields">
-                {{-- <div class="resv-field"><label for="customer_name">Nama pelanggan / pemesan *</label><input id="customer_name"
-                        name="customer_name" value="{{ old('customer_name', auth()->user()->name) }}" maxlength="150"
-                        required></div> --}}
-                {{-- <div class="resv-field"><label for="customer_phone">Telepon</label><input id="customer_phone"
-                        name="customer_phone" type="tel" value="{{ old('customer_phone') }}" maxlength="40"></div> --}}
-                {{-- <div class="resv-field"><label for="guest_count">Jumlah tamu *</label><input id="guest_count"
-                        name="guest_count" type="number" min="1" max="100" value="{{ old('guest_count', 1) }}"
-                        required></div> --}}
-                {{-- <div class="resv-field"><label for="service_type_id">Tipe layanan *</label><select id="service_type_id"
-                        name="service_type_id" required>
-                        <option value="">Pilih tipe</option>
-                        @foreach ($types as $type)
-                            <option value="{{ $type->id }}" @selected(old('service_type_id') == $type->id)>{{ $type->name }}</option>
-                        @endforeach
-                    </select></div> --}}
-
-                {{-- <div class="resv-field"><label for="service_date">Tanggal mulai *</label><input id="service_date"
-                        type="date" name="service_date" min="{{ now('Asia/Makassar')->toDateString() }}"
-                        value="{{ old('service_date') }}" required></div>
-                <div class="resv-field"><label for="service_end_date">Tanggal selesai *</label><input id="service_end_date"
-                        type="date" name="service_end_date" min="{{ now('Asia/Makassar')->toDateString() }}"
-                        value="{{ old('service_end_date') }}" required></div> --}}
-                {{-- <div class="resv-field"><label for="start_time">Jam mulai</label><input id="start_time" type="time"
-                        name="start_time" value="{{ old('start_time') }}"></div>
-                <div class="resv-field"><label for="end_time">Jam selesai</label><input id="end_time" type="time"
-                        name="end_time" value="{{ old('end_time') }}"></div> --}}
-                <div class="resv-field full">
-                    <label>Itinerary / daftar tujuan</label>
-                    <p class="resv-muted">Setiap destinasi disimpan terpisah dengan waktu kunjungan, nama, dan short link
-                        Google Maps.</p>
-                    <div id="reservation-stops">
-                        <div class="resv-stop-row"
-                            style="border:1px solid var(--tms-border);border-radius:10px;padding:14px;margin-bottom:12px">
-                            <div class="resv-fields">
-                                <div class="resv-field"><label>Waktu kunjungan</label><input type="time"
-                                        name="itinerary_stops[0][visit_time]" required></div>
-                                <div class="resv-field"><label>Nama destinasi</label><input type="text"
-                                        name="itinerary_stops[0][name]" maxlength="150" placeholder="Ubud Palace" required>
-                                </div>
-                                <div class="resv-field full"><label>Short link Google Maps</label><input type="url"
-                                        name="itinerary_stops[0][google_maps_url]" maxlength="500"
-                                        placeholder="https://maps.app.goo.gl/..." required></div>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" class="resv-btn alt" id="addReservationStop">+ Tambah destinasi</button>
-                </div>
-                <div class="resv-field full"><label>Daftar tamu / wisatawan</label>
-                    <p class="resv-muted">Opsional bila data belum tersedia. Pemohon Reservation tidak otomatis menjadi
-                        tamu.</p>
-                    <div id="reservation-guests">
-                        <div class="resv-guest-row"
-                            style="border:1px solid var(--tms-border);border-radius:10px;padding:12px;margin-bottom:10px">
-                            <div class="resv-fields">
-                                <div class="resv-field"><label>Nama</label><input name="guests[0][name]" maxlength="150">
-                                </div>
-                                <div class="resv-field"><label>Jenis kelamin</label><select name="guests[0][gender]">
-                                        <option value="">Pilih</option>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                    </select></div>
-                                <div class="resv-field"><label>Kategori usia</label><select name="guests[0][age_category]">
-                                        <option value="">Pilih</option>
-                                        <option value="Adult">Adult</option>
-                                        <option value="Children">Children</option>
-                                    </select></div>
-                                <div class="resv-field"><label>Kontak (opsional)</label><input name="guests[0][phone]"
-                                        type="tel" maxlength="40"></div>
-                            </div>
-                        </div>
-                    </div><button type="button" class="resv-btn alt" id="addReservationGuest">+ Tambah tamu</button>
-                </div>
+                <label for=""></label>
                 <div class="resv-field full"><label for="notes">Catatan / kebutuhan khusus</label>
                     <textarea id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
                 </div>
             </div>
-            <div class="resv-actions"><a class="resv-btn alt" href="{{ route('reservations.index') }}">Batal</a><button
-                    class="resv-btn" type="submit">Kirim Permintaan</button></div>
-        </form>
+            <div class="resv-actions">
+                <a class="resv-btn alt" href="{{ route('reservations.index') }}">Batal</a>
+                <button class="resv-btn" type="submit">Kirim Permintaan</button></div>
+        </form> --}}
     </div>
     <script>
         (() => {
@@ -285,20 +330,20 @@
             addGuest?.addEventListener('click', () => {
                 if (!guestContainer || guestContainer.querySelectorAll('.resv-guest-row').length >= 100) return;
                 const i = guestIndex++;
+                const ino = i + 1;
                 const row = document.createElement('div');
-                row.className = 'resv-guest-row';
-                row.style.cssText =
-                    'border:1px solid var(--tms-border);border-radius:10px;padding:12px;margin-bottom:10px';
+                row.className = 'service-stop-row';
                 row.innerHTML =
-                    '<div class="resv-fields"><div class="resv-field"><label>Nama</label><input name="guests[' +
+                    '<div class="service-stop-number">'+ ino +'</div>'+
+                    '<div class="service-create-fields"><div class="service-create-field"><label>Nama</label><input id="guest-name-' + i + '" name="guests[' +
                     i +
-                    '][name]" maxlength="150"></div><div class="resv-field"><label>Jenis kelamin</label><select name="guests[' +
+                    '][name]" maxlength="150"></div><div class="service-create-field"><label>Jenis kelamin</label><select name="guests[' +
                     i +
-                    '][gender]"><option value="">Pilih</option><option value="Male">Male</option><option value="Female">Female</option></select></div><div class="resv-field"><label>Kategori usia</label><select name="guests[' +
+                    '][gender]"><option value="">Pilih</option><option value="Male">Male</option><option value="Female">Female</option></select></div><div class="service-create-field"><label>Kategori usia</label><select name="guests[' +
                     i +
-                    '][age_category]"><option value="">Pilih</option><option value="Adult">Adult</option><option value="Children">Children</option></select></div><div class="resv-field"><label>Kontak (opsional)</label><input name="guests[' +
+                    '][age_category]"><option value="">Pilih</option><option value="Adult">Adult</option><option value="Children">Children</option></select></div><div class="service-create-field"><label>Kontak (opsional)</label><input name="guests[' +
                     i +
-                    '][phone]" maxlength="40"></div></div><button type="button" class="resv-btn alt remove-guest">Hapus tamu</button>';
+                    '][phone]" maxlength="40"></div></div><button type="button" class="resv-btn-remove alt remove-guest">X</button>';
                 row.querySelector('.remove-guest').addEventListener('click', () => row.remove());
                 guestContainer.appendChild(row);
             });
@@ -307,19 +352,23 @@
             if (!container || !add) return;
             let index = 1;
             add.addEventListener('click', () => {
-                if (container.querySelectorAll('.resv-stop-row').length >= 40) return;
+                if (container.querySelectorAll('.service-stop-row').length >= 40) return;
                 const row = document.createElement('div');
-                row.className = 'resv-stop-row';
-                row.style.cssText =
-                    'border:1px solid var(--tms-border);border-radius:10px;padding:14px;margin-bottom:12px';
+                const noIndex = index + 1;
+                row.className = 'service-stop-row';
                 row.innerHTML =
-                    '<div class="resv-fields"><div class="resv-field"><label>Waktu kunjungan</label><input type="time" name="itinerary_stops[' +
+                    '<div class="service-stop-number">'+ noIndex +'</div>'+
+                    '<div class="service-stop-fields"><div class="service-create-field"><div class="service-create-field"><label>Nama destinasi</label><input type="text" placeholder="Contoh: Uluwatu Temple" id="stop-name-' +
+                    index +'" name="itinerary_stops[' +
                     index +
-                    '][visit_time]" required></div><div class="resv-field"><label>Nama destinasi</label><input type="text" name="itinerary_stops[' +
+                    '][name]" required></div></div><div class="service-create-field"><label>Waktu Kunjungan</label><input type="time" id="stop-time-' + 
+                    index +'" name="itinerary_stops[' +
                     index +
-                    '][name]" maxlength="150" required></div><div class="resv-field full"><label>Short link Google Maps</label><input type="url" name="itinerary_stops[' +
+                    '][visit_time]" maxlength="150" required></div> <div class="service-create-field full"><label>Short link Google Maps</label><input type="url" id="stop-map-' +
+                    index +'" name="itinerary_stops[' +
                     index +
-                    '][google_maps_url]" maxlength="500" placeholder="https://maps.app.goo.gl/..." required></div></div><button type="button" class="resv-btn alt remove-stop">Hapus destinasi</button>';
+                    '][google_maps_url]" maxlength="500" placeholder="https://maps.app.goo.gl/..." required></div><div class="service-create-field full"><label>Keterangan</label><input type="text" id="stop-note-' + index + '" name="stops[' + 
+                    index + '][note]"></div></div> <button type="button" class="resv-btn-remove alt remove-stop">X</button>';
                 row.querySelector('.remove-stop').addEventListener('click', () => row.remove());
                 container.appendChild(row);
                 index++;

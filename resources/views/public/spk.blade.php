@@ -282,7 +282,6 @@
     $showNumberUrl = $numberUrl ?? false;
     $checkinUrl = $showNumberUrl ? route('public.spk.number.checkin', [$spk->id, $spk->spk_number]) : route('public.spk.checkin', $token);
     $addDestinationUrl = $showNumberUrl ? route('public.spk.number.destinations.add', [$spk->id, $spk->spk_number]) : route('public.spk.destinations.add', $token);
-    $completeUrl = $showNumberUrl ? route('public.spk.number.complete', [$spk->id, $spk->spk_number]) : route('public.spk.complete', $token);
 @endphp
 
 @if($expired)
@@ -310,10 +309,20 @@
 
 <h4 class="section-title">Informasi Layanan</h4>
 <table>
-    <tr><th>Jenis Layanan</th><td>{{ $service->serviceType?->name ?? 'Transport Service' }}</td></tr>
+    <tr><th>Jenis Layanan</th><td>{{ $service->serviceType?->name ?? 'Layanan Transportasi' }}</td></tr>
     <tr><th>Tanggal Layanan</th><td>{{ \App\Support\DateFormatter::format($service->service_date) }}@if($service->service_end_date && $service->service_end_date->format('Y-m-d') !== $service->service_date->format('Y-m-d')) – {{ \App\Support\DateFormatter::format($service->service_end_date) }}@endif</td></tr>
     <tr><th>Jumlah Tamu</th><td>{{ $service->guest_count ?? 1 }} orang</td></tr>
     @if($service->notes)<tr><th>Catatan Operasional</th><td>{{ $service->notes }}</td></tr>@endif
+</table>
+
+@php
+    $reservationUser = $service->reservation?->requester;
+    $reservationPhone = $reservationUser?->phone ?: $service->reservation?->customer_phone ?: $service->customer_phone;
+@endphp
+<h4 class="section-title">Detail Reservasi</h4>
+<table>
+    <tr><th>Nama Reservasi</th><td>{{ $reservationUser?->name ?? $service->customer_name ?? '—' }}</td></tr>
+    <tr><th>No. Telepon / WhatsApp</th><td>{{ $reservationPhone ?: '—' }}</td></tr>
 </table>
 
 <div class="row">
@@ -356,7 +365,9 @@
                     @if($stop->status === 'Checked In')
                         <p class="caption"><strong>✓ Check-in tercatat</strong></p>
                         @php
-                            $stopEvent = $spk->events->firstWhere('itinerary_stop_id', $stop->id);
+                            $stopEvent = $spk->events
+                                ->where('itinerary_stop_id', $stop->id)
+                                ->firstWhere('event_type', 'check_in');
                         @endphp
                         @if($stopEvent && $stopEvent->latitude !== null && $stopEvent->longitude !== null)
                             <div class="description-item"><div class="icon">🗺️</div><div class="desc">Lokasi check-in: <a href="https://www.google.com/maps?q={{ $stopEvent->latitude }},{{ $stopEvent->longitude }}" target="_blank" rel="noreferrer">Lihat di Google Maps</a></div></div>
@@ -368,7 +379,7 @@
                         @endif
                     @endif
                     @if($stop->status !== 'Checked In' && $canCheckIn && $stop->status !== 'Cancelled')
-                        <button type="button" class="public-action public-stop-checkin" data-stop-id="{{ $stop->id }}" data-stop-name="{{ $stop->name }}">📍 Check-in destinasi dengan GPS</button>
+                        <button type="button" class="public-action public-stop-checkin" data-bs-toggle="modal" data-bs-target="#checkinModal" data-stop-id="{{ $stop->id }}" data-stop-name="{{ $stop->name }}">Check-in destinasi</button>
                         <form method="post" action="{{ $showNumberUrl ? route('public.spk.number.destinations.cancel', [$spk->id, $spk->spk_number, $stop->id]) : route('public.spk.destinations.cancel', [$token, $stop->id]) }}" class="mt-2">
                             @csrf
                             <div class="public-form-row"><div><label class="public-small" for="cancel-reason-{{ $stop->id }}">Alasan pembatalan (opsional)</label><input id="cancel-reason-{{ $stop->id }}" class="form-control" name="reason" maxlength="500"></div><div class="align-self-end"><button class="public-action public-action-danger" type="submit" onclick="return confirm('Batalkan destinasi ini?')">Batalkan destinasi</button></div></div>
@@ -383,43 +394,43 @@
 
 @if($canCheckIn)
     <div class="card shadow p-4 mt-3 mb-3">
-        <h4 class="section-title mt-0">Check-in GPS</h4>
-        <p>Lokasi perangkat akan dicatat saat check-in dikonfirmasi. Pastikan izin lokasi pada browser telah diaktifkan.</p>
-        <div id="gpsStatus" class="public-gps-message">GPS belum diambil. Pilih destinasi lalu tekan tombol check-in.</div>
-        <form method="post" action="{{ $checkinUrl }}" id="checkinForm">
-            @csrf
-            <input type="hidden" name="latitude" id="latitude">
-            <input type="hidden" name="longitude" id="longitude">
-            <input type="hidden" name="accuracy_meters" id="accuracy">
-            <input type="hidden" name="idempotency_key" id="idem">
-            <input type="hidden" name="itinerary_stop_id" id="stopId">
-            <div class="public-field"><label for="checkin-note">Catatan check-in (opsional)</label><textarea name="note" id="checkin-note" rows="2" maxlength="1000"></textarea></div>
-            <button type="button" id="getGps" class="public-action public-action-secondary">Ambil GPS untuk check-in umum</button>
-            <button type="submit" id="submitCheckin" class="public-action" disabled>Konfirmasi check-in umum</button>
-        </form>
+        <h4 class="section-title mt-0">Laporan Pekerjaan</h4>
+        <p>Buat laporan singkat atau langsung lakukan check-in.</p>
+        <button type="button" id="generalCheckin" class="public-action" data-bs-toggle="modal" data-bs-target="#checkinModal">Buat check-in umum</button>
+    </div>
+
+    <div class="modal fade" id="checkinModal" tabindex="-1" aria-labelledby="checkinModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="checkinModalLabel">Check-in pekerjaan</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button></div>
+            <form method="post" action="{{ $checkinUrl }}" id="checkinForm">@csrf
+                <div class="modal-body">
+                    <input type="hidden" name="latitude" id="latitude"><input type="hidden" name="longitude" id="longitude"><input type="hidden" name="accuracy_meters" id="accuracy"><input type="hidden" name="idempotency_key" id="idem"><input type="hidden" name="itinerary_stop_id" id="stopId">
+                    <p id="checkinTarget" class="mb-3"><strong>Check-in umum</strong></p>
+                    <div class="public-field"><label for="checkin-note">Laporan singkat (opsional)</label><textarea name="note" id="checkin-note" rows="4" maxlength="1000" placeholder="Contoh: Tamu sudah dijemput dan perjalanan berjalan lancar."></textarea><span class="public-small">Kosongkan jika ingin langsung check-in tanpa laporan singkat.</span></div>
+                    <div id="gpsStatus" class="public-gps-message public-gps-error" hidden></div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="button" id="submitCheckin" class="public-action">Simpan check-in</button></div>
+            </form>
+        </div></div>
     </div>
 
     <div class="card shadow p-4 mt-3 mb-3">
         <h4 class="section-title mt-0">✚ Tambah Destinasi</h4>
-        <p>Tambahkan destinasi yang dikunjungi selama perjalanan. Lokasi GPS akan dicatat saat check-in.</p>
-        <form method="post" action="{{ $addDestinationUrl }}">
+        <p>Tambahkan destinasi yang dikunjungi selama perjalanan.</p>
+        <form method="post" action="{{ $addDestinationUrl }}" id="destinationForm">
             @csrf
+            <input type="hidden" name="latitude" id="destinationLatitude">
+            <input type="hidden" name="longitude" id="destinationLongitude">
+            <input type="hidden" name="accuracy_meters" id="destinationAccuracy">
             <div class="public-field"><label for="destination-name">Nama Lokasi / Destinasi <span>*</span></label><input id="destination-name" name="name" required maxlength="150" placeholder="Contoh: Monkey Forest"></div>
             <div class="public-field"><label for="destination-time">Waktu Kunjungan <span>*</span></label><input id="destination-time" type="time" name="visit_time" required></div>
-            <div class="public-field"><label for="destination-map">Short Link Google Maps <span>*</span></label><input id="destination-map" type="url" name="google_maps_url" required maxlength="500" placeholder="https://maps.app.goo.gl/..."></div>
             <div class="public-field"><label for="destination-address">Alamat / Keterangan Lokasi</label><input id="destination-address" name="address" maxlength="500" placeholder="Alamat atau area destinasi"></div>
             <div class="public-field"><label for="destination-note">Deskripsi / Catatan</label><textarea id="destination-note" name="note" rows="2" maxlength="1000"></textarea></div>
-            <button type="submit" class="public-action">Simpan Destinasi</button>
+            <div id="destinationLocationError" class="public-gps-message public-gps-error" hidden></div>
+            <button type="submit" class="public-action" id="saveDestination">Simpan Destinasi</button>
         </form>
     </div>
 
-    <div class="card shadow p-4 mt-3 mb-3">
-        <h4 class="section-title mt-0">Penyelesaian Layanan</h4>
-        <form method="post" action="{{ $completeUrl }}">
-            @csrf
-            <button type="submit" class="public-action" onclick="return confirm('Tandai layanan selesai? Setelah selesai, SPK tidak dapat diubah oleh driver.')">Tandai Layanan Selesai</button>
-        </form>
-    </div>
 @else
     <div class="public-readonly"><strong>Check-in ditutup.</strong><p class="mt-2">{{ $expired ? 'SPK telah kedaluwarsa. Halaman tetap tersedia untuk melihat detail dan riwayat, tetapi tidak dapat diubah.' : ($service->status === 'Cancelled' ? 'Layanan ini telah dibatalkan.' : ($service->status === 'Completed' ? 'Layanan ini telah selesai.' : 'Check-in hanya tersedia selama periode layanan.')) }}</p></div>
 @endif
@@ -431,65 +442,90 @@
         <li>Tiba tepat waktu sesuai jadwal kunjungan pada itinerary.</li>
         <li>Selalu mengemudi dengan hati-hati dan mematuhi rambu lalu lintas.</li>
         <li>Pastikan kenyamanan penumpang menjadi prioritas.</li>
-        <li>Lakukan check-in GPS di destinasi sesuai itinerary.</li>
+        <li>Lakukan check-in di destinasi sesuai itinerary.</li>
         <li>Jaga sikap profesional dan nama baik perusahaan.</li>
     </ul>
 </div>
-<h4 class="section-title">Kontak Darurat</h4>
-<table>
-    <tr><th>Nama Kontak</th><td>{{ $spk->emergency_name ?: 'Operasional Bali Kami Tour' }}</td></tr>
-    <tr><th>Telepon</th><td>{{ $spk->emergency_phone ?: '—' }}</td></tr>
-    <tr><th>WhatsApp</th><td>{{ $spk->emergency_whatsapp ?: '—' }}</td></tr>
-</table>
-
 <div class="public-footer">BALI KAMI TOUR · TRANSPORT MANAGEMENT SYSTEM · Waktu operasional WITA</div>
 
 <script>
 (() => {
     const form = document.getElementById('checkinForm');
     if (!form) return;
-    const gpsButton = document.getElementById('getGps');
     const submitButton = document.getElementById('submitCheckin');
     const statusBox = document.getElementById('gpsStatus');
     const stopId = document.getElementById('stopId');
+    const target = document.getElementById('checkinTarget');
+    const note = document.getElementById('checkin-note');
     const makeKey = () => window.crypto?.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
     document.getElementById('idem').value = makeKey();
     const status = (message, error = false) => {
         statusBox.textContent = message;
-        statusBox.className = 'public-gps-message ' + (error ? 'public-gps-error' : 'public-gps-success');
+        statusBox.className = 'public-gps-message public-gps-error';
+        statusBox.hidden = !error;
     };
     const getLocation = () => {
-        if (!navigator.geolocation) { status('Browser tidak mendukung GPS/geolocation.', true); return; }
-        gpsButton.disabled = true;
+        if (!navigator.geolocation) { status('Perangkat tidak mendukung akses lokasi.', true); return; }
         submitButton.disabled = true;
-        status('Sedang mengambil lokasi GPS perangkat…');
+        submitButton.textContent = 'Menyimpan...';
+        status('', false);
         navigator.geolocation.getCurrentPosition(position => {
             document.getElementById('latitude').value = position.coords.latitude;
             document.getElementById('longitude').value = position.coords.longitude;
             document.getElementById('accuracy').value = position.coords.accuracy;
-            document.getElementById('idem').value = makeKey();
-            status('Lokasi berhasil diperoleh. Akurasi ±' + Math.round(position.coords.accuracy) + ' meter. Konfirmasi untuk menyimpan check-in.');
-            submitButton.disabled = false;
-            gpsButton.disabled = false;
+            submitButton.textContent = 'Menyimpan check-in...';
+            form.submit();
         }, error => {
-            status(error.code === 1 ? 'Izin lokasi ditolak. Buka pengaturan situs pada browser, ubah Lokasi menjadi Izinkan, lalu tekan Ambil GPS lagi.' : error.code === 2 ? 'Lokasi tidak tersedia. Aktifkan Location/GPS pada perangkat, pastikan sinyal tersedia, lalu coba lagi.' : 'GPS belum merespons. Pastikan layanan lokasi aktif, izinkan browser menggunakan lokasi, dan coba lagi. Halaman harus dibuka melalui HTTPS atau localhost.', true);
-            gpsButton.disabled = false;
+            status(error.code === 1 ? 'Akses lokasi diperlukan untuk menyimpan check-in. Aktifkan izin lokasi pada pengaturan situs lalu coba lagi.' : 'Lokasi perangkat belum dapat diperoleh. Pastikan layanan lokasi aktif dan coba lagi.', true);
+            submitButton.disabled = false;
+            submitButton.textContent = 'Coba lagi';
         }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
     };
-    gpsButton.addEventListener('click', () => {
-        stopId.value = '';
-        submitButton.textContent = 'Konfirmasi check-in umum';
-        getLocation();
-    });
+    const prepareCheckin = (id = '', name = '') => {
+        stopId.value = id;
+        target.textContent = name ? 'Destinasi: ' + name : 'Check-in umum';
+        note.value = '';
+        document.getElementById('latitude').value = '';
+        document.getElementById('longitude').value = '';
+        document.getElementById('accuracy').value = '';
+        document.getElementById('idem').value = makeKey();
+        statusBox.textContent = '';
+        statusBox.hidden = true;
+        submitButton.disabled = false;
+        submitButton.textContent = 'Simpan check-in';
+    };
+    document.getElementById('generalCheckin').addEventListener('click', () => prepareCheckin());
     document.querySelectorAll('.public-stop-checkin').forEach(button => button.addEventListener('click', () => {
-        stopId.value = button.dataset.stopId;
-        submitButton.textContent = 'Konfirmasi check-in: ' + button.dataset.stopName;
-        document.getElementById('checkinForm').scrollIntoView({behavior:'smooth', block:'center'});
-        getLocation();
+        prepareCheckin(button.dataset.stopId, button.dataset.stopName);
     }));
-    form.addEventListener('submit', () => {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Menyimpan check-in…';
+    submitButton.addEventListener('click', getLocation);
+
+    const destinationForm = document.getElementById('destinationForm');
+    const destinationButton = document.getElementById('saveDestination');
+    const destinationError = document.getElementById('destinationLocationError');
+    destinationForm?.addEventListener('submit', event => {
+        event.preventDefault();
+        destinationError.hidden = true;
+        if (!navigator.geolocation) {
+            destinationError.textContent = 'Perangkat tidak mendukung akses lokasi.';
+            destinationError.hidden = false;
+            return;
+        }
+        destinationButton.disabled = true;
+        destinationButton.textContent = 'Menyimpan...';
+        navigator.geolocation.getCurrentPosition(position => {
+            document.getElementById('destinationLatitude').value = position.coords.latitude;
+            document.getElementById('destinationLongitude').value = position.coords.longitude;
+            document.getElementById('destinationAccuracy').value = position.coords.accuracy;
+            destinationForm.submit();
+        }, error => {
+            destinationError.textContent = error.code === 1
+                ? 'Akses lokasi diperlukan untuk menyimpan destinasi. Aktifkan izin lokasi pada pengaturan situs lalu coba lagi.'
+                : 'Lokasi perangkat belum dapat diperoleh. Pastikan layanan lokasi aktif dan coba lagi.';
+            destinationError.hidden = false;
+            destinationButton.disabled = false;
+            destinationButton.textContent = 'Simpan Destinasi';
+        }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
     });
 })();
 </script>

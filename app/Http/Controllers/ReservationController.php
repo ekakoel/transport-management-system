@@ -66,7 +66,7 @@ class ReservationController extends Controller
         $data = $request->validate([
             'service_type_id' => ['required', 'exists:service_types,id'],
             'customer_name' => ['required', 'string', 'max:150'],
-            'customer_phone' => ['nullable', 'string', 'max:40'],
+            'customer_phone' => ['required', 'string', 'max:40'],
             'guest_count' => ['required', 'integer', 'min:1', 'max:100'],
             'guests' => ['nullable', 'array', 'max:100'],
             'guests.*.name' => ['nullable', 'required_with:guests.*.gender', 'string', 'max:150'],
@@ -80,6 +80,7 @@ class ReservationController extends Controller
             'itinerary_stops' => ['required', 'array', 'min:1', 'max:40'],
             'itinerary_stops.*.name' => ['required', 'string', 'max:150'],
             'itinerary_stops.*.visit_time' => ['required', 'date_format:H:i'],
+            'itinerary_stops.*.note' => ['string'],
             'itinerary_stops.*.google_maps_url' => ['required', 'url', 'max:500', 'regex:#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i'],
             'notes' => ['nullable', 'string', 'max:3000'],
         ]);
@@ -92,9 +93,12 @@ class ReservationController extends Controller
 
         $itineraryStops = array_values(array_filter($data['itinerary_stops'] ?? [], fn ($stop) => !empty($stop['name'])));
         unset($data['itinerary_stops']);
-        $data['itinerary'] = json_encode($itineraryStops, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $data['itinerary'] = $itineraryStops;
 
         $reservation = DB::transaction(function () use ($data, $guests, $request) {
+            if ($request->user()->phone !== $data['customer_phone']) {
+                $request->user()->update(['phone' => $data['customer_phone']]);
+            }
             $reservation = Reservation::create($data + [
                 'reservation_number' => 'RSV-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(6)),
                 'user_id' => $request->user()->id,
@@ -125,6 +129,80 @@ class ReservationController extends Controller
             'vehicles' => $isAdmin ? Vehicle::where('status', 'Available')->orderBy('name')->get() : collect(),
             'contacts' => $isAdmin ? EmergencyContact::where('is_active', 1)->orderByDesc('is_default')->get() : collect(),
         ]);
+    }
+
+    public function edit(Request $request, Reservation $reservation)
+    {
+        abort_unless($this->canEditReservation($request, $reservation), 403);
+
+        $reservation->load(['guests', 'serviceType']);
+
+        return view('reservations.edit', [
+            'reservation' => $reservation,
+            'types' => ServiceType::where('is_active', 1)
+                ->orWhere('id', $reservation->service_type_id)
+                ->orderBy('name')
+                ->get(),
+        ]);
+    }
+
+    public function update(Request $request, Reservation $reservation)
+    {
+        if (! $this->canEditReservation($request, $reservation)) {
+            return redirect()->route('admin.reservations.show', $reservation)
+                ->withErrors(['reservation' => 'Reservasi tidak dapat diubah karena tanggal layanan sudah terlewat.']);
+        }
+
+        $data = $request->validate([
+            'service_type_id' => ['required', 'exists:service_types,id'],
+            'customer_name' => ['required', 'string', 'max:150'],
+            'customer_phone' => ['required', 'string', 'max:40'],
+            'guest_count' => ['required', 'integer', 'min:1', 'max:100'],
+            'guests' => ['nullable', 'array', 'max:100'],
+            'guests.*.name' => ['nullable', 'required_with:guests.*.gender', 'string', 'max:150'],
+            'guests.*.gender' => ['nullable', 'required_with:guests.*.name', Rule::in(['Male', 'Female'])],
+            'guests.*.age_category' => ['nullable', 'required_with:guests.*.name', Rule::in(['Adult', 'Children'])],
+            'guests.*.phone' => ['nullable', 'string', 'max:40'],
+            'service_date' => ['required', 'date', 'after_or_equal:today'],
+            'service_end_date' => ['required', 'date', 'after_or_equal:service_date'],
+            'start_time' => ['nullable', 'date_format:H:i'],
+            'end_time' => ['nullable', 'date_format:H:i'],
+            'itinerary_stops' => ['required', 'array', 'min:1', 'max:40'],
+            'itinerary_stops.*.name' => ['required', 'string', 'max:150'],
+            'itinerary_stops.*.visit_time' => ['required', 'date_format:H:i'],
+            'itinerary_stops.*.google_maps_url' => ['required', 'url', 'max:500', 'regex:#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i'],
+            'notes' => ['nullable', 'string', 'max:3000'],
+        ]);
+
+        $guests = array_values(array_filter($data['guests'] ?? [], fn ($guest) => !empty($guest['name'])));
+        unset($data['guests']);
+        if ($guests) {
+            $data['guest_count'] = count($guests);
+        }
+
+        $itineraryStops = array_values(array_filter($data['itinerary_stops'] ?? [], fn ($stop) => !empty($stop['name'])));
+        unset($data['itinerary_stops']);
+        $data['itinerary'] = $itineraryStops;
+
+        DB::transaction(function () use ($reservation, $data, $guests) {
+            $reservation->update($data);
+            $reservation->guests()->delete();
+
+            foreach ($guests as $guest) {
+                $reservation->guests()->create($guest);
+            }
+        });
+
+        return redirect()->route('admin.reservations.show', $reservation)
+            ->with('success', 'Data permintaan berhasil diperbarui.');
+    }
+
+    private function canEditReservation(Request $request, Reservation $reservation): bool
+    {
+        $isAdmin = in_array(strtolower((string) $request->user()->role), ['admin', 'owner', 'manager'], true);
+
+        return $isAdmin
+            && now('Asia/Makassar')->toDateString() <= $reservation->service_date->format('Y-m-d');
     }
 
     public function cancel(Request $request, Reservation $reservation)
@@ -205,7 +283,10 @@ class ReservationController extends Controller
             return back()->withInput()->withErrors(['driver_id' => 'Driver atau kendaraan sudah memiliki layanan pada tanggal tersebut.']);
         }
 
-        $itineraryStops = json_decode((string) $reservation->itinerary, true);
+        $itineraryStops = $reservation->itinerary;
+        if (is_string($itineraryStops)) {
+            $itineraryStops = json_decode($itineraryStops, true);
+        }
         if (!is_array($itineraryStops) || count($itineraryStops) < 1) {
             return back()->withErrors(['itinerary' => 'Permintaan harus memiliki minimal satu destinasi dengan waktu kunjungan dan short link Google Maps.']);
         }
@@ -226,7 +307,6 @@ class ReservationController extends Controller
             $service = TransportService::create([
                 'service_code' => 'TMS-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(5)),
                 'customer_name' => $locked->customer_name,
-                'reservation_user_id' => $locked->user_id,
                 'reservation_id' => $locked->id,
                 'customer_phone' => $locked->customer_phone,
                 'guest_count' => $locked->guest_count,
@@ -235,7 +315,7 @@ class ReservationController extends Controller
                 'service_end_date' => $end,
                 'start_time' => $locked->start_time,
                 'end_time' => $locked->end_time,
-                'notes' => trim(($locked->notes ?? '') . (($data['admin_notes'] ?? '') ? "\nCatatan admin: " . $data['admin_notes'] : '')),
+                'notes' => trim(($locked->notes ?? '') . (($data['admin_notes'] ?? '') ? "\nAdmin: " . $data['admin_notes'] : '')),
                 'driver_id' => $data['driver_id'],
                 'vehicle_id' => $data['vehicle_id'],
                 'status' => 'Published',
@@ -246,8 +326,11 @@ class ReservationController extends Controller
                 $service->guests()->create(['name'=>$guest->name,'gender'=>$guest->gender,'age_category'=>$guest->age_category,'phone'=>$guest->phone]);
             }
 
-            $lockedStops = json_decode((string) $locked->itinerary, true);
-            foreach ($lockedStops as $i => $stop) {
+            $lockedStops = $locked->itinerary;
+            if (is_string($lockedStops)) {
+                $lockedStops = json_decode($lockedStops, true);
+            }
+            foreach ((array) $lockedStops as $i => $stop) {
                 $service->stops()->create([
                     'name' => $stop['name'],
                     'visit_time' => $stop['visit_time'],
@@ -263,7 +346,7 @@ class ReservationController extends Controller
                 ? EmergencyContact::where('is_active', 1)->find($data['emergency_contact_id'])
                 : EmergencyContact::where('is_active', 1)->where('is_default', 1)->first();
 
-            Spk::create([
+            $spk = Spk::create([
                 'transport_service_id' => $service->id,
                 'spk_number' => 'SPK-' . now('Asia/Makassar')->format('Ymd') . '-' . str_pad((string) $service->id, 5, '0', STR_PAD_LEFT),
                 'token_hash' => hash('sha256', $rawToken),
@@ -281,11 +364,11 @@ class ReservationController extends Controller
                 'reviewed_at' => now(),
             ]);
 
-            session(['new_spk_url' => route('public.spk.show', ['token' => $rawToken])]);
+            session()->flash('new_spk_url', route('public.spk.number.show', [$spk->id, $spk->spk_number]));
             return $service;
         });
 
-        return redirect()->route('services.show', $service)->with('success', 'Permintaan disetujui. Transport Service dan SPK berhasil dibuat.');
+        return redirect()->route('services.show', $service)->with('success', 'Permintaan disetujui. Layanan Transportasi dan SPK berhasil dibuat.');
     }
 
     public function reject(Request $request, Reservation $reservation)

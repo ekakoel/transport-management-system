@@ -136,7 +136,7 @@
                                       stroke-width="1.6"/>
                             </svg>
                         </span>
-                        <span><strong>Fleet Control</strong><small>Vehicles & drivers</small></span>
+                        <span><strong>Fleet Control</strong><small>Kendaraan & drivers</small></span>
                     </div>
 
                     <div class="feature-item">

@@ -9,7 +9,7 @@
                     PERMINTAAN LAYANAN TRANSPORTASI
                 </div>
                 <h1>Review Permintaan Transportasi</h1>
-                <p class="resv-muted">Tinjau permintaan Reservation. Persetujuan membuat Transport Service dan SPK.</p>
+                <p class="resv-muted">Tinjau permintaan Reservation. Persetujuan membuat Layanan Transportasi dan SPK.</p>
             </div>
         </div>
     </header>
@@ -28,20 +28,20 @@
                             </span>
                             <div>
                                 <h2>Filter Permintaan Layanan</h2>
-                                <p>Temukan permintaan layanan berdasarkan nomor pesanan, pelanggan, pemohon.</p>
+                                <p>Temukan permintaan layanan berdasarkan nomor pesanan, pelanggan, reservasi.</p>
                             </div>
                         </div>
                     </div>
                     <form method="GET" class="services-filter-form">
                         <div class="services-filter-field w-100">
-                            <label for="service-search">Nomor pesanan / Pelanggan / Pemohonn</label>
+                            <label for="service-search">Nomor pesanan / Pelanggan / Reservasi</label>
                             <div class="services-input-wrap">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor"
                                         stroke-width="1.7" />
                                     <path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
                                 </svg>
-                                <input type="search" name="q" class="input-text" value="{{ request('q') }}" placeholder="Cari nomor / pelanggan / pemohon">
+                                <input type="search" name="q" class="input-text" value="{{ request('q') }}" placeholder="Cari nomor / pelanggan / reservasi">
                             </div>
                         </div>
                         <div class="services-filter-field">
@@ -80,7 +80,7 @@
                                 <thead>
                                     <tr>
                                         <th>Nomor</th>
-                                        <th>Pemohon</th>
+                                        <th>Reservasi</th>
                                         <th>Jadwal</th>
                                         <th>Pelanggan</th>
                                         <th>Status</th>
@@ -93,21 +93,35 @@
                                             <td><strong>{{ $r->reservation_number }}</strong><br><small
                                                     class="resv-muted">{{ $r->serviceType?->name }}</small></td>
                                             <td>{{ $r->requester?->name }}<br><small
-                                                    class="resv-muted">{{ $r->requester?->email }}</small></td>
+                                                    class="resv-muted">{{ $r->requester?->email }}{{ $r->requester?->phone ? ' · ' . $r->requester->phone : '' }}</small></td>
                                             <td>{{ \App\Support\DateFormatter::format($r->service_date) }}<br><small class="resv-muted">s/d
                                                     {{ \App\Support\DateFormatter::format($r->service_end_date) }}</small></td>
                                             <td>{{ $r->customer_name }}</td>
                                             <td><span class="resv-status {{ $r->status }}">{{ $r->status }}</span></td>
                                             {{-- <td><a class="resv-btn" href="{{ route('admin.reservations.show', $r) }}">Tinjau</a></td> --}}
                                             <td class="services-action-cell">
-                                                <a href="{{ route('admin.reservations.show', $r) }}" class="services-detail-btn"
-                                                    aria-label="Detail">
-                                                    Detail
-                                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                        <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8"
-                                                            stroke-linecap="round" stroke-linejoin="round" />
-                                                    </svg>
-                                                </a>
+                                                <div class="services-action-group">
+                                                    @if (now('Asia/Makassar')->toDateString() <= $r->service_date->format('Y-m-d'))
+                                                        <a href="{{ route('admin.reservations.edit', $r) }}" class="services-detail-btn"
+                                                            aria-label="Edit">
+                                                            Edit
+                                                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                                <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"
+                                                                    stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                                                                <path d="m13.5 5.5 3 3" stroke="currentColor" stroke-width="1.8"
+                                                                    stroke-linecap="round" />
+                                                            </svg>
+                                                        </a>
+                                                    @endif
+                                                    <a href="{{ route('admin.reservations.show', $r) }}" class="services-detail-btn"
+                                                        aria-label="Detail">
+                                                        Detail
+                                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                            <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8"
+                                                                stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty<tr>
@@ -138,7 +152,7 @@
                                     <thead>
                                         <tr>
                                             <th>Nomor</th>
-                                            <th>Pemohon</th>
+                                            <th>Reservasi</th>
                                             <th>Jadwal</th>
                                             <th>Pelanggan</th>
                                             <th>Status</th>
@@ -151,7 +165,7 @@
                                                 <td><strong>{{ $x->reservation_number }}</strong><br><small
                                                         class="resv-muted">{{ $x->serviceType?->name }}</small></td>
                                                 <td>{{ $x->requester?->name }}<br><small
-                                                        class="resv-muted">{{ $x->requester?->email }}</small></td>
+                                                        class="resv-muted">{{ $x->requester?->email }}{{ $x->requester?->phone ? ' · ' . $x->requester->phone : '' }}</small></td>
                                                 <td>{{ \App\Support\DateFormatter::format($x->service_date) }}<br><small class="resv-muted">s/d
                                                         {{ \App\Support\DateFormatter::format($x->service_end_date) }}</small></td>
                                                 <td>{{ $x->customer_name }}</td>

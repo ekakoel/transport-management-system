@@ -23,7 +23,6 @@ Route::prefix('spk/{spk}/{spkNumber}')
         Route::post('/check-in', [TmsController::class, 'publicCheckInByNumber'])->name('checkin');
         Route::post('/destinations', [TmsController::class, 'publicAddDestinationByNumber'])->name('destinations.add');
         Route::post('/destinations/{stop}/cancel', [TmsController::class, 'publicCancelDestinationByNumber'])->name('destinations.cancel');
-        Route::post('/complete', [TmsController::class, 'publicCompleteByNumber'])->name('complete');
     });
 
 Route::prefix('public/spk')
@@ -34,7 +33,6 @@ Route::prefix('public/spk')
         Route::post('/{token}/check-in', [TmsController::class, 'publicCheckIn'])->name('checkin');
         Route::post('/{token}/destinations', [TmsController::class, 'publicAddDestination'])->name('destinations.add');
         Route::post('/{token}/destinations/{stop}/cancel', [TmsController::class, 'publicCancelDestination'])->name('destinations.cancel');
-        Route::post('/{token}/complete', [TmsController::class, 'publicComplete'])->name('complete');
     });
 
 Route::middleware(['auth'])->group(function () {
@@ -61,6 +59,10 @@ Route::middleware(['auth'])->group(function () {
         ->group(function () {
             Route::get('/reservations', [ReservationController::class, 'adminIndex'])
                 ->name('reservations.index');
+            Route::get('/reservations/{reservation}/edit', [ReservationController::class, 'edit'])
+                ->name('reservations.edit');
+            Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])
+                ->name('reservations.update');
             Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])
                 ->name('reservations.show');
             Route::post('/reservations/{reservation}/approve', [ReservationController::class, 'approve'])
@@ -69,35 +71,86 @@ Route::middleware(['auth'])->group(function () {
                 ->name('reservations.reject');
         });
 
-    // Transport Service dan SPK: admin, owner, dan manager
-    Route::middleware('role:admin,owner,manager')->group(function () {
-        Route::get('/services', [TmsController::class, 'services'])
-            ->name('services.index');
+    // Semua user terautentikasi dapat melihat daftar dan detail layanan.
+    Route::get('/services', [TmsController::class, 'services'])
+        ->name('services.index');
+    Route::get('/services/{service}/spk-preview', [TmsController::class, 'previewSpk'])
+        ->whereNumber('service')
+        ->name('services.spk.preview');
+    Route::get('/services/{service}', [TmsController::class, 'showService'])
+        ->whereNumber('service')
+        ->name('services.show');
+
+    // Hanya admin yang dapat membuat atau mengubah data operasional.
+    Route::middleware('role:admin')->group(function () {
         Route::get('/services/create', [TmsController::class, 'createService'])
             ->name('services.create');
         Route::post('/services', [TmsController::class, 'storeService'])
             ->name('services.store');
+        Route::post('/services/{service}/send-spk', [TmsController::class, 'sendSpkToDriver'])
+            ->name('services.spk.send');
+        Route::post('/services/{service}/send-info', [TmsController::class, 'sendServiceInfoToReservation'])
+            ->name('services.info.send');
 
-        // Harus diletakkan sebelum /services/{service}
-        Route::get('/services/{service}/spk-preview', [TmsController::class, 'previewSpk'])
-            ->name('services.spk.preview');
-        Route::get('/services/{service}', [TmsController::class, 'showService'])
-            ->name('services.show');
+        Route::prefix('services/{service}/guests')
+            ->name('services.guests.')
+            ->group(function () {
+                Route::post('/', [TmsController::class, 'storeGuest'])
+                    ->name('store');
+                Route::put('/{guest}', [TmsController::class, 'updateGuest'])
+                    ->name('update');
+                Route::delete('/{guest}', [TmsController::class, 'destroyGuest'])
+                    ->name('destroy');
+            });
+
+        Route::prefix('services/{service}/stops')
+            ->name('services.stops.')
+            ->group(function () {
+                Route::post('/', [TmsController::class, 'storeStop'])
+                    ->name('store');
+                Route::put('/{stop}', [TmsController::class, 'updateStop'])
+                    ->name('update');
+                Route::delete('/{stop}', [TmsController::class, 'destroyStop'])
+                    ->name('destroy');
+            });
 
         Route::get('/drivers', [TmsController::class, 'drivers'])
             ->name('drivers.index');
         Route::post('/drivers', [TmsController::class, 'storeDriver'])
             ->name('drivers.store');
 
+        Route::get('/reservation-users', [TmsController::class, 'reservationUsers'])
+            ->name('reservation-users.index');
+        Route::post('/reservation-users', [TmsController::class, 'storeReservationUser'])
+            ->name('reservation-users.store');
+        Route::get('/reservation-users/{user}/edit', [TmsController::class, 'editReservationUser'])
+            ->whereNumber('user')
+            ->name('reservation-users.edit');
+        Route::put('/reservation-users/{user}', [TmsController::class, 'updateReservationUser'])
+            ->whereNumber('user')
+            ->name('reservation-users.update');
+
         Route::get('/vehicles', [TmsController::class, 'vehicles'])
             ->name('vehicles.index');
         Route::post('/vehicles', [TmsController::class, 'storeVehicle'])
             ->name('vehicles.store');
+        Route::get('/vehicles/{vehicle}/edit', [TmsController::class, 'editVehicle'])
+            ->whereNumber('vehicle')
+            ->name('vehicles.edit');
+        Route::put('/vehicles/{vehicle}', [TmsController::class, 'updateVehicle'])
+            ->whereNumber('vehicle')
+            ->name('vehicles.update');
 
         Route::get('/service-types', [TmsController::class, 'types'])
             ->name('types.index');
         Route::post('/service-types', [TmsController::class, 'storeType'])
             ->name('types.store');
+        Route::get('/service-types/{type}/edit', [TmsController::class, 'editType'])
+            ->whereNumber('type')
+            ->name('types.edit');
+        Route::put('/service-types/{type}', [TmsController::class, 'updateType'])
+            ->whereNumber('type')
+            ->name('types.update');
 
         Route::get('/emergency-contacts', [TmsController::class, 'contacts'])
             ->name('contacts.index');

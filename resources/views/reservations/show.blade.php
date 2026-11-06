@@ -25,21 +25,36 @@
             'Pending' => 'resv-pending',
             default => 'default',
         };
+        $canEditReservation = $isAdmin
+            && now('Asia/Makassar')->toDateString() <= $reservation->service_date->format('Y-m-d');
     @endphp
     <header>
         <div class="main-header">
             <div class="services-heading">
                 <h1>{{ $reservation->reservation_number }}</h1>
-                <p class="resv-muted">Diajukan {{ \App\Support\DateFormatter::format($reservation->created_at, null, 'd M Y H:i') }} · Pemohon: {{ $reservation->requester?->name }}</p>
+                <p class="resv-muted">Diajukan {{ \App\Support\DateFormatter::format($reservation->created_at, null, 'd M Y H:i') }} · Reservation: {{ $reservation->requester?->name }}</p>
             </div>
             @if ($isAdmin)
-                <a href="{{ route('admin.reservations.index') }}" class="service-show-back">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M19 12H5m7 7-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                    Kembali ke daftar permintaan
-                </a>
+                <div class="service-show-header-actions">
+                    @if ($canEditReservation)
+                        <a href="{{ route('admin.reservations.edit', $reservation) }}" class="service-show-action-add">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"
+                                    stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                                <path d="m13.5 5.5 3 3" stroke="currentColor" stroke-width="1.7"
+                                    stroke-linecap="round" />
+                            </svg>
+                            Edit Reservation
+                        </a>
+                    @endif
+                    <a href="{{ route('admin.reservations.index') }}" class="service-show-back">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M19 12H5m7 7-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                        Kembali ke daftar permintaan
+                    </a>
+                </div>
             @else
                 <a href="{{ route('reservations.index') }}" class="service-show-back">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -87,6 +102,9 @@
                                 <span class="service-show-detail-label">Pelanggan / Pemesan</span>
                                 <strong>{{ $reservation->customer_name }}</strong>
                                 <small>{{ $reservation->customer_phone ?: 'Nomor telepon tidak tersedia' }}</small>
+                                 @if($reservation->requester?->phone && $reservation->requester->phone !== $reservation->customer_phone)
+                                     <small>Telepon akun: {{ $reservation->requester->phone }}</small>
+                                 @endif
                             </div>
                         </div>
                         <div class="service-show-detail-item">
@@ -227,7 +245,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @php($itineraryStops = $reservation->itinerary ?? [])
+                                @php
+                                    $itineraryStops = $reservation->itinerary ?? [];
+                                @endphp
                                 @if (is_array($itineraryStops))
                                     @forelse($itineraryStops as $stop)
                                         <tr>
@@ -436,7 +456,7 @@
                     @endif
                     @if ($reservation->admin_notes)
                         <div class="tms-info-item">
-                            <span class="tms-info-label">Catatan Admin</span>
+                            <span class="tms-info-label">Admin:</span>
                             <span class="tms-info-description">{{ $reservation->admin_notes }}</span>
                         </div>
                     @endif

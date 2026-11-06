@@ -1,8 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Transport Services')
+@section('title', 'Layanan Transportasi')
 
 @section('content')
+    @php
+        $isAdmin = strtolower((string) auth()->user()->role) === 'admin';
+    @endphp
     <header>
         <div class="main-header">
             <div class="services-heading">
@@ -10,16 +13,18 @@
                     <span class="services-eyebrow-dot"></span>
                     TRANSPORT OPERATIONS
                 </div>
-                <h1>Transport Services / SPK</h1>
+                <h1>Layanan Transportasi / SPK</h1>
                 <p>Kelola layanan transportasi, pantau penugasan driver, dan periksa status operasional.</p>
             </div>
 
+            @if($isAdmin)
             <a href="{{ route('services.create') }}" class="services-create-btn">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
                 <span>Buat SPK</span>
             </a>
+            @endif
         </div>
     </header>
     <div class="services-page">
@@ -94,136 +99,167 @@
                     </form>
                 </section>
 
-                {{-- Services Table --}}
-                <section class="services-table-panel">
-                    <div class="services-table-header">
-                        <div>
-                            <h2>Daftar Layanan</h2>
-                            <p>Data SPK dan penugasan transportasi.</p>
-                        </div>
-                        <div class="services-total">
-                            <span class="services-total-dot"></span>
-                            {{ number_format($services->total()) }} layanan
-                        </div>
-                    </div>
+                {{-- Services Tables --}}
+                @php
+                    $serviceTables = [
+                        [
+                            'key' => 'active',
+                            'title' => 'Daftar Layanan Aktif dan Akan Datang',
+                            'description' => 'Layanan yang sedang berjalan dan dijadwalkan.',
+                            'services' => $activeServices,
+                            'empty_title' => 'Tidak ada layanan aktif atau mendatang',
+                            'empty_description' => $isAdmin
+                                ? 'Ubah filter pencarian atau buat SPK baru untuk memulai.'
+                                : 'Ubah filter pencarian untuk melihat layanan lainnya.',
+                            'show_create' => true,
+                            'history' => false,
+                        ],
+                        [
+                            'key' => 'history',
+                            'title' => 'Services History',
+                            'description' => 'Layanan yang sudah berlalu. Data bersifat read-only dan tidak dapat diubah atau dihapus.',
+                            'services' => $historyServices,
+                            'empty_title' => 'Belum ada riwayat layanan',
+                            'empty_description' => 'Layanan yang sudah selesai atau terlewat akan tampil di sini.',
+                            'show_create' => false,
+                            'history' => true,
+                        ],
+                    ];
+                @endphp
 
-                    <div class="services-table-scroll">
-                        <table class="services-table">
-                            <thead>
-                                <tr>
-                                    <th>Nomor Order / SPK</th>
-                                    <th>Tanggal Layanan</th>
-                                    <th>Pelanggan</th>
-                                    <th>Driver / Kendaraan</th>
-                                    <th>Status</th>
-                                    <th class="services-action-heading"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($services as $s)
-                                    @php
-                                        $statusClass = match ($s->status) {
-                                            'Draft' => 'draft',
-                                            'Published' => 'published',
-                                            'In Progress' => 'progress',
-                                            'Completed' => 'completed',
-                                            'Cancelled' => 'cancelled',
-                                            'Expired' => 'expired',
-                                            default => 'default',
-                                        };
-                                    @endphp
+                @foreach ($serviceTables as $table)
+                    <section class="services-table-panel {{ $table['history'] ? 'services-table-panel-history' : '' }}">
+                        <div class="services-table-header">
+                            <div>
+                                <h2>{{ $table['title'] }}</h2>
+                                <p>{{ $table['description'] }}</p>
+                            </div>
+                            <div class="services-total">
+                                <span class="services-total-dot"></span>
+                                {{ number_format($table['services']->total()) }} layanan
+                            </div>
+                        </div>
+
+                        <div class="services-table-scroll">
+                            <table class="services-table">
+                                <thead>
                                     <tr>
-                                        <td>
-                                            <div class="services-code">{{ $s->service_code }}</div>
-                                            <div class="services-subtext">
-                                                {{ $s->spk?->spk_number ?: 'SPK belum tersedia' }}
-                                            </div>
-                                        </td>
-
-                                        <td>
-                                            <div class="services-date">
-                                                {{ \App\Support\DateFormatter::format($s->service_date) }}
-                                            </div>
-                                            @if ($s->service_end_date->format('Y-m-d') !== $s->service_date->format('Y-m-d'))
+                                        <th>Nomor Order / SPK</th>
+                                        <th>Tanggal Layanan</th>
+                                        <th>Pelanggan</th>
+                                        <th>Driver / Kendaraan</th>
+                                        <th>Status</th>
+                                        <th class="services-action-heading"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($table['services'] as $s)
+                                        @php
+                                            $statusClass = match ($s->status) {
+                                                'Draft' => 'draft',
+                                                'Published' => 'published',
+                                                'In Progress' => 'progress',
+                                                'Completed' => 'completed',
+                                                'Cancelled' => 'cancelled',
+                                                'Expired' => 'expired',
+                                                default => 'default',
+                                            };
+                                        @endphp
+                                        <tr>
+                                            <td>
+                                                <div class="services-code">{{ $s->service_code }}</div>
                                                 <div class="services-subtext">
-                                                    s/d {{ \App\Support\DateFormatter::format($s->service_end_date) }}
+                                                    {{ $s->spk?->spk_number ?: 'SPK belum tersedia' }}
                                                 </div>
-                                            @else
-                                                <div class="services-subtext">Satu hari</div>
-                                            @endif
-                                        </td>
+                                            </td>
 
-                                        <td>
-                                            <div class="services-primary-text">{{ $s->customer_name }}</div>
-                                            <div class="services-subtext">
-                                                {{ $s->serviceType?->name ?? 'Tipe layanan belum ditentukan' }}
-                                            </div>
-                                        </td>
+                                            <td>
+                                                <div class="services-date">
+                                                    {{ \App\Support\DateFormatter::format($s->service_date) }}
+                                                </div>
+                                                @if ($s->service_end_date->format('Y-m-d') !== $s->service_date->format('Y-m-d'))
+                                                    <div class="services-subtext">
+                                                        s/d {{ \App\Support\DateFormatter::format($s->service_end_date) }}
+                                                    </div>
+                                                @else
+                                                    <div class="services-subtext">Satu hari</div>
+                                                @endif
+                                            </td>
 
-                                        <td>
-                                            <div class="services-primary-text">
-                                                {{ $s->driver?->name ?? 'Belum ditugaskan' }}
-                                            </div>
-                                            <div class="services-subtext">
-                                                {{ $s->vehicle?->plate_number ?? 'Kendaraan belum ditentukan' }}
-                                            </div>
-                                        </td>
+                                            <td>
+                                                <div class="services-primary-text">{{ $s->customer_name }}</div>
+                                                <div class="services-subtext">
+                                                    {{ $s->serviceType?->name ?? 'Tipe layanan belum ditentukan' }}
+                                                </div>
+                                            </td>
 
-                                        <td>
-                                            <span class="services-status services-status-{{ $statusClass }}">
-                                                <span class="services-status-dot"></span>
-                                                {{ $s->status }}
-                                            </span>
-                                        </td>
+                                            <td>
+                                                <div class="services-primary-text">
+                                                    {{ $s->driver?->name ?? 'Belum ditugaskan' }}
+                                                </div>
+                                                <div class="services-subtext">
+                                                    {{ $s->vehicle?->plate_number ?? 'Kendaraan belum ditentukan' }}
+                                                </div>
+                                            </td>
 
-                                        <td class="services-action-cell">
-                                            <a href="{{ route('services.show', $s) }}" class="services-detail-btn"
-                                                aria-label="Detail {{ $s->service_code }}">
-                                                Detail
-                                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                    <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8"
-                                                        stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6">
-                                            <div class="services-empty-state">
-                                                <span class="services-empty-icon">
-                                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                        <rect x="4" y="3" width="16" height="18" rx="2"
-                                                            stroke="currentColor" stroke-width="1.6" />
-                                                        <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor"
-                                                            stroke-width="1.6" stroke-linecap="round" />
-                                                    </svg>
+                                            <td>
+                                                <span class="services-status services-status-{{ $statusClass }}">
+                                                    <span class="services-status-dot"></span>
+                                                    {{ $s->status }}
                                                 </span>
-                                                <h3>Tidak ada layanan ditemukan</h3>
-                                                <p>Ubah filter pencarian atau buat SPK baru untuk memulai.</p>
-                                                <a href="{{ route('services.create') }}" class="services-empty-link">
-                                                    + Buat SPK baru
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                            </td>
 
-                    @if ($services->hasPages())
-                        <div class="services-pagination">
-                            <div class="services-pagination-info">
-                                Menampilkan {{ $services->firstItem() }}–{{ $services->lastItem() }}
-                                dari {{ number_format($services->total()) }} layanan
-                            </div>
-                            <div class="services-pagination-links">
-                                {{ $services->withQueryString()->links() }}
-                            </div>
+                                            <td class="services-action-cell">
+                                                <a href="{{ route('services.show', $s) }}" class="services-detail-btn"
+                                                    aria-label="Detail {{ $s->service_code }}">
+                                                    Detail
+                                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                        <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8"
+                                                            stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6">
+                                                <div class="services-empty-state">
+                                                    <span class="services-empty-icon">
+                                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                            <rect x="4" y="3" width="16" height="18" rx="2"
+                                                                stroke="currentColor" stroke-width="1.6" />
+                                                            <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor"
+                                                                stroke-width="1.6" stroke-linecap="round" />
+                                                        </svg>
+                                                    </span>
+                                                    <h3>{{ $table['empty_title'] }}</h3>
+                                                    <p>{{ $table['empty_description'] }}</p>
+                                                    @if ($table['show_create'] && $isAdmin)
+                                                        <a href="{{ route('services.create') }}" class="services-empty-link">
+                                                            + Buat SPK baru
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
-                    @endif
-                </section>
+
+                        @if ($table['services']->hasPages())
+                            <div class="services-pagination">
+                                <div class="services-pagination-info">
+                                    Menampilkan {{ $table['services']->firstItem() }}–{{ $table['services']->lastItem() }}
+                                    dari {{ number_format($table['services']->total()) }} layanan
+                                </div>
+                                <div class="services-pagination-links">
+                                    {{ $table['services']->withQueryString()->links() }}
+                                </div>
+                            </div>
+                        @endif
+                    </section>
+                @endforeach
             </div>
 
             <aside class="tms-info-panel" aria-label="Informasi Ringkasan Layanan">
@@ -235,13 +271,18 @@
                 <div class="tms-info-list">
                     <div class="tms-info-item">
                         <span class="tms-info-label">Hasil saat ini</span>
-                        <strong class="tms-info-value">{{ number_format($services->total()) }}</strong>
-                        <span class="tms-info-description">Jumlah layanan sesuai filter aktif.</span>
+                        <strong class="tms-info-value">{{ number_format($totalServiceCount) }}</strong>
+                        <span class="tms-info-description">Jumlah layanan aktif dan riwayat sesuai filter aktif.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Layanan mendatang</span>
                         <strong class="tms-info-value">{{ number_format($upcomingServiceCount) }}</strong>
                         <span class="tms-info-description">Belum selesai, dibatalkan, atau expired.</span>
+                    </div>
+                    <div class="tms-info-item">
+                        <span class="tms-info-label">Riwayat layanan</span>
+                        <strong class="tms-info-value">{{ number_format($historyServices->total()) }}</strong>
+                        <span class="tms-info-description">Layanan yang sudah berlalu dan tidak dapat diubah.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">SPK aktif</span>
@@ -262,8 +303,9 @@
                         <span class="tms-info-description">Status Completed.</span>
                     </div>
                 </div>
-                <div class="tms-info-panel-footer"><a href="{{ route('services.create') }}">+ Buat layanan / SPK</a>
-                </div>
+                @if($isAdmin)
+                    <div class="tms-info-panel-footer"><a href="{{ route('services.create') }}">+ Buat layanan / SPK</a></div>
+                @endif
             </aside>
         </div>
     </div>
