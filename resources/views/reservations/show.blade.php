@@ -390,7 +390,8 @@
                         <section class="resv-card">
                             <form method="POST" action="{{ route('reservations.cancel', $reservation) }}">
                                 @csrf
-                                <button class="resv-btn red" type="submit" onclick="return confirm('Batalkan permintaan ini?')">Batalkan Permintaan</button>
+                                <button class="service-reject-btn" type="submit"
+                                    onclick="return confirm('Batalkan permintaan ini?')">Batalkan Permintaan</button>
                             </form>
                         </section>
                     @endif

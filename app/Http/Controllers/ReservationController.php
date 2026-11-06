@@ -75,12 +75,10 @@ class ReservationController extends Controller
             'guests.*.phone' => ['nullable', 'string', 'max:40'],
             'service_date' => ['required', 'date', 'after_or_equal:today'],
             'service_end_date' => ['required', 'date', 'after_or_equal:service_date'],
-            'start_time' => ['nullable', 'date_format:H:i'],
-            'end_time' => ['nullable', 'date_format:H:i'],
             'itinerary_stops' => ['required', 'array', 'min:1', 'max:40'],
             'itinerary_stops.*.name' => ['required', 'string', 'max:150'],
             'itinerary_stops.*.visit_time' => ['required', 'date_format:H:i'],
-            'itinerary_stops.*.note' => ['string'],
+            'itinerary_stops.*.note' => ['nullable', 'string', 'max:500'],
             'itinerary_stops.*.google_maps_url' => ['required', 'url', 'max:500', 'regex:#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i'],
             'notes' => ['nullable', 'string', 'max:3000'],
         ]);
@@ -94,6 +92,8 @@ class ReservationController extends Controller
         $itineraryStops = array_values(array_filter($data['itinerary_stops'] ?? [], fn ($stop) => !empty($stop['name'])));
         unset($data['itinerary_stops']);
         $data['itinerary'] = $itineraryStops;
+        $data['start_time'] = $itineraryStops ? ($itineraryStops[0]['visit_time'] ?? null) : null;
+        $data['end_time'] = $itineraryStops ? ($itineraryStops[count($itineraryStops) - 1]['visit_time'] ?? null) : null;
 
         $reservation = DB::transaction(function () use ($data, $guests, $request) {
             if ($request->user()->phone !== $data['customer_phone']) {
@@ -170,6 +170,7 @@ class ReservationController extends Controller
             'itinerary_stops' => ['required', 'array', 'min:1', 'max:40'],
             'itinerary_stops.*.name' => ['required', 'string', 'max:150'],
             'itinerary_stops.*.visit_time' => ['required', 'date_format:H:i'],
+            'itinerary_stops.*.note' => ['nullable', 'string', 'max:500'],
             'itinerary_stops.*.google_maps_url' => ['required', 'url', 'max:500', 'regex:#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i'],
             'notes' => ['nullable', 'string', 'max:3000'],
         ]);

@@ -163,6 +163,8 @@
                                     <th>Telepon</th>
                                     <th>Nomor SIM</th>
                                     <th>Status</th>
+                                    <th>Layanan</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -176,10 +178,26 @@
                                                 {{ $d->is_active ? 'Aktif' : 'Nonaktif' }}
                                             </span>
                                         </td>
+                                        <td>{{ $d->services_count }}</td>
+                                        <td>
+                                            <div class="service-show-panel-actions">
+                                                <a href="{{ route('drivers.edit', $d) }}" class="services-detail-btn">
+                                                    Edit
+                                                </a>
+                                                <button type="button" class="services-detail-btn"
+                                                    data-driver-delete-open
+                                                    data-driver-name="{{ $d->name }}"
+                                                    data-driver-action="{{ route('drivers.destroy', $d) }}"
+                                                    @disabled($d->services_count > 0)
+                                                    title="{{ $d->services_count > 0 ? 'Driver masih digunakan pada layanan' : 'Hapus driver' }}">
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" style="text-align: center; padding: 28px;">
+                                        <td colspan="6" style="text-align: center; padding: 28px;">
                                             Belum ada driver terdaftar.
                                         </td>
                                     </tr>
@@ -228,4 +246,66 @@
             </aside>
         </div>
     </div>
+
+    <div class="tms-modal" id="driverDeleteModal" hidden>
+        <div class="tms-modal-backdrop" data-driver-delete-close></div>
+        <div class="tms-modal-dialog tms-modal-dialog-sm" role="dialog" aria-modal="true"
+            aria-labelledby="driverDeleteTitle">
+            <div class="tms-modal-header">
+                <h2 id="driverDeleteTitle">Hapus Driver</h2>
+                <button type="button" class="tms-modal-close" data-driver-delete-close
+                    aria-label="Tutup">&times;</button>
+            </div>
+            <form id="driverDeleteForm" method="POST" action="">
+                @csrf
+                @method('DELETE')
+                <div class="tms-modal-body">
+                    <p>Hapus driver <strong id="driverDeleteName"></strong> dari sistem?</p>
+                </div>
+                <div class="tms-modal-footer">
+                    <button type="button" class="tms-modal-btn tms-modal-btn-secondary"
+                        data-driver-delete-close>Batal</button>
+                    <button type="submit" class="tms-modal-btn tms-modal-btn-danger">Hapus Driver</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const modal = document.getElementById('driverDeleteModal');
+            if (!modal) return;
+
+            const form = document.getElementById('driverDeleteForm');
+            const nameField = document.getElementById('driverDeleteName');
+            const closeButton = modal.querySelector('.tms-modal-close');
+
+            const openModal = (trigger) => {
+                form.action = trigger.dataset.driverAction;
+                nameField.textContent = trigger.dataset.driverName || '';
+                modal.hidden = false;
+                document.body.classList.add('tms-modal-open');
+                window.setTimeout(() => closeButton?.focus(), 30);
+            };
+
+            const closeModal = () => {
+                modal.hidden = true;
+                document.body.classList.remove('tms-modal-open');
+            };
+
+            document.querySelectorAll('[data-driver-delete-open]').forEach((trigger) => {
+                trigger.addEventListener('click', () => openModal(trigger));
+            });
+
+            modal.querySelectorAll('[data-driver-delete-close]').forEach((element) => {
+                element.addEventListener('click', closeModal);
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !modal.hidden) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
 @endsection

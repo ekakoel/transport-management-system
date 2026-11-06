@@ -118,6 +118,15 @@ Route::middleware(['auth'])->group(function () {
             ->name('drivers.index');
         Route::post('/drivers', [TmsController::class, 'storeDriver'])
             ->name('drivers.store');
+        Route::get('/drivers/{driver}/edit', [TmsController::class, 'editDriver'])
+            ->whereNumber('driver')
+            ->name('drivers.edit');
+        Route::put('/drivers/{driver}', [TmsController::class, 'updateDriver'])
+            ->whereNumber('driver')
+            ->name('drivers.update');
+        Route::delete('/drivers/{driver}', [TmsController::class, 'destroyDriver'])
+            ->whereNumber('driver')
+            ->name('drivers.destroy');
 
         Route::get('/reservation-users', [TmsController::class, 'reservationUsers'])
             ->name('reservation-users.index');

@@ -88,7 +88,7 @@ class TmsController extends Controller
                 $query->whereDate('service_end_date', '<', $today)
                     ->orWhereIn('status', ['Completed', 'Cancelled', 'Expired']);
             })
-            ->orderByDesc('service_end_date')
+            ->orderByDesc('service_date')
             ->orderByDesc('start_time')
             ->paginate(15, ['*'], 'history_page')
             ->withQueryString();
@@ -467,7 +467,7 @@ class TmsController extends Controller
 
     public function drivers()
     {
-        $drivers = Driver::orderBy('name')->paginate(20);
+        $drivers = Driver::withCount('services')->orderBy('name')->paginate(20);
         $driverStats = [
             'total' => Driver::count(),
             'active' => Driver::where('is_active', 1)->count(),
@@ -481,6 +481,36 @@ class TmsController extends Controller
         $d = $r->validate(['name' => 'required|string|max:150', 'phone' => 'nullable|string|max:40', 'license_number' => 'nullable|string|max:80', 'notes' => 'nullable|string|max:1000']);
         Driver::create($d + ['is_active' => $r->boolean('is_active')]);
         return back()->with('success', 'Driver disimpan.');
+    }
+    public function editDriver(Driver $driver)
+    {
+        return view('drivers.edit', [
+            'driver' => $driver,
+            'serviceCount' => $driver->services()->count(),
+        ]);
+    }
+    public function updateDriver(Request $request, Driver $driver)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:150',
+            'phone' => 'nullable|string|max:40',
+            'license_number' => 'nullable|string|max:80',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $driver->update($data + ['is_active' => $request->boolean('is_active')]);
+
+        return redirect()->route('drivers.index')->with('success', 'Data driver berhasil diperbarui.');
+    }
+    public function destroyDriver(Driver $driver)
+    {
+        if ($driver->services()->exists()) {
+            return back()->withErrors(['driver' => 'Driver tidak dapat dihapus karena masih digunakan pada layanan.']);
+        }
+
+        $driver->delete();
+
+        return redirect()->route('drivers.index')->with('success', 'Driver berhasil dihapus.');
     }
     public function vehicles(Request $request)
     {
