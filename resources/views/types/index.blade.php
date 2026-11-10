@@ -26,7 +26,7 @@
             </span>
             <div>
                 <strong>Kelola kategori layanan transportasi</strong>
-                <p>Buat tipe layanan seperti Airport Transfer atau City Tour. Tipe yang aktif dapat digunakan sesuai alur
+                <p>Buat tipe layanan seperti Airport Shuttle atau City Tour. Tipe yang aktif dapat digunakan sesuai alur
                     operasional aplikasi.</p>
             </div>
         </div>
@@ -61,7 +61,7 @@
                             <div class="service-create-field">
                                 <label for="name">Tipe Layanan <span>*</span></label>
                                 <input id="name" type="text" name="name" value="{{ old('name') }}"
-                                    placeholder="Contoh: Airport Transfer" required>
+                                    placeholder="Contoh: Airport Shuttle" required>
                                 @error('name')
                                     <small class="service-create-error">{{ $message }}</small>
                                 @enderror

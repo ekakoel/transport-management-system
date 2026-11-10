@@ -90,7 +90,11 @@
                                 <tbody>
                                     @forelse($reservations as $r)
                                         <tr>
-                                            <td><strong>{{ $r->reservation_number }}</strong><br><small
+                                            <td><strong>{{ $r->reservation_number }}</strong><br>
+                                                @if ($r->order_number)
+                                                    <small class="resv-muted">Order: {{ $r->order_number }}</small><br>
+                                                @endif
+                                                <small
                                                     class="resv-muted">{{ $r->serviceType?->name }}</small></td>
                                             <td>{{ $r->requester?->name }}<br><small
                                                     class="resv-muted">{{ $r->requester?->email }}{{ $r->requester?->phone ? ' · ' . $r->requester->phone : '' }}</small></td>
@@ -98,7 +102,6 @@
                                                     {{ \App\Support\DateFormatter::format($r->service_end_date) }}</small></td>
                                             <td>{{ $r->customer_name }}</td>
                                             <td><span class="resv-status {{ $r->status }}">{{ $r->status }}</span></td>
-                                            {{-- <td><a class="resv-btn" href="{{ route('admin.reservations.show', $r) }}">Tinjau</a></td> --}}
                                             <td class="services-action-cell">
                                                 <div class="services-action-group">
                                                     @if (now('Asia/Makassar')->toDateString() <= $r->service_date->format('Y-m-d'))
@@ -125,16 +128,16 @@
                                             </td>
                                         </tr>
                                     @empty<tr>
-                                            <td colspan="6" class="resv-muted">Tidak ada permintaan yang cocok.</td>
+                                            <td colspan="6" class="resv-muted">Tidak ada permintaan layanan yang tersedia</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
                             </table>
                         </div>
-                        <div style="margin-top:18px">{{ $reservations->links() }}</div>
+                        <div class="tms-pagination-shell">{{ $reservations->links() }}</div>
                     </div>
                 </section>
-                @if ($layananReservationsExpired->total() > 0)
+                {{-- @if ($layananReservationsExpired->total() > 0)
                     <section class="services-table-panel">
                         <div class="services-table-header">
                             <div>
@@ -162,7 +165,11 @@
                                     <tbody>
                                         @forelse($layananReservationsExpired as $x)
                                             <tr>
-                                                <td><strong>{{ $x->reservation_number }}</strong><br><small
+                                                <td><strong>{{ $x->reservation_number }}</strong><br>
+                                                    @if ($x->order_number)
+                                                        <small class="resv-muted">Order: {{ $x->order_number }}</small><br>
+                                                    @endif
+                                                    <small
                                                         class="resv-muted">{{ $x->serviceType?->name }}</small></td>
                                                 <td>{{ $x->requester?->name }}<br><small
                                                         class="resv-muted">{{ $x->requester?->email }}{{ $x->requester?->phone ? ' · ' . $x->requester->phone : '' }}</small></td>
@@ -188,11 +195,11 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div style="margin-top:18px">{{ $layananReservationsExpired->links() }}</div>
+                            <div class="tms-pagination-shell">{{ $layananReservationsExpired->links() }}</div>
                         </div>
                         
                     </section>
-                @endif
+                @endif --}}
             </div>
             <aside class="tms-info-panel" aria-label="Informasi Ringkasan Layanan">
                 <div class="tms-info-panel-heading">

@@ -17,7 +17,7 @@
         };
 
         $stepErrorMap = [
-            1 => ['customer_name', 'customer_phone', 'guest_count', 'service_type_id', 'service_date', 'service_end_date'],
+            1 => ['customer_name', 'order_number', 'guest_count', 'service_type_id', 'service_date', 'service_end_date'],
             2 => ['guests'],
             3 => ['itinerary_stops'],
             4 => ['notes'],
@@ -137,11 +137,12 @@
                     </div>
 
                     <div class="service-create-field">
-                        <label for="customer_phone">Nomor WhatsApp / Telepon <span>*</span></label>
-                        <input id="customer_phone" name="customer_phone" type="tel" maxlength="40"
-                            value="{{ old('customer_phone', auth()->user()->phone) }}"
-                            placeholder="Contoh: +62 812..." autocomplete="tel" required>
-                        @error('customer_phone')
+                        <label for="order_number">Nomor Order</label>
+                        <input id="order_number" name="order_number" type="text" maxlength="100"
+                            value="{{ old('order_number') }}"
+                            placeholder="Nomor order dari pelanggan / sistem">
+                        <small class="service-create-help">Opsional. Admin juga dapat mengisinya saat SPK diterbitkan.</small>
+                        @error('order_number')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
                     </div>
@@ -749,7 +750,7 @@
                 reviewRoot.innerHTML = [
                     reviewSection('Detail Layanan', [
                         ['Pelanggan / Agent', fieldValue('customer_name')],
-                        ['Telepon', fieldValue('customer_phone')],
+                        ['Nomor Order', fieldValue('order_number')],
                         ['Tipe Layanan', selectedText('service_type_id', 'Belum dipilih')],
                         ['Jumlah Tamu', guestCount],
                         ['Tanggal Mulai', formatDate(fieldValue('service_date'))],

@@ -102,6 +102,9 @@
                                             <td>
                                                 <span>{{ $r->requester?->name }}</span><br>
                                                 <strong>{{ $r->reservation_number }}</strong><br>
+                                                @if ($r->order_number)
+                                                    <small class="resv-muted">Order: {{ $r->order_number }}</small><br>
+                                                @endif
                                                 <small class="resv-muted">{{ \App\Support\DateFormatter::format($r->created_at, null, 'd M Y H:i') }}</small>
                                             </td>
                                             <td>
@@ -127,9 +130,6 @@
                                                     </svg>
                                                 </a>
                                             </td>
-                                            {{-- <td>
-                                                <a class="resv-link" href="{{ route('reservations.show', $r) }}">Detail →</a>
-                                            </td> --}}
                                         </tr>
                                     @empty
                                         <tr>
@@ -139,7 +139,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div style="margin-top:18px">{{ $reservations->links() }}</div>
+                        <div class="tms-pagination-shell">{{ $reservations->links() }}</div>
                     </div>
                 </section>
             </div>

@@ -192,7 +192,7 @@
                     </div>
 
                     @if ($reservationUsers->hasPages())
-                        <div style="margin-top: 20px;">
+                        <div class="tms-pagination-shell">
                             {{ $reservationUsers->links() }}
                         </div>
                     @endif

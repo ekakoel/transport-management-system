@@ -19,19 +19,22 @@ class ReservationController extends Controller
     public function index(Request $request)
     {
         $today = now('Asia/Makassar')->toDateString();
-        $query = Reservation::with(['requester', 'serviceType'])->latest();
+        $query = Reservation::with(['requester', 'serviceType']);
         if ($request->filled('status')) $query->where('status', $request->string('status')->toString());
         if ($request->filled('q')) {
             $term = $request->string('q')->toString();
             $query->where(function ($q) use ($term) {
                 $q->where('reservation_number', 'like', "%{$term}%")
+                  ->orWhere('order_number', 'like', "%{$term}%")
                   ->orWhere('customer_name', 'like', "%{$term}%")
                   ->orWhereHas('requester', fn ($u) => $u->where('name', 'like', "%{$term}%"));
             });
         }
         $reservations = $query
             ->where('user_id', $request->user()->id)
-            ->latest()
+            ->orderByRaw('CASE WHEN service_date >= ? THEN 0 ELSE 1 END', [$today])
+            ->orderByRaw('CASE WHEN service_date >= ? THEN service_date END ASC', [$today])
+            ->orderByRaw('CASE WHEN service_date < ? THEN service_date END DESC', [$today])
             ->paginate(15)
             ->withQueryString();
         $pendingReservation = Reservation::whereDate('service_date',">=", $today)
@@ -67,7 +70,7 @@ class ReservationController extends Controller
         $data = $request->validate([
             'service_type_id' => ['required', 'exists:service_types,id'],
             'customer_name' => ['required', 'string', 'max:150'],
-            'customer_phone' => ['required', 'string', 'max:40'],
+            'order_number' => ['nullable', 'string', 'max:100'],
             'guest_count' => ['required', 'integer', 'min:1', 'max:100'],
             'guests' => ['nullable', 'array', 'max:100'],
             'guests.*.name' => ['nullable', 'required_with:guests.*.gender', 'string', 'max:150'],
@@ -93,13 +96,8 @@ class ReservationController extends Controller
         $itineraryStops = array_values(array_filter($data['itinerary_stops'] ?? [], fn ($stop) => !empty($stop['name'])));
         unset($data['itinerary_stops']);
         $data['itinerary'] = $itineraryStops;
-        $data['start_time'] = $itineraryStops ? ($itineraryStops[0]['visit_time'] ?? null) : null;
-        $data['end_time'] = $itineraryStops ? ($itineraryStops[count($itineraryStops) - 1]['visit_time'] ?? null) : null;
 
         $reservation = DB::transaction(function () use ($data, $guests, $request) {
-            if ($request->user()->phone !== $data['customer_phone']) {
-                $request->user()->update(['phone' => $data['customer_phone']]);
-            }
             $reservation = Reservation::create($data + [
                 'reservation_number' => 'RSV-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(6)),
                 'user_id' => $request->user()->id,
@@ -157,7 +155,7 @@ class ReservationController extends Controller
         $data = $request->validate([
             'service_type_id' => ['required', 'exists:service_types,id'],
             'customer_name' => ['required', 'string', 'max:150'],
-            'customer_phone' => ['required', 'string', 'max:40'],
+            'order_number' => ['nullable', 'string', 'max:100'],
             'guest_count' => ['required', 'integer', 'min:1', 'max:100'],
             'guests' => ['nullable', 'array', 'max:100'],
             'guests.*.name' => ['nullable', 'required_with:guests.*.gender', 'string', 'max:150'],
@@ -166,8 +164,6 @@ class ReservationController extends Controller
             'guests.*.phone' => ['nullable', 'string', 'max:40'],
             'service_date' => ['required', 'date', 'after_or_equal:today'],
             'service_end_date' => ['required', 'date', 'after_or_equal:service_date'],
-            'start_time' => ['nullable', 'date_format:H:i'],
-            'end_time' => ['nullable', 'date_format:H:i'],
             'itinerary_stops' => ['required', 'array', 'min:1', 'max:40'],
             'itinerary_stops.*.name' => ['required', 'string', 'max:150'],
             'itinerary_stops.*.visit_time' => ['required', 'date_format:H:i'],
@@ -225,40 +221,37 @@ class ReservationController extends Controller
             $term = $request->string('q')->toString();
             $query->where(function ($q) use ($term) {
                 $q->where('reservation_number', 'like', "%{$term}%")
+                  ->orWhere('order_number', 'like', "%{$term}%")
                   ->orWhere('customer_name', 'like', "%{$term}%")
                   ->orWhereHas('requester', fn ($u) => $u->where('name', 'like', "%{$term}%"));
             });
         }
         $reservations = $query
+            ->where('status','Pending')
             ->where('service_date','>=',$today)
             ->orderByRaw('CASE WHEN service_date >= ? THEN 0 ELSE 1 END', [$today])
             ->orderByRaw('CASE WHEN service_date >= ? THEN service_date END ASC', [$today])
             ->orderByRaw('CASE WHEN service_date < ? THEN service_date END DESC', [$today])
-            ->orderBy('start_time')
             ->paginate(20)
             ->withQueryString();
         $todayActiveReservations = Reservation::whereDate('service_date', $today)
             ->whereIn('status', ['Approved'])
             ->with(['requester', 'serviceType', 'transportService'])
             ->orderBy('service_date')
-            ->orderBy('start_time')
             ->get();
         $layananReservationsAkanDatang = Reservation::whereDate('service_date','>', $today)
             ->whereIn('status', ['Approved'])
             ->with(['requester', 'serviceType', 'transportService'])
             ->orderBy('service_date')
-            ->orderBy('start_time')
             ->get();
         $layananReservationsMenungguDiproses= Reservation::where('status', 'Pending')
             ->whereDate('service_date','>', $today)
             ->with(['requester', 'serviceType', 'transportService'])
             ->orderBy('service_date')
-            ->orderBy('start_time')
             ->get();
         $layananReservationsExpired = Reservation::whereDate('service_date','<', $today)
             ->with(['requester', 'serviceType', 'transportService'])
             ->orderByDesc('service_date')
-            ->orderByDesc('start_time')
             ->paginate(20)
             ->withQueryString();
         return view('reservations.admin-index', compact(
@@ -275,6 +268,7 @@ class ReservationController extends Controller
         abort_unless($reservation->status === 'Pending', 422, 'Permintaan ini sudah diproses.');
 
         $data = $request->validate([
+            'order_number' => ['nullable', 'string', 'max:100'],
             'driver_id' => ['required', 'exists:drivers,id'],
             'vehicle_id' => ['required', 'exists:vehicles,id'],
             'emergency_contact_id' => ['nullable', 'exists:emergency_contacts,id'],
@@ -305,6 +299,7 @@ class ReservationController extends Controller
         if (!is_array($itineraryStops) || count($itineraryStops) < 1) {
             return back()->withErrors(['itinerary' => 'Permintaan harus memiliki minimal satu destinasi dengan waktu kunjungan dan short link Google Maps.']);
         }
+        $itineraryStops = array_values($itineraryStops);
         foreach ($itineraryStops as $stop) {
             $mapUrl = (string) ($stop['google_maps_url'] ?? '');
             if (empty($stop['name']) || !preg_match('/^\d{2}:\d{2}$/', (string) ($stop['visit_time'] ?? '')) ||
@@ -313,9 +308,11 @@ class ReservationController extends Controller
                 return back()->withErrors(['itinerary' => 'Setiap destinasi harus memiliki nama, waktu kunjungan, dan short link Google Maps yang valid.']);
             }
         }
+        $startTime = $itineraryStops[0]['visit_time'];
+        $endTime = $itineraryStops[array_key_last($itineraryStops)]['visit_time'];
 
         $rawToken = Str::random(64);
-        $service = DB::transaction(function () use ($reservation, $data, $request, $rawToken, $start, $end) {
+        $service = DB::transaction(function () use ($reservation, $data, $request, $rawToken, $start, $end, $startTime, $endTime) {
             $locked = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
             abort_unless($locked->status === 'Pending', 422, 'Permintaan ini sudah diproses.');
 
@@ -323,13 +320,13 @@ class ReservationController extends Controller
                 'service_code' => 'TMS-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(5)),
                 'customer_name' => $locked->customer_name,
                 'reservation_id' => $locked->id,
-                'customer_phone' => $locked->customer_phone,
+                'customer_phone' => $locked->requester?->phone,
                 'guest_count' => $locked->guest_count,
                 'service_type_id' => $locked->service_type_id,
                 'service_date' => $start,
                 'service_end_date' => $end,
-                'start_time' => $locked->start_time,
-                'end_time' => $locked->end_time,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
                 'notes' => trim(($locked->notes ?? '') . (($data['admin_notes'] ?? '') ? "\nAdmin: " . $data['admin_notes'] : '')),
                 'driver_id' => $data['driver_id'],
                 'vehicle_id' => $data['vehicle_id'],
@@ -373,6 +370,7 @@ class ReservationController extends Controller
 
             $locked->update([
                 'status' => 'Approved',
+                'order_number' => $data['order_number'] ?? $locked->order_number,
                 'admin_notes' => $data['admin_notes'] ?? null,
                 'transport_service_id' => $service->id,
                 'reviewed_by' => $request->user()->id,

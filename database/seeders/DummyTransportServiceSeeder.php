@@ -34,7 +34,7 @@ class DummyTransportServiceSeeder extends Seeder
                 'code' => 'DUMMY-TMS-001',
                 'customer' => 'John Smith',
                 'phone' => '+628123450001',
-                'type' => 'Airport Transfer',
+                'type' => 'Airport Shuttle',
                 'day' => 1,
                 'start' => '09:00',
                 'end' => '10:30',

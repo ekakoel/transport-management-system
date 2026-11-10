@@ -152,6 +152,17 @@
                     </div>
 
                     <div class="service-create-field">
+                        <label for="order_number">Nomor Order</label>
+                        <input id="order_number" name="order_number" type="text" maxlength="100"
+                            value="{{ old('order_number') }}"
+                            placeholder="Nomor order dari pelanggan / sistem">
+                        <small class="service-create-help">Opsional. Nomor order yang tersimpan pada reservasi.</small>
+                        @error('order_number')
+                            <small class="service-create-error">{{ $message }}</small>
+                        @enderror
+                    </div>
+
+                    <div class="service-create-field">
                         <label for="service_type_id">Tipe Layanan <span>*</span></label>
                         <select id="service_type_id" name="service_type_id" required>
                             <option value="">Pilih tipe layanan</option>
@@ -751,6 +762,7 @@
                         ['Pemilik Reservation', selectedText('user_id', 'Belum dipilih')],
                         ['Pelanggan', fieldValue('customer_name')],
                         ['Telepon', fieldValue('customer_phone')],
+                        ['Nomor Order', fieldValue('order_number')],
                         ['Tipe Layanan', selectedText('service_type_id', 'Belum dipilih')],
                         ['Catatan', fieldValue('notes')],
                     ]),

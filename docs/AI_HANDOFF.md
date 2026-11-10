@@ -35,7 +35,7 @@ Laravel Transport Management System
   - Client-side per-step validation, dynamic guest/stop rows with counters and remove actions.
   - Live review summary before submit; submit button shows loading state.
   - Supports restoring the initial step after validation errors.
-- `ReservationController` derives `start_time`/`end_time` from the first/last itinerary stop times.
+- Reservations store service dates and itinerary stop times only; approval derives the transport service's `start_time`/`end_time` from the first/last itinerary stops.
 - Added `itinerary_stops.*.note` validation (`nullable|string|max:500`) on store and update.
 - Removed obsolete `start_time`/`end_time` request validation.
 - Added 5-step wizard CSS (`service-wizard-steps--5`) and responsive breakpoints.

@@ -45,7 +45,7 @@
                             <div class="service-create-field">
                                 <label for="name">Tipe Layanan <span>*</span></label>
                                 <input id="name" type="text" name="name" value="{{ old('name', $type->name) }}"
-                                    placeholder="Contoh: Airport Transfer" required>
+                                    placeholder="Contoh: Airport Shuttle" required>
                                 @error('name')
                                     <small class="service-create-error">{{ $message }}</small>
                                 @enderror

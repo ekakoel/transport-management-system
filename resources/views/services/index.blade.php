@@ -168,6 +168,9 @@
                                         <tr>
                                             <td>
                                                 <div class="services-code">{{ $s->service_code }}</div>
+                                                @if ($s->reservation?->order_number)
+                                                    <div class="services-subtext">Order: {{ $s->reservation->order_number }}</div>
+                                                @endif
                                                 <div class="services-subtext">
                                                     {{ $s->spk?->spk_number ?: 'SPK belum tersedia' }}
                                                 </div>

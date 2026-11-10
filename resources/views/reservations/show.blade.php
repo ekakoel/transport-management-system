@@ -3,7 +3,7 @@
 @section('content')
     @php
         $serviceType = match ($reservation->serviceType?->name) {
-            'Airport Transfer' => '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.5 15.5 10 13l-3-6 2-.7 5 5 4.5-1.5c1.2-.4 2.2.1 2.5 1s-.4 1.7-1.5 2.1L5 18l-2.5-.5z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /><path d="M3 21h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>',
+            'Airport Shuttle' => '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.5 15.5 10 13l-3-6 2-.7 5 5 4.5-1.5c1.2-.4 2.2.1 2.5 1s-.4 1.7-1.5 2.1L5 18l-2.5-.5z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /><path d="M3 21h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>',
             'Full Day Charter' => '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="7" r="3.5" stroke="currentColor" stroke-width="1.7" /><path d="M12 1.5v1M12 11.5v1M6.5 7h-1M18.5 7h-1M8.1 3.1l-.7-.7M16.6 11.6l-.7-.7M15.9 3.1l.7-.7M7.4 11.6l.7-.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /><path d="M3 16h13l3 2.5V21H3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /><circle cx="7" cy="20" r="1.5" fill="currentColor" /><circle cx="16" cy="20" r="1.5" fill="currentColor" /></svg>',
             'Hourly Charter' => '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="9" r="6.5" stroke="currentColor" stroke-width="1.7" /><path d="M12 5.5v3.8l2.5 1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /><path d="M3 18h13l3 2.5V22H3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /><circle cx="7" cy="21" r="1.2" fill="currentColor" /><circle cx="16" cy="21" r="1.2" fill="currentColor" /></svg>',
             'Point to Point' => '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="5.5" cy="6" r="2.5" stroke="currentColor" stroke-width="1.7" /><circle cx="18.5" cy="18" r="2.5" stroke="currentColor" stroke-width="1.7" /><path d="M5.5 8.5v3a2 2 0 0 0 2 2h9a2 2 0 0 1 2 2v0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /><path d="m15.5 13.5 3 2-3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>',
@@ -11,7 +11,7 @@
             default => 'default',
         };
         $captionServiceType = match ($reservation->serviceType?->name) {
-            'Airport Transfer' => 'Layanan antar dari atau menuju bandara.',
+            'Airport Shuttle' => 'Layanan antar dari atau menuju bandara.',
             'Full Day Charter' => 'Layanan transportasi privat seharian penuh sesuai rencana perjalanan.',
             'Hourly Charter' => 'Layanan transportasi privat berdasarkan durasi per jam.',
             'Point to Point' => 'Layanan antar jemput langsung dari lokasi penjemputan ke tujuan yang ditentukan.',
@@ -101,10 +101,21 @@
                             <div>
                                 <span class="service-show-detail-label">Pelanggan / Pemesan</span>
                                 <strong>{{ $reservation->customer_name }}</strong>
-                                <small>{{ $reservation->customer_phone ?: 'Nomor telepon tidak tersedia' }}</small>
-                                 @if($reservation->requester?->phone && $reservation->requester->phone !== $reservation->customer_phone)
-                                     <small>Telepon akun: {{ $reservation->requester->phone }}</small>
-                                 @endif
+                                <small>{{ $reservation->requester?->phone ?: 'Nomor telepon tidak tersedia' }}</small>
+                            </div>
+                        </div>
+                        <div class="service-show-detail-item">
+                            <span class="service-show-detail-icon">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M5 4h14v16l-2.5-1.5L14 20l-2-1.5L10 20l-2.5-1.5L5 20V4Z"
+                                        stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                                    <path d="M8 8h8M8 12h8M8 16h5"
+                                        stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <span class="service-show-detail-label">Nomor Order</span>
+                                <strong>{{ $reservation->order_number ?: '—' }}</strong>
                             </div>
                         </div>
                         <div class="service-show-detail-item">
@@ -133,9 +144,9 @@
                             <div>
                                 <span class="service-show-detail-label">Tanggal Mulai</span>
                                 <strong>
-                                    {{ \App\Support\DateFormatter::format($reservation->service_date, $reservation->start_time) }}
+                                    {{ \App\Support\DateFormatter::format($reservation->service_date) }}
                                     <span class="service-show-time-separator">&#8594;</span>
-                                    {{ \App\Support\DateFormatter::format($reservation->service_end_date, $reservation->end_time) }}
+                                    {{ \App\Support\DateFormatter::format($reservation->service_end_date) }}
                                 </strong>
                             </div>
                         </div>
@@ -224,9 +235,9 @@
                             </div>
                             <div>
                                 <h2 class="resv-section-title">Itinerary</h2>
-                                <p>{{ \App\Support\DateFormatter::format($reservation->service_date, $reservation->start_time) }}
+                                <p>{{ \App\Support\DateFormatter::format($reservation->service_date) }}
                                     <span class="service-show-time-separator">&#8594;</span>
-                                    {{ \App\Support\DateFormatter::format($reservation->service_end_date, $reservation->end_time) }}
+                                    {{ \App\Support\DateFormatter::format($reservation->service_end_date) }}
                                 </p>
                             </div>
                         </div>
@@ -282,8 +293,8 @@
                         </table>
                     </div>
                 </section>
-                <section class="service-create-card">
-                    @if ($isAdmin && $reservation->status === 'Pending')
+                @if ($isAdmin && $reservation->status === 'Pending')
+                    <section class="service-create-card mb-3">
                         <div class="services-panel-heading">
                             <div class="service-show-panel-heading">
                                 <div class="service-show-panel-icon service-show-blue">
@@ -309,6 +320,9 @@
                         <form method="POST" action="{{ route('admin.reservations.approve', $reservation) }}">
                             @csrf
                             <div class="service-create-fields">
+                                <div class="service-create-field hidden">
+                                    <input id="order_number" name="order_number" type="text" maxlength="100" value="{{ old('order_number', $reservation->order_number) }}">
+                                </div>
                                 <div class="service-create-field">
                                     <label for="driver_id">Driver <span>*</span></label>
                                     <select id="driver_id" name="driver_id" required>
@@ -349,53 +363,58 @@
                                 <button class="service-submit-btn" type="submit">Setujui &amp; Buat SPK</button>
                             </div>
                         </form>
-                        <hr style="border:0;border-top:1px solid var(--tms-border);margin:24px 0">
-                        <div class="services-panel-heading">
-                            <div class="service-show-panel-heading">
-                                <div class="service-show-panel-icon service-show-blue">
-                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <circle cx="12" cy="8" r="3.5"
-                                            stroke="currentColor" stroke-width="1.7" />
-                                        <path d="M5 20v-1.5a7 7 0 0 1 14 0V20"
-                                            stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-                                        <path d="m15.5 14.5 1.8 1.8 3.2-3.5"
-                                            stroke="currentColor" stroke-width="1.7"
-                                            stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h2 class="resv-section-title">Penolakan Permintaan Layanan</h2>
-                                    <p>Setujui hanya setelah memastikan jadwal, driver, kendaraan, dan kontak darurat. SPK akan diterbitkan otomatis.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <form method="POST" action="{{ route('admin.reservations.reject', $reservation) }}">
+                        
+                    </section>
+                @endif
+                @if (!$isAdmin && $reservation->status === 'Pending')
+                    <section class="resv-card">
+                        <form method="POST" action="{{ route('reservations.cancel', $reservation) }}">
                             @csrf
-                            <div class="service-create-fields">
-                                <div class="service-create-field service-field-full">
-                                    <label for="reject_admin_notes">Alasan Penolakan <span>*</span></label>
-                                    <textarea id="reject_admin_notes" name="reject_admin_notes" rows="3"
-                                        placeholder="Berikan alasan penolakan permintaan layanan" required>{{ old('reject_admin_notes') }}</textarea>
-                                    @error('reject_admin_notes')
-                                        <small class="service-create-error">{{ $message }}</small>
-                                    @enderror
+                            <button class="service-reject-btn" type="submit"
+                                onclick="return confirm('Batalkan permintaan ini?')">Batalkan Permintaan</button>
+                        </form>
+                    </section>
+                @endif
+                
+                @if ($isAdmin && $reservation->status === 'Pending')
+                    <section class="service-create-card mb-3">
+                            <div class="services-panel-heading">
+                                <div class="service-show-panel-heading">
+                                    <div class="service-show-panel-icon service-show-blue">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <circle cx="12" cy="8" r="3.5"
+                                                stroke="currentColor" stroke-width="1.7" />
+                                            <path d="M5 20v-1.5a7 7 0 0 1 14 0V20"
+                                                stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                                            <path d="m15.5 14.5 1.8 1.8 3.2-3.5"
+                                                stroke="currentColor" stroke-width="1.7"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h2 class="resv-section-title">Penolakan Permintaan Layanan</h2>
+                                        <p>Setujui hanya setelah memastikan jadwal, driver, kendaraan, dan kontak darurat. SPK akan diterbitkan otomatis.</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="service-create-actions">
-                                <button class="service-reject-btn" type="submit">Tolak Permintaan</button>
-                            </div>
-                        </form>
-                    @endif
-                    @if (!$isAdmin && $reservation->status === 'Pending')
-                        <section class="resv-card">
-                            <form method="POST" action="{{ route('reservations.cancel', $reservation) }}">
+                            <form method="POST" action="{{ route('admin.reservations.reject', $reservation) }}">
                                 @csrf
-                                <button class="service-reject-btn" type="submit"
-                                    onclick="return confirm('Batalkan permintaan ini?')">Batalkan Permintaan</button>
+                                <div class="service-create-fields">
+                                    <div class="service-create-field service-field-full">
+                                        <label for="reject_admin_notes">Alasan Penolakan <span>*</span></label>
+                                        <textarea id="reject_admin_notes" name="reject_admin_notes" rows="3"
+                                            placeholder="Berikan alasan penolakan permintaan layanan" required>{{ old('reject_admin_notes') }}</textarea>
+                                        @error('reject_admin_notes')
+                                            <small class="service-create-error">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="service-create-actions">
+                                    <button class="service-reject-btn" type="submit">Tolak Permintaan</button>
+                                </div>
                             </form>
-                        </section>
-                    @endif
-                </section>
+                    </section>
+                @endif
                 <div class="resv-actions">
                     <a class="service-show-back" href="{{ $isAdmin ? route('admin.reservations.index') : route('reservations.index') }}">
                         ← Kembali ke daftar permintaan

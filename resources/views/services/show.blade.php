@@ -93,7 +93,7 @@
                                     target="_blank" id="sendInfoForm">
                                     @csrf
                                     <button type="submit" class="service-show-copy-btn" id="sendInfoButton"
-                                        @disabled(!$service->reservation || !($service->reservation->requester?->phone ?: $service->reservation->customer_phone ?: $service->customer_phone))>
+                                        @disabled(!$service->reservation || !($service->reservation->requester?->phone ?: $service->customer_phone))>
                                         <span>{!! $infoSentCount > 0 ? 'Kirim Ulang Info<br>Reservasi' : 'Kirim Info<br>Reservasi' !!}</span>
                                     </button>
                                 </form>
@@ -130,6 +130,11 @@
                             @if($service->reservation?->requester?->phone)
                                 <div class="service-show-summary-sub">
                                     {{ $service->reservation->requester->phone }}
+                                </div>
+                            @endif
+                            @if($service->reservation?->order_number)
+                                <div class="service-show-summary-sub">
+                                    Order: {{ $service->reservation->order_number }}
                                 </div>
                             @endif
                         </div>

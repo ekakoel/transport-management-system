@@ -44,6 +44,10 @@
                         title="Reservasi Requests">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         <span>{{ auth()->user()->role === 'reservation' ? 'Reservasi Saya' : 'Reservasi / Pesanan' }}</span>
+                        @if ($isReservationReviewer && $pendingReservationCount > 0)
+                            <span class="nav-badge"
+                                title="{{ $pendingReservationCount }} reservasi menunggu review">{{ $pendingReservationCount > 99 ? '99+' : $pendingReservationCount }}</span>
+                        @endif
                     </a>
                     <a href="{{ route('services.index') }}"
                         class="{{ request()->routeIs('services.*') ? 'active' : '' }}"
@@ -145,6 +149,24 @@
                     </div>
 
                     <div class="topbar-right">
+                        @if ($isReservationReviewer)
+                            <a href="{{ route('admin.reservations.index', ['status' => 'Pending']) }}"
+                                class="topbar-notification"
+                                aria-label="Notifikasi reservasi: {{ $pendingReservationCount }} menunggu review"
+                                title="{{ $pendingReservationCount > 0 ? $pendingReservationCount . ' reservasi menunggu review' : 'Tidak ada reservasi menunggu review' }}">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7Z"
+                                        stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                                    <path d="M10.3 20a2 2 0 0 0 3.4 0" stroke="currentColor" stroke-width="1.8"
+                                        stroke-linecap="round" />
+                                </svg>
+                                @if ($pendingReservationCount > 0)
+                                    <span class="topbar-notification-badge"
+                                        aria-hidden="true">{{ $pendingReservationCount > 99 ? '99+' : $pendingReservationCount }}</span>
+                                @endif
+                            </a>
+                        @endif
+
                         <div class="topbar-status">
                             <span class="status-dot"></span>
                             System Online
@@ -152,12 +174,74 @@
 
                         <div class="topbar-divider"></div>
 
-                        <form method="post" action="{{ route('logout') }}">
-                            @csrf
-                            <button class="btn secondary topbar-logout" type="submit">
-                                Logout
+                        @php
+                            $accountInitials = collect(preg_split('/\s+/', trim(auth()->user()->name)))
+                                ->filter()
+                                ->take(2)
+                                ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
+                                ->implode('');
+                        @endphp
+
+                        <div class="topbar-user" data-user-menu>
+                            <button type="button" class="topbar-user-toggle" data-user-menu-toggle
+                                aria-haspopup="menu" aria-expanded="false" aria-controls="topbar-user-menu"
+                                title="Menu akun">
+                                <span class="topbar-user-avatar" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8" />
+                                        <path d="M4 21v-2a8 8 0 0 1 16 0v2" stroke="currentColor" stroke-width="1.8"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                </span>
+                                <span class="topbar-user-meta">
+                                    <span class="topbar-user-name">{{ auth()->user()->name }}</span>
+                                    <span
+                                        class="topbar-user-role">{{ ucfirst(str_replace('_', ' ', auth()->user()->role ?: 'user')) }}</span>
+                                </span>
+                                <span class="topbar-user-caret" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="1.8"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </span>
                             </button>
-                        </form>
+
+                            <div class="topbar-user-menu" id="topbar-user-menu" role="menu">
+                                <div class="topbar-user-menu-header">
+                                    <span class="topbar-user-menu-avatar"
+                                        aria-hidden="true">{{ $accountInitials ?: 'U' }}</span>
+                                    <div>
+                                        <strong>{{ auth()->user()->name }}</strong>
+                                        <span>{{ auth()->user()->email }}</span>
+                                    </div>
+                                </div>
+
+                                <a href="{{ route('profile') }}"
+                                    class="topbar-user-menu-link {{ request()->routeIs('profile') ? 'is-active' : '' }}"
+                                    role="menuitem">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8" />
+                                        <path d="M4 21v-2a8 8 0 0 1 16 0v2" stroke="currentColor" stroke-width="1.8"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                    Profil Saya
+                                </a>
+
+                                <form method="post" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="topbar-user-menu-link topbar-user-menu-logout"
+                                        role="menuitem">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" stroke="currentColor"
+                                                stroke-width="1.8" stroke-linecap="round" />
+                                            <path d="M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="1.8"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </header>
                 <main class="content">

@@ -16,13 +16,6 @@
         if (!is_array($stopRows) || count($stopRows) === 0) {
             $stopRows = [['name' => '', 'visit_time' => '', 'google_maps_url' => '']];
         }
-
-        $startTime = old('start_time', $reservation->start_time
-            ? \Illuminate\Support\Carbon::parse($reservation->start_time)->format('H:i')
-            : '');
-        $endTime = old('end_time', $reservation->end_time
-            ? \Illuminate\Support\Carbon::parse($reservation->end_time)->format('H:i')
-            : '');
     @endphp
     <header>
         <div class="main-header">
@@ -76,11 +69,12 @@
                         @enderror
                     </div>
                     <div class="service-create-field">
-                        <label for="customer_phone">Telepon Pelanggan</label>
-                        <input id="customer_phone" name="customer_phone" type="tel" maxlength="40"
-                            value="{{ old('customer_phone', $reservation->customer_phone) }}"
-                            placeholder="Nomor telepon pelanggan">
-                        @error('customer_phone')
+                        <label for="order_number">Nomor Order <span>*</span></label>
+                        <input id="order_number" name="order_number" type="text" maxlength="100"
+                            value="{{ old('order_number', $reservation->order_number) }}"
+                            placeholder="Nomor order dari pelanggan / sistem" required>
+                        <small class="service-create-help">Opsional. Dapat diisi oleh admin saat membuat SPK.</small>
+                        @error('order_number')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
                     </div>
@@ -120,25 +114,11 @@
                         @enderror
                     </div>
                     <div class="service-create-field">
-                        <label for="start_time">Jam Mulai</label>
-                        <input id="start_time" type="time" name="start_time" value="{{ $startTime }}">
-                        @error('start_time')
-                            <small class="service-create-error">{{ $message }}</small>
-                        @enderror
-                    </div>
-                    <div class="service-create-field">
                         <label for="service_end_date">Tanggal Akhir <span>*</span></label>
                         <input id="service_end_date" type="date" name="service_end_date"
                             min="{{ now('Asia/Makassar')->toDateString() }}"
                             value="{{ old('service_end_date', $reservation->service_end_date->format('Y-m-d')) }}" required>
                         @error('service_end_date')
-                            <small class="service-create-error">{{ $message }}</small>
-                        @enderror
-                    </div>
-                    <div class="service-create-field">
-                        <label for="end_time">Jam Selesai</label>
-                        <input id="end_time" type="time" name="end_time" value="{{ $endTime }}">
-                        @error('end_time')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
                     </div>

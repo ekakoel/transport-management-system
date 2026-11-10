@@ -411,7 +411,7 @@
                     </div>
 
                     @if ($vehicles->hasPages())
-                        <div style="margin-top: 20px;">
+                        <div class="tms-pagination-shell">
                             {{ $vehicles->links() }}
                         </div>
                     @endif

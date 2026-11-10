@@ -23,8 +23,13 @@ class TmsController extends Controller
 {
     public function dashboard()
     {
-        if (strtolower((string) auth()->user()->role) === 'reservation') return redirect()->route('reservations.index');
-        abort_unless(in_array(strtolower((string) auth()->user()->role), ['admin', 'owner', 'manager'], true), 403);
+        $role = strtolower((string) auth()->user()->role);
+
+        if ($role === 'reservation') {
+            return $this->reservationDashboard();
+        }
+
+        abort_unless(in_array($role, ['admin', 'owner', 'manager'], true), 403);
         $today = now('Asia/Makassar')->toDateString();
 
         $todayReservations = Reservation::query()
@@ -63,16 +68,57 @@ class TmsController extends Controller
         ]);
     }
 
+    private function reservationDashboard()
+    {
+        $today = now('Asia/Makassar')->toDateString();
+        $userId = auth()->id();
+
+        $base = Reservation::query()->where('user_id', $userId);
+        $upcoming = (clone $base)->whereDate('service_end_date', '>=', $today);
+
+        $pendingReservationCount = (clone $upcoming)->where('status', 'Pending')->count();
+        $approvedReservationCount = (clone $upcoming)->where('status', 'Approved')->count();
+        $rejectedReservationCount = (clone $upcoming)->where('status', 'Rejected')->count();
+        $cancelledReservationCount = (clone $upcoming)->where('status', 'Cancelled')->count();
+
+        $todayReservationCount = (clone $base)
+            ->whereDate('service_date', '<=', $today)
+            ->whereDate('service_end_date', '>=', $today)
+            ->whereIn('status', ['Pending', 'Approved'])
+            ->count();
+
+        $totalReservationCount = (clone $base)->count();
+
+        $reservations = (clone $upcoming)
+            ->with('serviceType')
+            ->orderBy('service_date')
+            ->orderBy('start_time')
+            ->limit(8)
+            ->get();
+
+        return view('dashboard-reservation', [
+            'pendingReservationCount' => $pendingReservationCount,
+            'approvedReservationCount' => $approvedReservationCount,
+            'rejectedReservationCount' => $rejectedReservationCount,
+            'cancelledReservationCount' => $cancelledReservationCount,
+            'todayReservationCount' => $todayReservationCount,
+            'totalReservationCount' => $totalReservationCount,
+            'reservations' => $reservations,
+        ]);
+    }
+
     public function services(Request $request)
     {
         $today = now('Asia/Makassar')->toDateString();
 
-        $q = TransportService::with(['driver', 'vehicle', 'serviceType', 'spk']);
+        $q = TransportService::with(['driver', 'vehicle', 'serviceType', 'spk', 'reservation']);
         if ($request->filled('date')) $q->whereDate('service_date', $request->input('date'));
         if ($request->filled('status')) $q->where('status', $request->input('status'));
         if ($request->filled('q')) $q->where(function ($w) use ($request) {
             $term = $request->input('q');
-            $w->where('service_code', 'like', "%$term%")->orWhere('customer_name', 'like', "%$term%");
+            $w->where('service_code', 'like', "%$term%")
+                ->orWhere('customer_name', 'like', "%$term%")
+                ->orWhereHas('reservation', fn ($r) => $r->where('order_number', 'like', "%$term%"));
         });
 
         $activeServices = (clone $q)
@@ -122,6 +168,7 @@ class TmsController extends Controller
             'user_id' => ['required', Rule::exists('users', 'id')->where(fn($q) => $q->where('role', 'reservation')->where('is_active', 1))],
             'customer_name' => 'required|string|max:150',
             'customer_phone' => 'nullable|string|max:40',
+            'order_number' => 'nullable|string|max:100',
             'guests' => 'nullable|array|max:100',
             'guests.*.name' => 'required_with:guests.*.gender|string|max:150',
             'guests.*.gender' => ['required_with:guests.*.name', Rule::in(['Male', 'Female'])],
@@ -166,10 +213,10 @@ class TmsController extends Controller
             foreach ($stops as $i => $stop) if (!empty($stop['name'])) $service->stops()->create(['name' => $stop['name'], 'visit_time' => $stop['visit_time'], 'address' => $stop['address'] ?? null, 'google_maps_url' => $stop['google_maps_url'], 'sort_order' => $i + 1, 'status' => 'Planned', 'added_by_driver' => false]);
             $reservation = Reservation::create([
                 'reservation_number' => 'RSV-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(6)),
+                'order_number' => $data['order_number'] ?? null,
                 'user_id' => $data['user_id'],
                 'service_type_id' => $data['service_type_id'],
                 'customer_name' => $data['customer_name'],
-                'customer_phone' => $data['customer_phone'] ?? null,
                 'guest_count' => $service->guest_count,
                 'service_date' => $data['service_date'],
                 'service_end_date' => $data['service_end_date'],
@@ -283,7 +330,7 @@ class TmsController extends Controller
             ?? $reservation?->customer_name
             ?? $service->customer_name
             ?? 'Bapak/Ibu';
-        $phone = preg_replace('/\D+/', '', (string) ($reservation?->requester?->phone ?: $reservation?->customer_phone ?: $service->customer_phone));
+        $phone = preg_replace('/\D+/', '', (string) ($reservation?->requester?->phone ?: $service->customer_phone));
         if (str_starts_with($phone, '0')) {
             $phone = '62' . substr($phone, 1);
         } elseif (str_starts_with($phone, '8')) {
@@ -307,7 +354,7 @@ class TmsController extends Controller
 
         $lines = [
             'Halo ' . $recipientName . ',', '', 'Your order',
-            'Order Number: ' . ($reservation?->reservation_number ?? $service->service_code),
+            'Order Number: ' . ($reservation?->order_number ?: $reservation?->reservation_number ?: $service->service_code),
             'Date: ' . \App\Support\DateFormatter::format($service->service_date),
             'Type: ' . ($service->serviceType?->name ?? 'Layanan Transportasi'), '',
             'Guest Name:', ...$guestLines, '',

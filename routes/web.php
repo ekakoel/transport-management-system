@@ -38,6 +38,9 @@ Route::prefix('public/spk')
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [TmsController::class, 'dashboard'])->name('dashboard');
 
+    Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
+    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+
     // Reservation: user dengan role reservation
     Route::middleware('role:reservation')->group(function () {
         Route::get('/reservations', [ReservationController::class, 'index'])

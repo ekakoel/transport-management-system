@@ -31,6 +31,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const userMenu = document.querySelector('[data-user-menu]');
+    const userMenuToggle = userMenu?.querySelector('[data-user-menu-toggle]');
+
+    if (userMenu && userMenuToggle) {
+        const setUserMenuOpen = (open) => {
+            userMenu.classList.toggle('is-open', open);
+            userMenuToggle.setAttribute('aria-expanded', String(open));
+        };
+
+        userMenuToggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            setUserMenuOpen(!userMenu.classList.contains('is-open'));
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!userMenu.contains(event.target)) {
+                setUserMenuOpen(false);
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && userMenu.classList.contains('is-open')) {
+                setUserMenuOpen(false);
+                userMenuToggle.focus();
+            }
+        });
+    }
+
     const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
     const shell = document.querySelector('.shell');
     const sidebar = shell?.querySelector('.sidebar');
