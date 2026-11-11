@@ -37,6 +37,7 @@ class TmsController extends Controller
             ->whereDate('service_end_date', '>=', $today)
             ->whereIn('status', ['Pending', 'Approved']);
 
+        $pendingReservationReviewCount = Reservation::where('status', 'Pending')->count();
         $todayReservationCount = (clone $todayReservations)->count();
         $todayPendingReservationCount = (clone $todayReservations)->where('status', 'Pending')->count();
 
@@ -44,20 +45,28 @@ class TmsController extends Controller
             ->whereDate('service_date', '<=', $today)
             ->whereDate('service_end_date', '>=', $today)
             ->whereIn('status', ['Published', 'In Progress'])
-            ->get(['id', 'status', 'driver_id', 'vehicle_id']);
+            ->get(['id', 'status', 'driver_id', 'vehicle_id', 'plate_number']);
 
         $todayActiveServiceCount = $todayActiveServices->count();
         $todayInProgressServiceCount = $todayActiveServices->where('status', 'In Progress')->count();
+        $incompleteTodayAssignmentCount = $todayActiveServices
+            ->filter(fn ($service) => $service->driver_id === null
+                || $service->vehicle_id === null
+                || blank($service->plate_number))
+            ->count();
         $activeVehicleCount = $todayActiveServices->pluck('vehicle_id')->filter()->unique()->count();
         $activeDriverCount = $todayActiveServices->pluck('driver_id')->filter()->unique()->count();
 
         return view('dashboard', [
             'todayReservationCount' => $todayReservationCount,
             'todayPendingReservationCount' => $todayPendingReservationCount,
+            'pendingReservationReviewCount' => $pendingReservationReviewCount,
             'todayActiveServiceCount' => $todayActiveServiceCount,
             'todayInProgressServiceCount' => $todayInProgressServiceCount,
+            'incompleteTodayAssignmentCount' => $incompleteTodayAssignmentCount,
             'activeVehicleCount' => $activeVehicleCount,
             'activeDriverCount' => $activeDriverCount,
+            'latestDriverCheckIns' => $this->latestDriverCheckIns(),
             'services' => TransportService::with(['driver', 'vehicle', 'serviceType', 'spk'])
                 ->whereDate('service_end_date', '>=', $today)
                 ->whereIn('status', ['Published', 'In Progress'])
@@ -66,6 +75,40 @@ class TmsController extends Controller
                 ->limit(8)
                 ->get()
         ]);
+    }
+
+    public function liveDashboardCheckIns()
+    {
+        return response()->json([
+            'checkIns' => $this->latestDriverCheckIns(),
+        ]);
+    }
+
+    private function latestDriverCheckIns(): array
+    {
+        return SpkEvent::query()
+            ->where('event_type', 'check_in')
+            ->with(['stop', 'spk', 'service.driver', 'service.vehicle'])
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get()
+            ->map(function (SpkEvent $event) {
+                $service = $event->service;
+                $checkedInAt = $event->created_at?->copy()->setTimezone('Asia/Makassar');
+
+                return [
+                    'service_code' => $service?->service_code ?? 'Layanan',
+                    'service_url' => $service ? route('services.show', $service) : null,
+                    'spk_number' => $event->spk?->spk_number ?? 'SPK',
+                    'driver' => $service?->driver?->name ?? 'Driver tidak tersedia',
+                    'vehicle' => $service?->vehicle?->name,
+                    'plate_number' => $service?->plate_number,
+                    'destination' => $event->stop?->name ?? 'Destinasi tidak tersedia',
+                    'note' => $event->note,
+                    'checked_in_at' => $checkedInAt?->format('d M Y H:i') . ' WITA',
+                ];
+            })
+            ->all();
     }
 
     private function reservationDashboard()
@@ -92,7 +135,6 @@ class TmsController extends Controller
         $reservations = (clone $upcoming)
             ->with('serviceType')
             ->orderBy('service_date')
-            ->orderBy('start_time')
             ->limit(8)
             ->get();
 
@@ -157,7 +199,7 @@ class TmsController extends Controller
             'drivers' => Driver::where('is_active', 1)->orderBy('name')->get(),
             'vehicles' => Vehicle::where('status', 'Available')->orderBy('name')->get(),
             'types' => ServiceType::where('is_active', 1)->orderBy('name')->get(),
-            'contacts' => EmergencyContact::where('is_active', 1)->orderByDesc('is_default')->get(),
+            'defaultEmergencyContact' => EmergencyContact::activeDefault(),
             'reservationUsers' => User::where('role', 'reservation')->where('is_active', 1)->orderBy('name')->get()
         ]);
     }
@@ -179,20 +221,27 @@ class TmsController extends Controller
             'service_end_date' => 'required|date|after_or_equal:service_date',
             'driver_id' => 'required|exists:drivers,id',
             'vehicle_id' => 'required|exists:vehicles,id',
+            'plate_number' => 'required|string|max:30',
             'notes' => 'nullable|string|max:2000',
-            'emergency_contact_id' => 'nullable|exists:emergency_contacts,id',
             'stops' => 'required|array|min:1|max:40',
             'stops.*.name' => 'required|string|max:150',
             'stops.*.visit_time' => 'required|date_format:H:i',
             'stops.*.google_maps_url' => ['required', 'url', 'max:500', 'regex:#^https?://(maps\.app\.goo\.gl|goo\.gl|www\.google\.com|maps\.google\.com)/#i'],
             'stops.*.address' => 'nullable|string|max:500'
         ]);
+        $contact = EmergencyContact::activeDefault();
+        if (! $contact) {
+            return back()->withInput()->withErrors([
+                'emergency_contact' => 'Tidak ada Kontak Darurat aktif yang ditandai sebagai Default. Atur kontak default sebelum membuat layanan dan SPK.',
+            ]);
+        }
+
         $stops = array_values($data['stops']);
         if ($data['service_date'] < now('Asia/Makassar')->toDateString()) return back()->withInput()->withErrors(['service_date' => 'Tanggal layanan tidak boleh di masa lalu.']);
         $conflict = $this->hasScheduleConflict((int)$data['driver_id'], (int)$data['vehicle_id'], $data['service_date'], $data['service_end_date']);
         if ($conflict) return back()->withInput()->withErrors(['driver_id' => 'Driver atau kendaraan sudah memiliki layanan yang tanggalnya bertumpang tindih.']);
         $rawToken = Str::random(64);
-        $service = DB::transaction(function () use ($data, $stops, $rawToken, $request) {
+        $service = DB::transaction(function () use ($data, $stops, $rawToken, $request, $contact) {
             $service = TransportService::create([
                 'service_code' => 'TMS-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(5)),
                 'customer_name' => $data['customer_name'] ?? null,
@@ -201,6 +250,7 @@ class TmsController extends Controller
                 'service_type_id' => $data['service_type_id'],
                 'service_date' => $data['service_date'],
                 'service_end_date' => $data['service_end_date'],
+                'plate_number' => $data['plate_number'],
                 'start_time' => $stops[0]['visit_time'],
                 'end_time' => $stops[count($stops) - 1]['visit_time'],
                 'notes' => $data['notes'] ?? null,
@@ -220,8 +270,6 @@ class TmsController extends Controller
                 'guest_count' => $service->guest_count,
                 'service_date' => $data['service_date'],
                 'service_end_date' => $data['service_end_date'],
-                'start_time' => $service->start_time,
-                'end_time' => $service->end_time,
                 'itinerary' => $stops,
                 'notes' => $data['notes'] ?? null,
                 'status' => 'Approved',
@@ -231,8 +279,7 @@ class TmsController extends Controller
             ]);
             $service->update(['reservation_id' => $reservation->id]);
             foreach (($data['guests'] ?? []) as $guest) if (!empty($guest['name'])) $reservation->guests()->create($guest);
-            $contact = isset($data['emergency_contact_id']) ? EmergencyContact::find($data['emergency_contact_id']) : EmergencyContact::where('is_active', 1)->where('is_default', 1)->first();
-            $spk = Spk::create(['transport_service_id' => $service->id, 'spk_number' => 'SPK-' . now('Asia/Makassar')->format('Ymd') . '-' . str_pad((string)$service->id, 5, '0', STR_PAD_LEFT), 'token_hash' => hash('sha256', $rawToken), 'published_at' => now(), 'emergency_name' => $contact?->name ?? 'Operasional Bali Kami Tour', 'emergency_phone' => $contact?->phone, 'emergency_whatsapp' => $contact?->whatsapp]);
+            $spk = Spk::create(['transport_service_id' => $service->id, 'spk_number' => 'SPK-' . now('Asia/Makassar')->format('Ymd') . '-' . str_pad((string)$service->id, 5, '0', STR_PAD_LEFT), 'token_hash' => hash('sha256', $rawToken), 'published_at' => now(), 'emergency_name' => $contact->name, 'emergency_phone' => $contact->phone, 'emergency_whatsapp' => $contact->whatsapp]);
             session()->flash('new_spk_url', route('public.spk.number.show', [$spk->id, $spk->spk_number]));
             return $service;
         });
@@ -362,7 +409,7 @@ class TmsController extends Controller
             'Driver: ' . ($service->driver?->name ?? '-'),
             'Hp: ' . ($service->driver?->phone ?? '-'),
             'Vehicle: ' . ($service->vehicle?->name ?? '-'),
-            'Police Number: ' . ($service->vehicle?->plate_number ?? '-'), '',
+            'Police Number: ' . ($service->plate_number ?? '-'), '',
             'Untuk melihat detail SPK, gunakan link berikut:',
             $detailUrl, '', 'Terima kasih,', 'online.balikamitour.com',
         ];
@@ -529,13 +576,6 @@ class TmsController extends Controller
         Driver::create($d + ['is_active' => $r->boolean('is_active')]);
         return back()->with('success', 'Driver disimpan.');
     }
-    public function editDriver(Driver $driver)
-    {
-        return view('drivers.edit', [
-            'driver' => $driver,
-            'serviceCount' => $driver->services()->count(),
-        ]);
-    }
     public function updateDriver(Request $request, Driver $driver)
     {
         $data = $request->validate([
@@ -549,25 +589,35 @@ class TmsController extends Controller
 
         return redirect()->route('drivers.index')->with('success', 'Data driver berhasil diperbarui.');
     }
-    public function destroyDriver(Driver $driver)
-    {
-        if ($driver->services()->exists()) {
-            return back()->withErrors(['driver' => 'Driver tidak dapat dihapus karena masih digunakan pada layanan.']);
-        }
-
-        $driver->delete();
-
-        return redirect()->route('drivers.index')->with('success', 'Driver berhasil dihapus.');
-    }
     public function vehicles(Request $request)
     {
         $vehicles = Vehicle::orderBy('name')->paginate(20)->withQueryString();
+        $companyVehicles = Vehicle::query()->where('ownership_type', 'Company');
+        $vehicleStatusCounts = (clone $companyVehicles)
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+        $totalVehicles = (int) (clone $companyVehicles)->count();
+        $maintenanceVehicles = (int) ($vehicleStatusCounts['Maintenance'] ?? 0);
+        $inactiveVehicles = (int) ($vehicleStatusCounts['Inactive'] ?? 0);
+        $today = now('Asia/Makassar')->toDateString();
+        $assignedTodayCount = TransportService::query()
+            ->whereNotNull('vehicle_id')
+            ->whereDate('service_date', '<=', $today)
+            ->whereDate('service_end_date', '>=', $today)
+            ->whereNotIn('status', ['Cancelled', 'Expired', 'Completed'])
+            ->whereHas('vehicle', function ($query) {
+                $query->where('ownership_type', 'Company')
+                    ->whereNotIn('status', ['Maintenance', 'Inactive']);
+            })
+            ->distinct()
+            ->count('vehicle_id');
         $vehicleStats = [
-            'total' => Vehicle::count(),
-            'Available' => Vehicle::where('status', 'Available')->count(),
-            'Assigned' => Vehicle::where('status', 'Assigned')->count(),
-            'Maintenance' => Vehicle::where('status', 'Maintenance')->count(),
-            'Inactive' => Vehicle::where('status', 'Inactive')->count(),
+            'total' => $totalVehicles,
+            'Available' => max(0, $totalVehicles - $assignedTodayCount - $maintenanceVehicles - $inactiveVehicles),
+            'Assigned' => $assignedTodayCount,
+            'Maintenance' => $maintenanceVehicles,
+            'Inactive' => $inactiveVehicles,
         ];
 
         $monthParam = (string) $request->query('month', '');
@@ -611,7 +661,7 @@ class TmsController extends Controller
                 $calendarEvents[$date->format('Y-m-d')][] = [
                     'vehicle_id' => $service->vehicle_id,
                     'vehicle' => $service->vehicle?->name ?? 'Kendaraan',
-                    'plate' => $service->vehicle?->plate_number ?? '-',
+                    'plate' => $service->plate_number ?? '-',
                     'type' => $service->serviceType?->name ?? 'Layanan',
                     'driver' => $service->driver?->name ?? 'Belum ditugaskan',
                     'start' => DateFormatter::format($service->service_date, $service->start_time),
@@ -642,7 +692,13 @@ class TmsController extends Controller
     }
     public function storeVehicle(Request $r)
     {
-        $d = $r->validate(['name' => 'required|string|max:150', 'plate_number' => 'required|string|max:30|unique:vehicles,plate_number', 'capacity' => 'required|integer|min:1|max:100', 'status' => ['required', Rule::in(['Available', 'Assigned', 'Maintenance', 'Inactive'])], 'notes' => 'nullable|string|max:1000']);
+        $d = $r->validate([
+            'name' => 'required|string|max:150',
+            'ownership_type' => ['required', Rule::in(['Company', 'Vendor'])],
+            'capacity' => 'required|integer|min:1|max:100',
+            'status' => ['required', Rule::in(['Available', 'Assigned', 'Maintenance', 'Inactive'])],
+            'notes' => 'nullable|string|max:1000',
+        ]);
         Vehicle::create($d);
         return back()->with('success', 'Kendaraan disimpan.');
     }
@@ -657,7 +713,7 @@ class TmsController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:150',
-            'plate_number' => ['required', 'string', 'max:30', Rule::unique('vehicles', 'plate_number')->ignore($vehicle->id)],
+            'ownership_type' => ['required', Rule::in(['Company', 'Vendor'])],
             'capacity' => 'required|integer|min:1|max:100',
             'status' => ['required', Rule::in(['Available', 'Assigned', 'Maintenance', 'Inactive'])],
             'notes' => 'nullable|string|max:1000',
@@ -682,14 +738,6 @@ class TmsController extends Controller
         $d = $r->validate(['name' => 'required|string|max:120', 'description' => 'nullable|string|max:500']);
         ServiceType::create($d + ['is_active' => $r->boolean('is_active')]);
         return back()->with('success', 'Tipe layanan disimpan.');
-    }
-    public function editType(ServiceType $type)
-    {
-        return view('types.edit', [
-            'type' => $type,
-            'serviceCount' => TransportService::where('service_type_id', $type->id)->count(),
-            'reservationCount' => Reservation::where('service_type_id', $type->id)->count(),
-        ]);
     }
     public function updateType(Request $request, ServiceType $type)
     {
@@ -720,10 +768,58 @@ class TmsController extends Controller
     }
     public function storeContact(Request $r)
     {
-        $d = $r->validate(['name' => 'required|string|max:150', 'phone' => 'required|string|max:40', 'whatsapp' => 'nullable|string|max:40']);
-        if ($r->boolean('is_default')) EmergencyContact::query()->update(['is_default' => false]);
-        EmergencyContact::create($d + ['is_default' => $r->boolean('is_default'), 'is_active' => $r->boolean('is_active')]);
+        $data = $r->validate([
+            'name' => 'required|string|max:150',
+            'phone' => 'required|string|max:40',
+            'whatsapp' => 'nullable|string|max:40',
+        ]);
+
+        DB::transaction(function () use ($r, $data) {
+            if ($r->boolean('is_default')) {
+                EmergencyContact::query()->update(['is_default' => false]);
+            }
+
+            EmergencyContact::create($data + [
+                'is_default' => $r->boolean('is_default'),
+                'is_active' => $r->boolean('is_active'),
+            ]);
+        });
+
         return back()->with('success', 'Kontak disimpan.');
+    }
+    public function updateContact(Request $request, EmergencyContact $contact)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:150',
+            'phone' => 'required|string|max:40',
+            'whatsapp' => 'nullable|string|max:40',
+        ]);
+
+        DB::transaction(function () use ($request, $contact, $data) {
+            if ($request->boolean('is_default')) {
+                EmergencyContact::query()
+                    ->where('id', '!=', $contact->id)
+                    ->update(['is_default' => false]);
+            }
+
+            $contact->update($data + [
+                'is_default' => $request->boolean('is_default'),
+                'is_active' => $request->boolean('is_active'),
+            ]);
+        });
+
+        return redirect()->route('contacts.index')->with('success', 'Kontak berhasil diperbarui.');
+    }
+    public function destroyContact(EmergencyContact $contact)
+    {
+        $wasDefault = $contact->is_default;
+        $contact->delete();
+
+        $message = $wasDefault
+            ? 'Kontak berhasil dihapus. Pilih kontak Default yang baru agar dapat digunakan pada layanan dan SPK.'
+            : 'Kontak berhasil dihapus.';
+
+        return redirect()->route('contacts.index')->with('success', $message);
     }
 
     public function reservationUsers()
@@ -764,13 +860,6 @@ class TmsController extends Controller
         ]);
 
         return back()->with('success', 'User reservation berhasil ditambahkan.');
-    }
-
-    public function editReservationUser(User $user)
-    {
-        abort_unless(strtolower((string) $user->role) === 'reservation', 404);
-
-        return view('users.edit', ['reservationUser' => $user]);
     }
 
     public function updateReservationUser(Request $request, User $user)
@@ -890,10 +979,16 @@ class TmsController extends Controller
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy_meters' => 'nullable|numeric|gt:0|max:100000',
-            'note' => 'nullable|string|max:1000',
+            'note' => 'required|string|max:1000',
+                    'destination_name' => 'nullable|string|max:150',
             'itinerary_stop_id' => 'nullable|integer|exists:service_itinerary_stops,id',
             'idempotency_key' => 'required|uuid',
         ]);
+
+                // Validate destination_name is provided when itinerary_stop_id is not given
+                if (empty($data['itinerary_stop_id']) && empty($data['destination_name'])) {
+                    return back()->withErrors(['destination_name' => 'Nama destinasi wajib diisi saat menambah destinasi baru.']);
+                }
 
         $duplicate = SpkEvent::where('spk_id', $spk->id)
             ->where('metadata->idempotency_key', $data['idempotency_key'])
@@ -918,10 +1013,42 @@ class TmsController extends Controller
         }
 
         DB::transaction(function () use ($spk, $data, $stop) {
+            $destinationStop = $stop;
+
+            if (! $destinationStop && filled($data['destination_name'] ?? null)) {
+                $maxSortOrder = (int) ItineraryStop::where('transport_service_id', $spk->transport_service_id)
+                    ->max('sort_order');
+                $destinationStop = ItineraryStop::create([
+                    'transport_service_id' => $spk->transport_service_id,
+                    'name' => $data['destination_name'],
+                    'visit_time' => now('Asia/Makassar')->format('H:i:s'),
+                    'latitude' => $data['latitude'],
+                    'longitude' => $data['longitude'],
+                    'address' => null,
+                    'note' => $data['note'] ?? null,
+                    'sort_order' => $maxSortOrder + 1,
+                    'status' => 'Checked In',
+                    'added_by_driver' => true,
+                ]);
+
+                SpkEvent::create([
+                    'spk_id' => $spk->id,
+                    'transport_service_id' => $spk->transport_service_id,
+                    'itinerary_stop_id' => $destinationStop->id,
+                    'event_type' => 'destination_added',
+                    'actor_type' => 'driver_public',
+                    'actor_id' => null,
+                    'created_at' => now('UTC'),
+                    'metadata' => [
+                        'idempotency_key' => $data['idempotency_key'],
+                    ],
+                ]);
+            }
+
             SpkEvent::create([
                 'spk_id' => $spk->id,
                 'transport_service_id' => $spk->transport_service_id,
-                'itinerary_stop_id' => $stop?->id,
+                'itinerary_stop_id' => $destinationStop?->id,
                 'event_type' => 'check_in',
                 'latitude' => $data['latitude'],
                 'longitude' => $data['longitude'],
@@ -942,7 +1069,12 @@ class TmsController extends Controller
             }
         });
 
-        return back()->with('success', 'Check-in berhasil disimpan.');
+        return back()->with(
+            'success',
+            filled($data['destination_name'] ?? null)
+                ? 'Destinasi berhasil ditambahkan dan laporan aktivitas tersimpan.'
+                : 'Check-in berhasil disimpan.'
+        );
     }
 
     public function publicCheckIn(Request $r, string $token)
@@ -1026,14 +1158,6 @@ class TmsController extends Controller
     {
         $spk = $this->validPublicSpk($token);
         abort_unless($spk, 404);
-
-        return $this->storePublicDestination($r, $spk);
-    }
-
-    public function publicAddDestinationByNumber(Request $r, Spk $spk, string $spkNumber)
-    {
-        abort_unless(!$spk->revoked_at && hash_equals($spk->spk_number, $spkNumber), 404);
-        $this->completePublicSpkIfDue($spk);
 
         return $this->storePublicDestination($r, $spk);
     }

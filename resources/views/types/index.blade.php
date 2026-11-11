@@ -17,7 +17,7 @@
         </div>
 
         {{-- Information Banner --}}
-        <div class="main-notice">
+        <div class="main-notice mb-3">
             <span class="main-notice-icon">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7" />
@@ -34,81 +34,8 @@
     <div class="service-create-page">
         <div class="tms-two-column">
             <div class="tms-main-column">
-
-
-                {{-- Form Tambah Tipe Layanan --}}
-                <form id="type-form" method="POST" action="{{ route('types.store') }}" class="service-create-form">
-                    @csrf
-
-                    <section class="service-create-card">
-                        <div class="service-create-section-header">
-                            <div class="service-create-section-icon service-icon-blue">
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor"
-                                        stroke-width="1.7" />
-                                    <path d="M8 9h8M8 12h8M8 15h4" stroke="currentColor" stroke-width="1.7"
-                                        stroke-linecap="round" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h2>Tambah Tipe Layanan</h2>
-                                <p>Masukkan nama dan deskripsi jenis layanan baru.</p>
-                            </div>
-                            <span class="service-create-step">01</span>
-                        </div>
-
-                        <div class="service-create-fields">
-                            <div class="service-create-field">
-                                <label for="name">Tipe Layanan <span>*</span></label>
-                                <input id="name" type="text" name="name" value="{{ old('name') }}"
-                                    placeholder="Contoh: Airport Shuttle" required>
-                                @error('name')
-                                    <small class="service-create-error">{{ $message }}</small>
-                                @enderror
-                            </div>
-
-                            <div class="service-create-field">
-                                <label for="description">Deskripsi</label>
-                                <input id="description" type="text" name="description" value="{{ old('description') }}"
-                                    placeholder="Deskripsi singkat layanan">
-                                @error('description')
-                                    <small class="service-create-error">{{ $message }}</small>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="service-itinerary-info" style="margin-top: 20px;">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
-                                <path d="m8 12 2.5 2.5L16 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                            <label
-                                style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; margin: 0;">
-                                <input type="checkbox" name="is_active" value="1" style="width: auto; margin: 0;"
-                                    @checked(old('is_active', '1') == '1')>
-                                <span>
-                                    <strong>Tipe Layanan Aktif</strong>
-                                    <small style="display: block;">Tipe layanan ditandai aktif untuk penggunaan
-                                        operasional.</small>
-                                </span>
-                            </label>
-                        </div>
-
-                        <div class="service-create-actions">
-                            <button type="submit" class="service-submit-btn">
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" />
-                                </svg>
-                                Tambah Tipe Layanan
-                            </button>
-                        </div>
-                    </section>
-                </form>
-
                 {{-- Daftar Tipe Layanan --}}
-                <section class="service-create-card" style="margin-top: 24px;">
+                <section class="service-create-card">
                     <div class="service-create-section-header">
                         <div class="service-create-section-icon service-icon-green">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -123,6 +50,8 @@
                             <p>Jenis layanan transportasi yang terdaftar di sistem.</p>
                         </div>
                         <span class="service-create-step">{{ $types->count() }}</span>
+                        <button type="button" class="tms-modal-btn tms-modal-btn-primary"
+                            data-type-create-open>Tambah Tipe</button>
                     </div>
 
                     <div class="services-table-scroll">
@@ -147,15 +76,19 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <a href="{{ route('types.edit', $t) }}" class="services-detail-btn">
-                                                Edit
-                                            </a>
+                                            <button type="button" class="services-detail-btn"
+                                                data-type-edit-open
+                                                data-type-action="{{ route('types.update', $t) }}"
+                                                data-type-id="{{ $t->id }}"
+                                                data-type-name="{{ $t->name }}"
+                                                data-type-description="{{ $t->description }}"
+                                                data-type-active="{{ $t->is_active ? '1' : '0' }}">Edit</button>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
                                         <td colspan="4" style="text-align: center; padding: 28px;">
-                                            Belum ada tipe layanan. Gunakan formulir di atas untuk menambahkannya.
+                                            Belum ada tipe layanan. Gunakan tombol Tambah Tipe untuk membuatnya.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -163,6 +96,69 @@
                         </table>
                     </div>
                 </section>
+                @php
+                    $editingType = $types->firstWhere('id', old('type_id'));
+                @endphp
+                <div class="tms-modal" id="typeModal" hidden
+                    data-open="{{ $errors->any() ? '1' : '0' }}"
+                    data-context="{{ old('type_context', 'create') }}"
+                    data-edit-action="{{ $editingType ? route('types.update', $editingType) : '' }}">
+                    <div class="tms-modal-backdrop" data-type-modal-close></div>
+                    <div class="tms-modal-dialog" role="dialog" aria-modal="true"
+                        aria-labelledby="typeModalTitle">
+                        <div class="tms-modal-header">
+                            <div>
+                                <h2 id="typeModalTitle">Tambah Tipe Layanan</h2>
+                                <p id="typeModalDescription">Masukkan nama dan deskripsi jenis layanan baru.</p>
+                            </div>
+                            <button type="button" class="tms-modal-close" data-type-modal-close
+                                aria-label="Tutup">&times;</button>
+                        </div>
+                        <form id="typeForm" method="POST" action="{{ route('types.store') }}">
+                            @csrf
+                            <input type="hidden" name="_method" id="typeMethod" value="PUT" disabled>
+                            <input type="hidden" name="type_context" id="typeContext"
+                                value="{{ old('type_context', 'create') }}">
+                            <input type="hidden" name="type_id" id="typeId" value="{{ old('type_id') }}">
+                            <div class="tms-modal-body">
+                                <div class="service-create-field">
+                                    <label for="typeName">Tipe Layanan <span>*</span></label>
+                                    <input id="typeName" type="text" name="name" maxlength="120"
+                                        value="{{ old('name') }}" placeholder="Contoh: Airport Shuttle" required>
+                                    @error('name')
+                                        <small class="service-create-error">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="service-create-field">
+                                    <label for="typeDescription">Deskripsi</label>
+                                    <input id="typeDescription" type="text" name="description" maxlength="500"
+                                        value="{{ old('description') }}" placeholder="Deskripsi singkat layanan">
+                                    @error('description')
+                                        <small class="service-create-error">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <label
+                                    style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; margin: 0;">
+                                    <input type="hidden" name="is_active" value="0">
+                                    <input id="typeActive" type="checkbox" name="is_active" value="1"
+                                        style="width: auto; margin: 0;"
+                                        @checked(old('is_active', '1') == '1')>
+                                    <span>
+                                        <strong>Tipe Layanan Aktif</strong>
+                                        <small style="display: block;">Tipe aktif dapat digunakan untuk kebutuhan operasional.</small>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="tms-modal-footer">
+                                <button type="button" class="tms-modal-btn tms-modal-btn-secondary"
+                                    data-type-modal-close>Batal</button>
+                                <button type="submit" class="tms-modal-btn tms-modal-btn-primary" id="typeSubmit">
+                                    Tambah Tipe Layanan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <aside class="tms-info-panel" aria-label="Informasi Tipe Layanan">
@@ -188,8 +184,104 @@
                         <span class="tms-info-description">Tipe yang tidak aktif.</span>
                     </div>
                 </div>
-                <div class="tms-info-panel-footer"><a href="#type-form">Tambah tipe layanan melalui formulir</a></div>
+                <div class="tms-info-panel-footer">
+                    <button type="button" class="tms-modal-btn tms-modal-btn-primary"
+                        data-type-create-open>Tambah tipe layanan</button>
+                </div>
             </aside>
         </div>
     </div>
+    <script>
+        (() => {
+            const modal = document.getElementById('typeModal');
+            const form = document.getElementById('typeForm');
+
+            if (!modal || !form) return;
+
+            const method = document.getElementById('typeMethod');
+            const context = document.getElementById('typeContext');
+            const typeId = document.getElementById('typeId');
+            const name = document.getElementById('typeName');
+            const description = document.getElementById('typeDescription');
+            const active = document.getElementById('typeActive');
+            const title = document.getElementById('typeModalTitle');
+            const modalDescription = document.getElementById('typeModalDescription');
+            const submit = document.getElementById('typeSubmit');
+
+            const openModal = () => {
+                modal.hidden = false;
+                document.body.classList.add('tms-modal-open');
+                window.setTimeout(() => name.focus(), 30);
+            };
+
+            const closeModal = () => {
+                modal.hidden = true;
+                document.body.classList.remove('tms-modal-open');
+            };
+
+            const setCreateForm = () => {
+                form.reset();
+                form.action = @json(route('types.store'));
+                method.disabled = true;
+                context.value = 'create';
+                typeId.value = '';
+                name.value = '';
+                description.value = '';
+                active.checked = true;
+                title.textContent = 'Tambah Tipe Layanan';
+                modalDescription.textContent = 'Masukkan nama dan deskripsi jenis layanan baru.';
+                submit.textContent = 'Tambah Tipe Layanan';
+            };
+
+            const setEditForm = (trigger) => {
+                form.action = trigger.dataset.typeAction;
+                method.disabled = false;
+                context.value = 'edit';
+                typeId.value = trigger.dataset.typeId;
+                name.value = trigger.dataset.typeName;
+                description.value = trigger.dataset.typeDescription || '';
+                active.checked = trigger.dataset.typeActive === '1';
+                title.textContent = 'Edit Tipe Layanan';
+                modalDescription.textContent = 'Perbarui nama, deskripsi, atau status tipe layanan.';
+                submit.textContent = 'Simpan Perubahan';
+            };
+
+            document.querySelectorAll('[data-type-create-open]').forEach((trigger) => {
+                trigger.addEventListener('click', () => {
+                    setCreateForm();
+                    openModal();
+                });
+            });
+
+            document.querySelectorAll('[data-type-edit-open]').forEach((trigger) => {
+                trigger.addEventListener('click', () => {
+                    setEditForm(trigger);
+                    openModal();
+                });
+            });
+
+            modal.querySelectorAll('[data-type-modal-close]').forEach((element) => {
+                element.addEventListener('click', closeModal);
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !modal.hidden) closeModal();
+            });
+
+            if (modal.dataset.open === '1') {
+                const isEdit = modal.dataset.context === 'edit' && modal.dataset.editAction;
+                if (isEdit) {
+                    form.action = modal.dataset.editAction;
+                    method.disabled = false;
+                    title.textContent = 'Edit Tipe Layanan';
+                    modalDescription.textContent = 'Perbarui nama, deskripsi, atau status tipe layanan.';
+                    submit.textContent = 'Simpan Perubahan';
+                } else {
+                    method.disabled = true;
+                }
+
+                openModal();
+            }
+        })();
+    </script>
 @endsection

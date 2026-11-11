@@ -21,7 +21,6 @@ Route::prefix('spk/{spk}/{spkNumber}')
     ->group(function () {
         Route::get('/', [TmsController::class, 'publicSpkByNumber'])->name('show');
         Route::post('/check-in', [TmsController::class, 'publicCheckInByNumber'])->name('checkin');
-        Route::post('/destinations', [TmsController::class, 'publicAddDestinationByNumber'])->name('destinations.add');
         Route::post('/destinations/{stop}/cancel', [TmsController::class, 'publicCancelDestinationByNumber'])->name('destinations.cancel');
     });
 
@@ -37,6 +36,9 @@ Route::prefix('public/spk')
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [TmsController::class, 'dashboard'])->name('dashboard');
+    Route::middleware('role:admin,owner,manager')
+        ->get('/dashboard/live-check-ins', [TmsController::class, 'liveDashboardCheckIns'])
+        ->name('dashboard.live-check-ins');
 
     Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
@@ -121,23 +123,13 @@ Route::middleware(['auth'])->group(function () {
             ->name('drivers.index');
         Route::post('/drivers', [TmsController::class, 'storeDriver'])
             ->name('drivers.store');
-        Route::get('/drivers/{driver}/edit', [TmsController::class, 'editDriver'])
-            ->whereNumber('driver')
-            ->name('drivers.edit');
         Route::put('/drivers/{driver}', [TmsController::class, 'updateDriver'])
             ->whereNumber('driver')
             ->name('drivers.update');
-        Route::delete('/drivers/{driver}', [TmsController::class, 'destroyDriver'])
-            ->whereNumber('driver')
-            ->name('drivers.destroy');
-
         Route::get('/reservation-users', [TmsController::class, 'reservationUsers'])
             ->name('reservation-users.index');
         Route::post('/reservation-users', [TmsController::class, 'storeReservationUser'])
             ->name('reservation-users.store');
-        Route::get('/reservation-users/{user}/edit', [TmsController::class, 'editReservationUser'])
-            ->whereNumber('user')
-            ->name('reservation-users.edit');
         Route::put('/reservation-users/{user}', [TmsController::class, 'updateReservationUser'])
             ->whereNumber('user')
             ->name('reservation-users.update');
@@ -157,9 +149,6 @@ Route::middleware(['auth'])->group(function () {
             ->name('types.index');
         Route::post('/service-types', [TmsController::class, 'storeType'])
             ->name('types.store');
-        Route::get('/service-types/{type}/edit', [TmsController::class, 'editType'])
-            ->whereNumber('type')
-            ->name('types.edit');
         Route::put('/service-types/{type}', [TmsController::class, 'updateType'])
             ->whereNumber('type')
             ->name('types.update');
@@ -168,5 +157,11 @@ Route::middleware(['auth'])->group(function () {
             ->name('contacts.index');
         Route::post('/emergency-contacts', [TmsController::class, 'storeContact'])
             ->name('contacts.store');
+        Route::put('/emergency-contacts/{contact}', [TmsController::class, 'updateContact'])
+            ->whereNumber('contact')
+            ->name('contacts.update');
+        Route::delete('/emergency-contacts/{contact}', [TmsController::class, 'destroyContact'])
+            ->whereNumber('contact')
+            ->name('contacts.destroy');
     });
 });

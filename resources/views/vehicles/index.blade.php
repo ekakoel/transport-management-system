@@ -12,7 +12,7 @@
                     TRANSPORT OPERATIONS
                 </div>
                 <h1>Manajemen Kendaraan</h1>
-                <p>Kelola armada, nomor polisi, kapasitas penumpang, dan status operasional kendaraan.</p>
+                <p>Kelola data armada, kapasitas penumpang, dan status operasional kendaraan.</p>
             </div>
 
             <button type="button" class="services-create-btn" data-vehicle-create-open
@@ -62,39 +62,6 @@
         $nextMonth = $calendarMonth->copy()->addMonth();
         $todayString = now('Asia/Makassar')->toDateString();
     @endphp
-
-    <section class="vehicle-calendar-panel">
-        {{-- <div class="vehicle-calendar-toolbar">
-            <div>
-                <span class="vehicle-calendar-kicker">KETERSEDIAAN ARMADA</span>
-                <h2>Kalender Ketersediaan Kendaraan</h2>
-                <p>Jadwal layanan transportasi per bulan untuk melihat kendaraan yang sudah terpakai.</p>
-            </div>
-
-            <div class="vehicle-calendar-toolbar-actions">
-                <a href="{{ route('vehicles.index', ['month' => $prevMonth->format('Y-m')]) }}"
-                    class="vehicle-calendar-nav-btn" aria-label="Bulan sebelumnya">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="m15 6-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                </a>
-                <span class="vehicle-calendar-month">{{ $calendarLabel }}</span>
-                <a href="{{ route('vehicles.index', ['month' => $nextMonth->format('Y-m')]) }}"
-                    class="vehicle-calendar-nav-btn" aria-label="Bulan berikutnya">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                </a>
-                @if (! $calendarMonth->isSameMonth(now('Asia/Makassar')))
-                    <a href="{{ route('vehicles.index') }}" class="vehicle-calendar-today-btn">Bulan ini</a>
-                @endif
-            </div>
-        </div> --}}
-
-        
-    </section>
 
     <div class="tms-modal" id="calendarEventModal" hidden>
         <div class="tms-modal-backdrop" data-calendar-modal-close></div>
@@ -168,10 +135,16 @@
                         </div>
 
                         <div class="service-create-field">
-                            <label for="plate_number">Nomor Polisi <span>*</span></label>
-                            <input id="plate_number" name="plate_number" type="text"
-                                value="{{ old('plate_number') }}" placeholder="Contoh: DK 1234 ABC" required>
-                            @error('plate_number')
+                            <label for="ownership_type">Kepemilikan Kendaraan <span>*</span></label>
+                            <select id="ownership_type" name="ownership_type" required>
+                                <option value="Company" @selected(old('ownership_type', 'Company') === 'Company')>
+                                    Kendaraan Perusahaan
+                                </option>
+                                <option value="Vendor" @selected(old('ownership_type') === 'Vendor')>
+                                    Kendaraan Vendor
+                                </option>
+                            </select>
+                            @error('ownership_type')
                                 <small class="service-create-error">{{ $message }}</small>
                             @enderror
                         </div>
@@ -377,7 +350,7 @@
                             <thead>
                                 <tr>
                                     <th>Kendaraan</th>
-                                    <th>Nomor Polisi</th>
+                                    <th>Kepemilikan</th>
                                     <th>Kapasitas</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
@@ -388,7 +361,7 @@
                                 @forelse ($vehicles as $v)
                                     <tr>
                                         <td><strong>{{ $v->name }}</strong></td>
-                                        <td>{{ $v->plate_number }}</td>
+                                        <td>{{ $v->ownership_type === 'Vendor' ? 'Vendor' : 'Perusahaan' }}</td>
                                         <td>{{ $v->capacity }} pax</td>
                                         <td>
                                             <span class="badge">{{ $v->status }}</span>
@@ -437,7 +410,7 @@
                                 style="background: {{ $vehicleColors[$calendarVehicle->id] }}"></span>
                             <div class="vehicle-calendar-legend-text">
                                 <strong>{{ $calendarVehicle->name }}</strong>
-                                <span>{{ $calendarVehicle->plate_number }} &middot; {{ $calendarVehicle->status }}</span>
+                                <span>{{ $calendarVehicle->status }}</span>
                             </div>
                             <span class="vehicle-calendar-legend-count">
                                 {{ $vehicleCalendarCounts[$calendarVehicle->id] ?? 0 }} hari
@@ -451,28 +424,33 @@
                 <div class="tms-info-panel-heading">
                     <span class="tms-info-panel-kicker">INFORMASI</span>
                     <h2>Kendaraan</h2>
-                    <p>Ringkasan armada berdasarkan status saat ini.</p>
+                    <p>Ringkasan kendaraan milik perusahaan dan layanan yang berlangsung hari ini.</p>
                 </div>
                 <div class="tms-info-list">
                     <div class="tms-info-item">
                         <span class="tms-info-label">Total kendaraan</span>
                         <strong class="tms-info-value">{{ number_format($vehicleStats['total']) }}</strong>
-                        <span class="tms-info-description">Seluruh kendaraan terdaftar.</span>
+                        <span class="tms-info-description">Kendaraan yang dimiliki perusahaan.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Available</span>
                         <strong class="tms-info-value">{{ number_format($vehicleStats['Available']) }}</strong>
-                        <span class="tms-info-description">Kendaraan tersedia.</span>
+                        <span class="tms-info-description">Kendaraan yang tidak bertugas atau dalam perawatan.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Assigned</span>
                         <strong class="tms-info-value">{{ number_format($vehicleStats['Assigned']) }}</strong>
-                        <span class="tms-info-description">Kendaraan ditugaskan.</span>
+                        <span class="tms-info-description">Kendaraan dengan layanan aktif hari ini.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Maintenance</span>
                         <strong class="tms-info-value">{{ number_format($vehicleStats['Maintenance']) }}</strong>
                         <span class="tms-info-description">Kendaraan dalam perawatan.</span>
+                    </div>
+                    <div class="tms-info-item">
+                        <span class="tms-info-label">Inactive</span>
+                        <strong class="tms-info-value">{{ number_format($vehicleStats['Inactive']) }}</strong>
+                        <span class="tms-info-description">Kendaraan yang tidak beroperasi.</span>
                     </div>
                 </div>
                 <div class="tms-info-panel-footer">

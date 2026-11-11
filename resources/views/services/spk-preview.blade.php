@@ -156,7 +156,7 @@
                             {{ $service->vehicle?->name ?? 'Belum ditentukan' }}
                         </div>
                         <div class="service-show-summary-sub">
-                            {{ $service->vehicle?->plate_number ?? 'Nomor polisi tidak tersedia' }}
+                            {{ $service->plate_number ?? 'Nomor polisi tidak tersedia' }}
                         </div>
                     </section>
                 </div>
@@ -476,8 +476,18 @@
                     <div class="tms-info-item">
                         <span class="tms-info-label">Kendaraan</span>
                         <strong
-                            class="tms-info-value">{{ $service->vehicle?->plate_number ?? 'Belum ditentukan' }}</strong>
+                            class="tms-info-value">{{ $service->plate_number ?? 'Belum ditentukan' }}</strong>
                         <span class="tms-info-description">Nomor kendaraan.</span>
+                    </div>
+                    <div class="tms-info-item">
+                        <span class="tms-info-label">Kontak Darurat</span>
+                        <strong class="tms-info-value">{{ $service->spk?->emergency_name ?? 'Belum diatur' }}</strong>
+                        <span class="tms-info-description">
+                            Telepon: {{ $service->spk?->emergency_phone ?? '—' }}
+                            @if ($service->spk?->emergency_whatsapp)
+                                · WhatsApp: {{ $service->spk->emergency_whatsapp }}
+                            @endif
+                        </span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Jumlah destinasi</span>

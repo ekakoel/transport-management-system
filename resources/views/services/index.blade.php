@@ -201,7 +201,7 @@
                                                     {{ $s->driver?->name ?? 'Belum ditugaskan' }}
                                                 </div>
                                                 <div class="services-subtext">
-                                                    {{ $s->vehicle?->plate_number ?? 'Kendaraan belum ditentukan' }}
+                                                    {{ $s->plate_number ?? 'Nomor polisi belum ditentukan' }}
                                                 </div>
                                             </td>
 

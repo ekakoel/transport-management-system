@@ -55,11 +55,16 @@
                             </div>
 
                             <div class="service-create-field">
-                                <label for="plate_number">Nomor Polisi <span>*</span></label>
-                                <input id="plate_number" name="plate_number" type="text"
-                                    value="{{ old('plate_number', $vehicle->plate_number) }}"
-                                    placeholder="Contoh: DK 1234 ABC" required>
-                                @error('plate_number')
+                                <label for="ownership_type">Kepemilikan Kendaraan <span>*</span></label>
+                                <select id="ownership_type" name="ownership_type" required>
+                                    <option value="Company" @selected(old('ownership_type', $vehicle->ownership_type ?? 'Company') === 'Company')>
+                                        Kendaraan Perusahaan
+                                    </option>
+                                    <option value="Vendor" @selected(old('ownership_type', $vehicle->ownership_type ?? 'Company') === 'Vendor')>
+                                        Kendaraan Vendor
+                                    </option>
+                                </select>
+                                @error('ownership_type')
                                     <small class="service-create-error">{{ $message }}</small>
                                 @enderror
                             </div>
@@ -128,9 +133,9 @@
                         <span class="tms-info-description">Nama atau model kendaraan.</span>
                     </div>
                     <div class="tms-info-item">
-                        <span class="tms-info-label">Nomor polisi</span>
-                        <strong class="tms-info-value">{{ $vehicle->plate_number }}</strong>
-                        <span class="tms-info-description">Identitas kendaraan saat ini.</span>
+                        <span class="tms-info-label">Kepemilikan</span>
+                        <strong class="tms-info-value">{{ ($vehicle->ownership_type ?? 'Company') === 'Vendor' ? 'Vendor' : 'Perusahaan' }}</strong>
+                        <span class="tms-info-description">Jenis kepemilikan kendaraan.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Kapasitas</span>

@@ -21,7 +21,7 @@
             $initialStep = 2;
         } elseif ($stepHasError(['guests'])) {
             $initialStep = 3;
-        } elseif ($stepHasError(['driver_id', 'vehicle_id', 'emergency_contact_id'])) {
+        } elseif ($stepHasError(['driver_id', 'vehicle_id', 'plate_number', 'emergency_contact'])) {
             $initialStep = 4;
         } elseif ($stepHasError(['stops'])) {
             $initialStep = 5;
@@ -79,6 +79,8 @@
         <form method="POST" action="{{ route('services.store') }}" class="service-create-form" id="serviceWizardForm"
             novalidate>
             @csrf
+            <input type="hidden" id="defaultEmergencyContactName"
+                value="{{ $defaultEmergencyContact?->name ?? 'Belum diatur' }}">
 
             {{-- Wizard Steps --}}
             <ol class="service-wizard-steps" aria-label="Langkah pembuatan layanan">
@@ -349,7 +351,7 @@
                             <option value="">Pilih kendaraan</option>
                             @foreach ($vehicles as $v)
                                 <option value="{{ $v->id }}" @selected(old('vehicle_id') == $v->id)>
-                                    {{ $v->name }} — {{ $v->plate_number }} ({{ $v->capacity }} pax)
+                                {{ $v->name }} ({{ $v->ownership_type === 'Vendor' ? 'Vendor' : 'Perusahaan' }}, {{ $v->capacity }} pax)
                                 </option>
                             @endforeach
                         </select>
@@ -358,21 +360,30 @@
                         @enderror
                     </div>
 
+                    <div class="service-create-field">
+                        <label for="plate_number">Nomor Polisi <span>*</span></label>
+                        <input id="plate_number" name="plate_number" type="text" maxlength="30"
+                            value="{{ old('plate_number') }}" placeholder="Contoh: DK 1234 ABC" required>
+                        @error('plate_number')
+                            <small class="service-create-error">{{ $message }}</small>
+                        @enderror
+                    </div>
+
                     <div class="service-create-field service-field-full">
-                        <label for="emergency_contact_id">Kontak Darurat</label>
-                        <select id="emergency_contact_id" name="emergency_contact_id">
-                            <option value="">Gunakan kontak default</option>
-                            @foreach ($contacts as $c)
-                                <option value="{{ $c->id }}"
-                                    @selected(old('emergency_contact_id') == $c->id)>
-                                    {{ $c->name }} — {{ $c->phone }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <small class="service-create-help">
-                            Kontak default digunakan jika tidak memilih kontak darurat khusus.
-                        </small>
-                        @error('emergency_contact_id')
+                        <label>Kontak Darurat</label>
+                        @if ($defaultEmergencyContact)
+                            <p class="service-create-help">
+                                Otomatis menggunakan {{ $defaultEmergencyContact->name }} · {{ $defaultEmergencyContact->phone }}
+                                @if ($defaultEmergencyContact->whatsapp)
+                                    · WhatsApp {{ $defaultEmergencyContact->whatsapp }}
+                                @endif
+                            </p>
+                        @else
+                            <p class="service-create-error">
+                                Belum ada kontak aktif berstatus Default. Atur Kontak Darurat sebelum membuat SPK.
+                            </p>
+                        @endif
+                        @error('emergency_contact')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
                     </div>
@@ -776,7 +787,8 @@
                     reviewSection('Penugasan Operasional', [
                         ['Driver', selectedText('driver_id', 'Belum dipilih')],
                         ['Kendaraan', selectedText('vehicle_id', 'Belum dipilih')],
-                        ['Kontak Darurat', selectedText('emergency_contact_id', 'Gunakan kontak default')],
+                        ['Nomor Polisi', fieldValue('plate_number')],
+                        ['Kontak Darurat', fieldValue('defaultEmergencyContactName')],
                     ]),
                     reviewSection('Itinerary', [
                         ['Jumlah Destinasi', stops.length ? `${stops.length} destinasi` : 'Belum ada destinasi'],

@@ -15,6 +15,7 @@ class TransportService extends Model
         'service_type_id',
         'service_date',
         'service_end_date',
+        'plate_number',
         'start_time',
         'end_time',
         'notes',

@@ -106,6 +106,57 @@
                     </article>
                 </div>
 
+                <section class="dashboard-panel dashboard-live-panel" aria-labelledby="liveCheckInsTitle">
+                    <div class="panel-heading">
+                        <div>
+                            <div class="panel-title" id="liveCheckInsTitle">Check In driver terbaru</div>
+                            <div class="panel-subtitle">Aktivitas Check In dari SPK yang diperbarui otomatis.</div>
+                        </div>
+                        <span class="dashboard-live-status" id="liveCheckInsStatus" role="status" aria-live="polite">
+                            Live · memperbarui setiap 15 detik
+                        </span>
+                    </div>
+
+                    <div class="dashboard-live-feed" id="liveCheckInsFeed"
+                        data-url="{{ route('dashboard.live-check-ins') }}">
+                        @forelse ($latestDriverCheckIns as $checkIn)
+                            <article class="dashboard-live-item">
+                                <div class="dashboard-live-indicator" aria-hidden="true"></div>
+                                <div class="dashboard-live-main">
+                                    <div class="dashboard-live-heading">
+                                        @if ($checkIn['service_url'])
+                                            <a class="service-code" href="{{ $checkIn['service_url'] }}">
+                                                {{ $checkIn['service_code'] }}
+                                            </a>
+                                        @else
+                                            <strong>{{ $checkIn['service_code'] }}</strong>
+                                        @endif
+                                        <span class="dashboard-live-spk">{{ $checkIn['spk_number'] }}</span>
+                                    </div>
+                                    <div class="dashboard-live-destination">
+                                        Check In di <strong>{{ $checkIn['destination'] }}</strong>
+                                    </div>
+                                    <div class="dashboard-live-meta">
+                                        <span>Driver: {{ $checkIn['driver'] }}</span>
+                                        @if ($checkIn['vehicle'])
+                                            <span>Kendaraan: {{ $checkIn['vehicle'] }}</span>
+                                        @endif
+                                        @if ($checkIn['plate_number'])
+                                            <span>{{ $checkIn['plate_number'] }}</span>
+                                        @endif
+                                    </div>
+                                    @if ($checkIn['note'])
+                                        <p class="dashboard-live-note">{{ $checkIn['note'] }}</p>
+                                    @endif
+                                </div>
+                                <time class="dashboard-live-time">{{ $checkIn['checked_in_at'] }}</time>
+                            </article>
+                        @empty
+                            <div class="dashboard-live-empty">Belum ada aktivitas Check In driver.</div>
+                        @endforelse
+                    </div>
+                </section>
+
                 <section class="dashboard-panel">
                     <div class="panel-heading">
                         <div>
@@ -155,9 +206,9 @@
                                         </td>
                                         <td>{{ $s->driver?->name ?? '—' }}</td>
                                         <td>
-                                            @if ($s->vehicle?->plate_number)
+                                            @if ($s->plate_number)
                                                 <span class="vehicle-plate">
-                                                    {{ $s->vehicle->plate_number }}
+                                                    {{ $s->plate_number }}
                                                 </span>
                                             @else
                                                 <span class="table-empty">Belum ditentukan</span>
@@ -210,6 +261,11 @@
                 </div>
                 <div class="tms-info-list">
                     <div class="tms-info-item">
+                        <span class="tms-info-label">Reservasi menunggu review</span>
+                        <strong class="tms-info-value">{{ number_format($pendingReservationReviewCount) }}</strong>
+                        <span class="tms-info-description">Semua permintaan berstatus Pending yang belum ditinjau.</span>
+                    </div>
+                    <div class="tms-info-item">
                         <span class="tms-info-label">Reservasi menunggu persetujuan</span>
                         <strong class="tms-info-value">{{ number_format($todayPendingReservationCount) }}</strong>
                         <span class="tms-info-description">Permintaan hari ini yang masih berstatus Pending.</span>
@@ -218,6 +274,11 @@
                         <span class="tms-info-label">Layanan sedang berjalan</span>
                         <strong class="tms-info-value">{{ number_format($todayInProgressServiceCount) }}</strong>
                         <span class="tms-info-description">Layanan hari ini dengan status In Progress.</span>
+                    </div>
+                    <div class="tms-info-item">
+                        <span class="tms-info-label">Penugasan belum lengkap hari ini</span>
+                        <strong class="tms-info-value">{{ number_format($incompleteTodayAssignmentCount) }}</strong>
+                        <span class="tms-info-description">SPK aktif hari ini yang belum memiliki driver, kendaraan, atau nomor polisi.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Kendaraan ditugaskan</span>
@@ -238,5 +299,127 @@
             </aside>
         </div>
     </div>
-    
+    <script>
+        (() => {
+            const feed = document.getElementById('liveCheckInsFeed');
+            const status = document.getElementById('liveCheckInsStatus');
+
+            if (!feed || !status) return;
+
+            const renderCheckIns = (checkIns) => {
+                feed.replaceChildren();
+
+                if (checkIns.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.className = 'dashboard-live-empty';
+                    empty.textContent = 'Belum ada aktivitas Check In driver.';
+                    feed.appendChild(empty);
+                    return;
+                }
+
+                checkIns.forEach((checkIn) => {
+                    const item = document.createElement('article');
+                    item.className = 'dashboard-live-item';
+
+                    const indicator = document.createElement('div');
+                    indicator.className = 'dashboard-live-indicator';
+                    indicator.setAttribute('aria-hidden', 'true');
+                    item.appendChild(indicator);
+
+                    const main = document.createElement('div');
+                    main.className = 'dashboard-live-main';
+
+                    const heading = document.createElement('div');
+                    heading.className = 'dashboard-live-heading';
+                    if (checkIn.service_url) {
+                        const serviceLink = document.createElement('a');
+                        serviceLink.className = 'service-code';
+                        serviceLink.href = checkIn.service_url;
+                        serviceLink.textContent = checkIn.service_code;
+                        heading.appendChild(serviceLink);
+                    } else {
+                        const serviceName = document.createElement('strong');
+                        serviceName.textContent = checkIn.service_code;
+                        heading.appendChild(serviceName);
+                    }
+
+                    const spk = document.createElement('span');
+                    spk.className = 'dashboard-live-spk';
+                    spk.textContent = checkIn.spk_number;
+                    heading.appendChild(spk);
+                    main.appendChild(heading);
+
+                    const destination = document.createElement('div');
+                    destination.className = 'dashboard-live-destination';
+                    destination.append('Check In di ');
+                    const destinationName = document.createElement('strong');
+                    destinationName.textContent = checkIn.destination;
+                    destination.appendChild(destinationName);
+                    main.appendChild(destination);
+
+                    const meta = document.createElement('div');
+                    meta.className = 'dashboard-live-meta';
+                    [
+                        `Driver: ${checkIn.driver}`,
+                        checkIn.vehicle ? `Kendaraan: ${checkIn.vehicle}` : null,
+                        checkIn.plate_number || null
+                    ].filter(Boolean).forEach((value) => {
+                        const detail = document.createElement('span');
+                        detail.textContent = value;
+                        meta.appendChild(detail);
+                    });
+                    main.appendChild(meta);
+
+                    if (checkIn.note) {
+                        const note = document.createElement('p');
+                        note.className = 'dashboard-live-note';
+                        note.textContent = checkIn.note;
+                        main.appendChild(note);
+                    }
+
+                    item.appendChild(main);
+                    const timestamp = document.createElement('time');
+                    timestamp.className = 'dashboard-live-time';
+                    timestamp.textContent = checkIn.checked_in_at;
+                    item.appendChild(timestamp);
+                    feed.appendChild(item);
+                });
+            };
+
+            const refreshCheckIns = async () => {
+                try {
+                    const response = await fetch(feed.dataset.url, {
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Permintaan gagal (${response.status}).`);
+                    }
+
+                    const result = await response.json();
+                    if (!Array.isArray(result.checkIns)) {
+                        throw new Error('Format data Check In tidak valid.');
+                    }
+
+                    renderCheckIns(result.checkIns);
+                    const updatedAt = new Intl.DateTimeFormat('id-ID', {
+                        timeZone: 'Asia/Makassar',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }).format(new Date());
+                    status.textContent = `Live · diperbarui ${updatedAt} WITA`;
+                } catch (error) {
+                    status.textContent = error instanceof Error
+                        ? `Gagal memperbarui aktivitas Check In: ${error.message}`
+                        : 'Gagal memperbarui aktivitas Check In. Data sebelumnya tetap ditampilkan.';
+                }
+            };
+
+            window.setInterval(refreshCheckIns, 15000);
+        })();
+    </script>
 @endsection

@@ -23,7 +23,7 @@
             </button>
         </div>
         {{-- Information Banner --}}
-        <div class="main-notice mb-2">
+        <div class="main-notice mb-3">
             <span class="main-notice-icon">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7" />
@@ -43,11 +43,18 @@
                 
 
                 {{-- Form Tambah Driver --}}
-                <form id="driver-form" method="POST" action="{{ route('drivers.store') }}" class="service-create-form">
+                <div class="tms-modal" id="driverCreateModal"
+                    data-open="{{ $errors->any() && old('driver_context') === 'create' ? '1' : '0' }}"
+                    hidden>
+                <div class="tms-modal-backdrop" data-driver-create-close></div>
+                <div class="tms-modal-dialog" role="dialog" aria-modal="true"
+                    aria-labelledby="driverCreateTitle">
+                <form id="driver-form" method="POST" action="{{ route('drivers.store') }}">
                     @csrf
+                    <input type="hidden" name="driver_context" value="create">
 
-                    <section class="service-create-card">
-                        <div class="service-create-section-header">
+
+                        <div class="tms-modal-header">
                             <div class="service-create-section-icon service-icon-blue">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7" />
@@ -55,17 +62,18 @@
                                         stroke-linecap="round" />
                                 </svg>
                             </div>
-                            <div>
-                                <h2>Tambah Driver</h2>
+                            <div class="tms-modal-title">
+                                <h2 id="driverCreateTitle">Tambah Driver</h2>
                                 <p>Masukkan informasi pengemudi baru.</p>
                             </div>
-                            <span class="service-create-step">01</span>
+                            <button type="button" class="tms-modal-close" data-driver-create-close
+                                aria-label="Tutup">&times;</button>
                         </div>
 
-                        <div class="service-create-fields">
+                        <div class="tms-modal-body">
                             <div class="service-create-field">
-                                <label for="name">Nama Driver <span>*</span></label>
-                                <input id="name" name="name" type="text" value="{{ old('name') }}"
+                                <label for="driverCreateName">Nama Driver <span>*</span></label>
+                                <input id="driverCreateName" name="name" type="text" value="{{ old('name') }}"
                                     placeholder="Masukkan nama lengkap" autocomplete="name" required>
                                 @error('name')
                                     <small class="service-create-error">{{ $message }}</small>
@@ -73,8 +81,8 @@
                             </div>
 
                             <div class="service-create-field">
-                                <label for="phone">Nomor Telepon</label>
-                                <input id="phone" name="phone" type="tel" value="{{ old('phone') }}"
+                                <label for="driverCreatePhone">Nomor Telepon</label>
+                                <input id="driverCreatePhone" name="phone" type="tel" value="{{ old('phone') }}"
                                     placeholder="Contoh: +62 812..." autocomplete="tel">
                                 @error('phone')
                                     <small class="service-create-error">{{ $message }}</small>
@@ -82,8 +90,8 @@
                             </div>
 
                             <div class="service-create-field">
-                                <label for="license_number">Nomor SIM</label>
-                                <input id="license_number" name="license_number" type="text"
+                                <label for="driverCreateLicense">Nomor SIM</label>
+                                <input id="driverCreateLicense" name="license_number" type="text"
                                     value="{{ old('license_number') }}" placeholder="Masukkan nomor SIM">
                                 @error('license_number')
                                     <small class="service-create-error">{{ $message }}</small>
@@ -91,8 +99,8 @@
                             </div>
 
                             <div class="service-create-field">
-                                <label for="notes">Catatan</label>
-                                <input id="notes" name="notes" type="text" value="{{ old('notes') }}"
+                                <label for="driverCreateNotes">Catatan</label>
+                                <input id="driverCreateNotes" name="notes" type="text" value="{{ old('notes') }}"
                                     placeholder="Catatan tambahan (opsional)">
                                 @error('notes')
                                     <small class="service-create-error">{{ $message }}</small>
@@ -100,7 +108,7 @@
                             </div>
                         </div>
 
-                        <div class="service-itinerary-info" style="margin-top: 20px;">
+                        <div class="service-itinerary-info">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
                                 <path d="m8 12 2.5 2.5L16 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
@@ -108,7 +116,8 @@
                             </svg>
                             <label
                                 style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; margin: 0;">
-                                <input type="checkbox" name="is_active" value="1" style="width: auto; margin: 0;"
+                                <input type="hidden" name="is_active" value="0">
+                                <input id="driverCreateActive" type="checkbox" name="is_active" value="1" style="width: auto; margin: 0;"
                                     @checked(old('is_active', '1') == '1')>
                                 <span>
                                     <strong>Driver Aktif</strong>
@@ -117,7 +126,7 @@
                             </label>
                         </div>
 
-                        <div class="service-create-actions">
+                        <div class="tms-modal-footer">
                             <button type="submit" class="service-submit-btn">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"
@@ -126,11 +135,12 @@
                                 Simpan Driver
                             </button>
                         </div>
-                    </section>
                 </form>
+                </div>
+                </div>
 
                 {{-- Daftar Driver --}}
-                <section class="service-create-card" style="margin-top: 24px;">
+                <section class="service-create-card">
                     <div class="service-create-section-header">
                         <div class="service-create-section-icon service-icon-green">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -176,17 +186,15 @@
                                         <td>{{ $d->services_count }}</td>
                                         <td>
                                             <div class="service-show-panel-actions">
-                                                <a href="{{ route('drivers.edit', $d) }}" class="services-detail-btn">
-                                                    Edit
-                                                </a>
                                                 <button type="button" class="services-detail-btn"
-                                                    data-driver-delete-open
+                                                    data-driver-edit-open
+                                                    data-driver-action="{{ route('drivers.update', $d) }}"
+                                                    data-driver-id="{{ $d->id }}"
                                                     data-driver-name="{{ $d->name }}"
-                                                    data-driver-action="{{ route('drivers.destroy', $d) }}"
-                                                    @disabled($d->services_count > 0)
-                                                    title="{{ $d->services_count > 0 ? 'Driver masih digunakan pada layanan' : 'Hapus driver' }}">
-                                                    Hapus
-                                                </button>
+                                                    data-driver-phone="{{ $d->phone }}"
+                                                    data-driver-license="{{ $d->license_number }}"
+                                                    data-driver-notes="{{ $d->notes }}"
+                                                    data-driver-active="{{ $d->is_active ? '1' : '0' }}">Edit</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -232,30 +240,86 @@
                         <span class="tms-info-description">Driver yang tidak aktif.</span>
                     </div>
                 </div>
-                <div class="tms-info-panel-footer"><a href="#driver-form">+ Tambah driver</a></div>
+                <div class="tms-info-panel-footer">
+                    <button type="button" class="tms-modal-btn tms-modal-btn-primary"
+                        data-driver-create-open>+ Tambah driver</button>
+                </div>
             </aside>
         </div>
     </div>
 
-    <div class="tms-modal" id="driverDeleteModal" hidden>
-        <div class="tms-modal-backdrop" data-driver-delete-close></div>
-        <div class="tms-modal-dialog tms-modal-dialog-sm" role="dialog" aria-modal="true"
-            aria-labelledby="driverDeleteTitle">
+    <div class="tms-modal" id="driverEditModal" hidden
+        data-open="{{ $errors->any() && old('driver_context') === 'edit' ? '1' : '0' }}"
+        data-edit-action="{{ old('driver_id') ? route('drivers.update', old('driver_id')) : '' }}">
+        <div class="tms-modal-backdrop" data-driver-edit-close></div>
+        <div class="tms-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="driverEditTitle">
             <div class="tms-modal-header">
-                <h2 id="driverDeleteTitle">Hapus Driver</h2>
-                <button type="button" class="tms-modal-close" data-driver-delete-close
+                <div class="service-create-section-icon service-icon-blue">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7" />
+                        <path d="M4 21v-2a8 8 0 0 1 16 0v2" stroke="currentColor" stroke-width="1.7"
+                            stroke-linecap="round" />
+                    </svg>
+                </div>
+                <div class="tms-modal-title">
+                    <h2 id="driverEditTitle">Edit Driver</h2>
+                    <p>Perbarui data pengemudi, informasi SIM, dan status operasional.</p>
+                </div>
+                <button type="button" class="tms-modal-close" data-driver-edit-close
                     aria-label="Tutup">&times;</button>
             </div>
-            <form id="driverDeleteForm" method="POST" action="">
+            <form id="driverEditForm" method="POST" action="">
                 @csrf
-                @method('DELETE')
+                @method('PUT')
+                <input type="hidden" name="driver_context" value="edit">
+                <input type="hidden" name="driver_id" id="driverEditId" value="{{ old('driver_id') }}">
                 <div class="tms-modal-body">
-                    <p>Hapus driver <strong id="driverDeleteName"></strong> dari sistem?</p>
+                    <div class="service-create-field">
+                        <label for="driverEditName">Nama Driver <span>*</span></label>
+                        <input id="driverEditName" name="name" type="text" maxlength="150"
+                            value="{{ old('name') }}" autocomplete="name" required>
+                        @error('name')
+                            <small class="service-create-error">{{ $message }}</small>
+                        @enderror
+                    </div>
+                    <div class="service-create-field">
+                        <label for="driverEditPhone">Nomor Telepon</label>
+                        <input id="driverEditPhone" name="phone" type="tel" maxlength="40"
+                            value="{{ old('phone') }}" autocomplete="tel">
+                        @error('phone')
+                            <small class="service-create-error">{{ $message }}</small>
+                        @enderror
+                    </div>
+                    <div class="service-create-field">
+                        <label for="driverEditLicense">Nomor SIM</label>
+                        <input id="driverEditLicense" name="license_number" type="text" maxlength="80"
+                            value="{{ old('license_number') }}">
+                        @error('license_number')
+                            <small class="service-create-error">{{ $message }}</small>
+                        @enderror
+                    </div>
+                    <div class="service-create-field">
+                        <label for="driverEditNotes">Catatan</label>
+                        <input id="driverEditNotes" name="notes" type="text" maxlength="1000"
+                            value="{{ old('notes') }}">
+                        @error('notes')
+                            <small class="service-create-error">{{ $message }}</small>
+                        @enderror
+                    </div>
+                    <label style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; margin: 0;">
+                        <input type="hidden" name="is_active" value="0">
+                        <input id="driverEditActive" type="checkbox" name="is_active" value="1"
+                            style="width: auto; margin: 0;" @checked(old('is_active', '1') == '1')>
+                        <span>
+                            <strong>Driver Aktif</strong>
+                            <small style="display: block;">Driver dapat dipilih untuk penugasan operasional.</small>
+                        </span>
+                    </label>
                 </div>
                 <div class="tms-modal-footer">
                     <button type="button" class="tms-modal-btn tms-modal-btn-secondary"
-                        data-driver-delete-close>Batal</button>
-                    <button type="submit" class="tms-modal-btn tms-modal-btn-danger">Hapus Driver</button>
+                        data-driver-edit-close>Batal</button>
+                    <button type="submit" class="tms-modal-btn tms-modal-btn-primary">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
@@ -263,39 +327,81 @@
 
     <script>
         (() => {
-            const modal = document.getElementById('driverDeleteModal');
-            if (!modal) return;
+            const createModal = document.getElementById('driverCreateModal');
+            const editModal = document.getElementById('driverEditModal');
+            const createForm = document.getElementById('driver-form');
+            const editForm = document.getElementById('driverEditForm');
 
-            const form = document.getElementById('driverDeleteForm');
-            const nameField = document.getElementById('driverDeleteName');
-            const closeButton = modal.querySelector('.tms-modal-close');
+            if (!createModal || !editModal || !createForm || !editForm) return;
 
-            const openModal = (trigger) => {
-                form.action = trigger.dataset.driverAction;
-                nameField.textContent = trigger.dataset.driverName || '';
+            const createName = document.getElementById('driverCreateName');
+            const createPhone = document.getElementById('driverCreatePhone');
+            const createLicense = document.getElementById('driverCreateLicense');
+            const createNotes = document.getElementById('driverCreateNotes');
+            const createActive = document.getElementById('driverCreateActive');
+            const editName = document.getElementById('driverEditName');
+            const editPhone = document.getElementById('driverEditPhone');
+            const editLicense = document.getElementById('driverEditLicense');
+            const editNotes = document.getElementById('driverEditNotes');
+            const editActive = document.getElementById('driverEditActive');
+            const syncBodyLock = () => {
+                document.body.classList.toggle(
+                    'tms-modal-open',
+                    !createModal.hidden || !editModal.hidden
+                );
+            };
+
+            const openModal = (modal, focusTarget) => {
                 modal.hidden = false;
-                document.body.classList.add('tms-modal-open');
-                window.setTimeout(() => closeButton?.focus(), 30);
+                syncBodyLock();
+                window.setTimeout(() => focusTarget?.focus(), 30);
             };
 
-            const closeModal = () => {
+            const closeModal = (modal) => {
                 modal.hidden = true;
-                document.body.classList.remove('tms-modal-open');
+                syncBodyLock();
             };
 
-            document.querySelectorAll('[data-driver-delete-open]').forEach((trigger) => {
-                trigger.addEventListener('click', () => openModal(trigger));
+            document.querySelectorAll('[data-driver-create-open]').forEach((trigger) => {
+                trigger.addEventListener('click', () => {
+                    createForm.reset();
+                    createActive.checked = true;
+                    openModal(createModal, createName);
+                });
             });
 
-            modal.querySelectorAll('[data-driver-delete-close]').forEach((element) => {
-                element.addEventListener('click', closeModal);
+            document.querySelectorAll('[data-driver-edit-open]').forEach((trigger) => {
+                trigger.addEventListener('click', () => {
+                    editForm.action = trigger.dataset.driverAction;
+                    document.getElementById('driverEditId').value = trigger.dataset.driverId;
+                    editName.value = trigger.dataset.driverName || '';
+                    editPhone.value = trigger.dataset.driverPhone || '';
+                    editLicense.value = trigger.dataset.driverLicense || '';
+                    editNotes.value = trigger.dataset.driverNotes || '';
+                    editActive.checked = trigger.dataset.driverActive === '1';
+                    openModal(editModal, editName);
+                });
+            });
+
+            createModal.querySelectorAll('[data-driver-create-close]').forEach((element) => {
+                element.addEventListener('click', () => closeModal(createModal));
+            });
+            editModal.querySelectorAll('[data-driver-edit-close]').forEach((element) => {
+                element.addEventListener('click', () => closeModal(editModal));
             });
 
             document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && !modal.hidden) {
-                    closeModal();
-                }
+                if (event.key !== 'Escape') return;
+                if (!editModal.hidden) closeModal(editModal);
+                else if (!createModal.hidden) closeModal(createModal);
             });
+
+            if (createModal.dataset.open === '1') openModal(createModal, createName);
+
+            if (editModal.dataset.open === '1' && editModal.dataset.editAction) {
+                editForm.action = editModal.dataset.editAction;
+                openModal(editModal, editName);
+            }
         })();
     </script>
 @endsection

@@ -1977,6 +1977,100 @@ body {
     border-bottom: 1px solid #edf0f5;
 }
 
+.dashboard-live-panel {
+    margin-bottom: 22px;
+}
+
+.dashboard-live-status {
+    flex-shrink: 0;
+    color: #16835f;
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.dashboard-live-feed {
+    display: grid;
+}
+
+.dashboard-live-item {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 13px;
+    padding: 16px 22px;
+    border-bottom: 1px solid #f0f2f7;
+}
+
+.dashboard-live-item:last-child {
+    border-bottom: 0;
+}
+
+.dashboard-live-indicator {
+    width: 8px;
+    height: 8px;
+    margin-top: 5px;
+    border-radius: 50%;
+    background: #10a878;
+    box-shadow: 0 0 0 4px #e5f8f0;
+}
+
+.dashboard-live-main {
+    min-width: 0;
+}
+
+.dashboard-live-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.dashboard-live-spk {
+    color: #8a96a9;
+    font-size: 10px;
+}
+
+.dashboard-live-destination {
+    margin-top: 5px;
+    color: #53617a;
+    font-size: 11px;
+}
+
+.dashboard-live-destination strong {
+    color: #1d2941;
+}
+
+.dashboard-live-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 13px;
+    margin-top: 7px;
+    color: #7d899e;
+    font-size: 10px;
+}
+
+.dashboard-live-note {
+    margin: 7px 0 0;
+    color: #53617a;
+    font-size: 10px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.dashboard-live-time {
+    color: #8a96a9;
+    font-size: 10px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.dashboard-live-empty {
+    padding: 24px 22px;
+    color: #8a96a9;
+    font-size: 11px;
+    text-align: center;
+}
+
 .panel-title {
     color: #1d2941;
     font-size: 15px;
@@ -6152,7 +6246,6 @@ body.tms-modal-open {
 
 .tms-modal-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
     gap: 12px;
     padding: 18px 20px;
@@ -6164,6 +6257,9 @@ body.tms-modal-open {
     color: #1d2942;
     font-size: 14px;
     font-weight: 800;
+}
+.tms-modal-header .tms-modal-title p {
+    margin: 0 !important;
 }
 
 .tms-modal-close {

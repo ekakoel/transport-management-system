@@ -310,7 +310,7 @@
                                 </div>
                                 <div>
                                     <h2 class="resv-section-title">Persetujuan Permintaan Layanan</h2>
-                                    <p>Setujui hanya setelah memastikan jadwal, driver, kendaraan, dan kontak darurat. SPK akan diterbitkan otomatis.</p>
+                                    <p>Setujui setelah memastikan jadwal, driver, dan kendaraan. Kontak Darurat Default akan dicantumkan otomatis pada SPK.</p>
                                 </div>
                             </div>
                             <span class="service-show-count">
@@ -342,11 +342,37 @@
                                     <select id="vehicle_id" name="vehicle_id" required>
                                         <option value="">Pilih kendaraan</option>
                                         @foreach ($vehicles as $vehicle)
-                                            <option value="{{ $vehicle->id }}" @selected(old('vehicle_id') == $vehicle->id)>{{ $vehicle->name }} · {{ $vehicle->plate_number }} ({{ $vehicle->capacity }} seat)
+                                            <option value="{{ $vehicle->id }}" @selected(old('vehicle_id') == $vehicle->id)>{{ $vehicle->name }} ({{ $vehicle->ownership_type === 'Vendor' ? 'Vendor' : 'Perusahaan' }}, {{ $vehicle->capacity }} seat)
                                             </option>
                                         @endforeach
                                     </select>
                                     @error('vehicle_id')
+                                        <small class="service-create-error">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="service-create-field">
+                                    <label for="plate_number">Nomor Polisi <span>*</span></label>
+                                    <input id="plate_number" name="plate_number" type="text" maxlength="30"
+                                        value="{{ old('plate_number') }}" placeholder="Contoh: DK 1234 ABC" required>
+                                    @error('plate_number')
+                                        <small class="service-create-error">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="service-create-field service-field-full">
+                                    <label>Kontak Darurat</label>
+                                    @if ($defaultEmergencyContact)
+                                        <p class="service-create-help">
+                                            Otomatis menggunakan {{ $defaultEmergencyContact->name }} · {{ $defaultEmergencyContact->phone }}
+                                            @if ($defaultEmergencyContact->whatsapp)
+                                                · WhatsApp {{ $defaultEmergencyContact->whatsapp }}
+                                            @endif
+                                        </p>
+                                    @else
+                                        <p class="service-create-error">
+                                            Belum ada kontak aktif berstatus Default. Atur Kontak Darurat sebelum menyetujui reservasi.
+                                        </p>
+                                    @endif
+                                    @error('emergency_contact')
                                         <small class="service-create-error">{{ $message }}</small>
                                     @enderror
                                 </div>

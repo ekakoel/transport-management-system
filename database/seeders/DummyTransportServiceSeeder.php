@@ -136,6 +136,7 @@ class DummyTransportServiceSeeder extends Seeder
                     'service_type_id' => $types[$sample['type']],
                     'service_date' => $date->toDateString(),
                     'service_end_date' => $date->toDateString(),
+                    'plate_number' => 'DK 1234 ABC',
                     'start_time' => $sample['start'] . ':00',
                     'end_time' => $sample['end'] . ':00',
                     'notes' => $sample['notes'],

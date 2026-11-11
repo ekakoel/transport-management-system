@@ -516,9 +516,6 @@
         $checkinUrl = $showNumberUrl
             ? route('public.spk.number.checkin', [$spk->id, $spk->spk_number])
             : route('public.spk.checkin', $token);
-        $addDestinationUrl = $showNumberUrl
-            ? route('public.spk.number.destinations.add', [$spk->id, $spk->spk_number])
-            : route('public.spk.destinations.add', $token);
     @endphp
 
     @if ($expired)
@@ -613,11 +610,21 @@
                 </tr>
                 <tr>
                     <th>Nomor Polisi</th>
-                    <td>{{ $service->vehicle?->plate_number ?? '—' }}</td>
+                    <td>{{ $service->plate_number ?? '—' }}</td>
                 </tr>
                 <tr>
                     <th>Kapasitas</th>
                     <td>{{ $service->vehicle?->capacity ?? '—' }}</td>
+                </tr>
+                <tr>
+                    <th>Kontak Darurat</th>
+                    <td>
+                        {{ $spk->emergency_name ?? '—' }}<br>
+                        Telepon: {{ $spk->emergency_phone ?? '—' }}
+                        @if ($spk->emergency_whatsapp)
+                            <br>WhatsApp: {{ $spk->emergency_whatsapp }}
+                        @endif
+                    </td>
                 </tr>
             </table>
         </div>
@@ -641,7 +648,7 @@
         @if ($service->stops->isEmpty())
             <p class="text-muted">Belum ada destinasi yang tercatat.</p>
         @else
-            @foreach ($service->stops as $stop)
+            @foreach ($service->stops->sortBy(fn ($stop) => [$stop->visit_time === null, $stop->visit_time ?? '', $stop->sort_order]) as $stop)
                 <div class="destination-container page-brake-avoid">
                     <div class="destination">
                         <div class="description">
@@ -671,7 +678,7 @@
                             @endif
                             <div class="description-item">
                                 <div class="icon">🔢</div>
-                                <div class="desc">Urutan destinasi: {{ $stop->sort_order }}</div>
+                                <div class="desc">Urutan destinasi: {{ $loop->iteration }}</div>
                             </div>
                             @if ($stop->note)
                                 <div class="description-item">
@@ -689,20 +696,12 @@
                                         ->where('itinerary_stop_id', $stop->id)
                                         ->firstWhere('event_type', 'check_in');
                                 @endphp
-                                @if ($stopEvent && $stopEvent->latitude !== null && $stopEvent->longitude !== null)
-                                    <div class="description-item">
-                                        <div class="icon">🗺️</div>
-                                        <div class="desc">Lokasi check in: <a
-                                                href="https://www.google.com/maps?q={{ $stopEvent->latitude }},{{ $stopEvent->longitude }}"
-                                                target="_blank" rel="noreferrer">Lihat di Google Maps</a></div>
-                                    </div>
-                                    <p class="public-small">Koordinat: {{ $stopEvent->latitude }},
-                                        {{ $stopEvent->longitude }}
-                                        @if ($stopEvent->created_at)
-                                            ·
-                                            {{ \App\Support\DateFormatter::format($stopEvent->created_at, null, 'd M Y H:i') }}
-                                            WITA
-                                        @endif
+                                @if ($stopEvent?->created_at)
+                                    <p class="public-small">
+                                        {{ \App\Support\DateFormatter::format($stopEvent->created_at, null, 'd M Y') }}
+                                        pukul
+                                        {{ \App\Support\DateFormatter::format($stopEvent->created_at, null, 'H:i') }}
+                                        WITA
                                     </p>
                                 @endif
                             @endif
@@ -728,10 +727,10 @@
 
     @if ($canCheckIn)
         <div class="card shadow p-4 mt-3 mb-3">
-            <h4 class="section-title mt-0">Laporan Pekerjaan</h4>
-            <p>Buat laporan singkat atau langsung lakukan check in.</p>
+            <h4 class="section-title mt-0">Tambah Destinasi di Luar SPK</h4>
+            <p>Tambahkan destinasi yang dikunjungi tetapi belum tercantum di SPK, beserta laporan aktivitas dan lokasi GPS.</p>
             <button type="button" id="generalCheckin" class="public-action" data-bs-toggle="modal"
-                data-bs-target="#checkinModal">Buat check in umum</button>
+                data-bs-target="#checkinModal">Tambah Destinasi</button>
         </div>
 
         <div class="modal fade" id="checkinModal" tabindex="-1" aria-labelledby="checkinModalLabel"
@@ -739,7 +738,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="checkinModalLabel">Check In</h5><button type="button"
+                        <h5 class="modal-title" id="checkinModalLabel">Tambah Destinasi</h5><button type="button"
                             class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
                     <form method="post" action="{{ $checkinUrl }}" id="checkinForm">@csrf
@@ -748,17 +747,22 @@
                                 name="longitude" id="longitude"><input type="hidden" name="accuracy_meters"
                                 id="accuracy"><input type="hidden" name="idempotency_key" id="idem"><input
                                 type="hidden" name="itinerary_stop_id" id="stopId">
-                            <p id="checkinTarget" class="mb-3"><strong>Check In umum</strong></p>
-                            <div class="public-field"><label for="checkin-note">Laporan singkat (opsional)</label>
+                            <p id="checkinTarget" class="mb-3"><strong>Destinasi di luar SPK</strong></p>
+                            <div class="public-field" id="checkinDestinationField" hidden>
+                                <label for="checkin-destination-name">Nama Destinasi <span>*</span></label>
+                                <input type="text" name="destination_name" id="checkin-destination-name"
+                                    maxlength="150" placeholder="Masukkan nama destinasi yang dikunjungi">
+                                <span class="public-small">Destinasi akan ditambahkan ke itinerary dan laporan aktivitas.</span>
+                            </div>
+                            <div class="public-field"><label for="checkin-note">Laporan singkat <span>*</span></label>
                                 <textarea name="note" id="checkin-note" rows="4" maxlength="1000"
-                                    placeholder="Contoh: Tamu sudah dijemput dan perjalanan berjalan lancar."></textarea><span class="public-small">Kosongkan jika ingin langsung
-                                    check in tanpa laporan singkat.</span>
+                                    placeholder="Contoh: Tamu sudah dijemput dan perjalanan berjalan lancar." required></textarea>
                             </div>
                             <div id="gpsStatus" class="public-gps-message public-gps-error" hidden></div>
                         </div>
                         <div class="modal-footer">
                             {{-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button> --}}
-                            <button type="button" id="submitCheckin" class="public-action">Simpan check in</button>
+                            <button type="button" id="submitCheckin" class="public-action">Simpan Destinasi</button>
                         </div>
                     </form>
                 </div>
@@ -795,29 +799,31 @@
             </div>
         </div>
 
-        <div class="card shadow p-4 mt-3 mb-3">
-            <h4 class="section-title mt-0">✚ Tambah Destinasi</h4>
-            <p>Tambahkan destinasi yang dikunjungi selama perjalanan.</p>
-            <form method="post" action="{{ $addDestinationUrl }}" id="destinationForm">
-                @csrf
-                <input type="hidden" name="latitude" id="destinationLatitude">
-                <input type="hidden" name="longitude" id="destinationLongitude">
-                <input type="hidden" name="accuracy_meters" id="destinationAccuracy">
-                <div class="public-field"><label for="destination-name">Nama Lokasi / Destinasi
-                        <span>*</span></label><input id="destination-name" name="name" required maxlength="150"
-                        placeholder="Contoh: Monkey Forest"></div>
-                <div class="public-field"><label for="destination-time">Waktu Kunjungan <span>*</span></label><input
-                        id="destination-time" type="time" name="visit_time" required></div>
-                <div class="public-field"><label for="destination-address">Alamat / Keterangan Lokasi</label><input
-                        id="destination-address" name="address" maxlength="500"
-                        placeholder="Alamat atau area destinasi"></div>
-                <div class="public-field"><label for="destination-note">Deskripsi / Catatan</label>
-                    <textarea id="destination-note" name="note" rows="2" maxlength="1000"></textarea>
-                </div>
-                <div id="destinationLocationError" class="public-gps-message public-gps-error" hidden></div>
-                <button type="submit" class="public-action" id="saveDestination">Simpan Destinasi</button>
-            </form>
-        </div>
+        @unless ($showNumberUrl)
+            <div class="card shadow p-4 mt-3 mb-3">
+                <h4 class="section-title mt-0">✚ Tambah Destinasi</h4>
+                <p>Tambahkan destinasi yang dikunjungi selama perjalanan.</p>
+                <form method="post" action="{{ route('public.spk.destinations.add', $token) }}" id="destinationForm">
+                    @csrf
+                    <input type="hidden" name="latitude" id="destinationLatitude">
+                    <input type="hidden" name="longitude" id="destinationLongitude">
+                    <input type="hidden" name="accuracy_meters" id="destinationAccuracy">
+                    <div class="public-field"><label for="destination-name">Nama Lokasi / Destinasi
+                            <span>*</span></label><input id="destination-name" name="name" required maxlength="150"
+                            placeholder="Contoh: Monkey Forest"></div>
+                    <div class="public-field"><label for="destination-time">Waktu Kunjungan <span>*</span></label><input
+                            id="destination-time" type="time" name="visit_time" required></div>
+                    <div class="public-field"><label for="destination-address">Alamat / Keterangan Lokasi</label><input
+                            id="destination-address" name="address" maxlength="500"
+                            placeholder="Alamat atau area destinasi"></div>
+                    <div class="public-field"><label for="destination-note">Deskripsi / Catatan</label>
+                        <textarea id="destination-note" name="note" rows="2" maxlength="1000"></textarea>
+                    </div>
+                    <div id="destinationLocationError" class="public-gps-message public-gps-error" hidden></div>
+                    <button type="submit" class="public-action" id="saveDestination">Simpan Destinasi</button>
+                </form>
+            </div>
+        @endunless
     @else
         <div class="public-readonly"><strong>Check In ditutup.</strong>
             <p class="mt-2">
@@ -847,7 +853,10 @@
             const statusBox = document.getElementById('gpsStatus');
             const stopId = document.getElementById('stopId');
             const target = document.getElementById('checkinTarget');
+            const modalTitle = document.getElementById('checkinModalLabel');
             const note = document.getElementById('checkin-note');
+            const destinationName = document.getElementById('checkin-destination-name');
+            const destinationField = document.getElementById('checkinDestinationField');
             const makeKey = () => window.crypto?.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math
                 .random().toString(36).slice(2);
             document.getElementById('idem').value = makeKey();
@@ -857,6 +866,8 @@
                 statusBox.hidden = !error;
             };
             const getLocation = () => {
+                if (!form.reportValidity()) return;
+
                 if (!navigator.geolocation) {
                     status('Perangkat tidak mendukung akses lokasi.', true);
                     return;
@@ -868,7 +879,7 @@
                     document.getElementById('latitude').value = position.coords.latitude;
                     document.getElementById('longitude').value = position.coords.longitude;
                     document.getElementById('accuracy').value = position.coords.accuracy;
-                    submitButton.textContent = 'Menyimpan check in...';
+                    submitButton.textContent = stopId.value ? 'Menyimpan check in...' : 'Menyimpan destinasi...';
                     form.submit();
                 }, error => {
                     status(error.code === 1 ?
@@ -885,8 +896,12 @@
             };
             const prepareCheckin = (id = '', name = '') => {
                 stopId.value = id;
-                target.textContent = name ? 'Destinasi: ' + name : 'Check In umum';
+                target.textContent = name ? 'Destinasi: ' + name : 'Destinasi di luar SPK';
+                modalTitle.textContent = name ? 'Check In Destinasi' : 'Tambah Destinasi di Luar SPK';
                 note.value = '';
+                destinationName.value = '';
+                destinationField.hidden = Boolean(id);
+                destinationName.required = !id;
                 document.getElementById('latitude').value = '';
                 document.getElementById('longitude').value = '';
                 document.getElementById('accuracy').value = '';
@@ -894,7 +909,7 @@
                 statusBox.textContent = '';
                 statusBox.hidden = true;
                 submitButton.disabled = false;
-                submitButton.textContent = 'Simpan check in';
+                submitButton.textContent = name ? 'Simpan Check In' : 'Simpan Destinasi';
             };
             document.getElementById('generalCheckin').addEventListener('click', () => prepareCheckin());
             document.querySelectorAll('.public-stop-checkin').forEach(button => button.addEventListener('click', () => {
@@ -911,37 +926,39 @@
                 cancelDestinationReason.value = '';
             }));
 
-            const destinationForm = document.getElementById('destinationForm');
-            const destinationButton = document.getElementById('saveDestination');
-            const destinationError = document.getElementById('destinationLocationError');
-            destinationForm?.addEventListener('submit', event => {
-                event.preventDefault();
-                destinationError.hidden = true;
-                if (!navigator.geolocation) {
-                    destinationError.textContent = 'Perangkat tidak mendukung akses lokasi.';
-                    destinationError.hidden = false;
-                    return;
-                }
-                destinationButton.disabled = true;
-                destinationButton.textContent = 'Menyimpan...';
-                navigator.geolocation.getCurrentPosition(position => {
-                    document.getElementById('destinationLatitude').value = position.coords.latitude;
-                    document.getElementById('destinationLongitude').value = position.coords.longitude;
-                    document.getElementById('destinationAccuracy').value = position.coords.accuracy;
-                    destinationForm.submit();
-                }, error => {
-                    destinationError.textContent = error.code === 1 ?
-                        'Akses lokasi diperlukan untuk menyimpan destinasi. Aktifkan izin lokasi pada pengaturan situs lalu coba lagi.' :
-                        'Lokasi perangkat belum dapat diperoleh. Pastikan layanan lokasi aktif dan coba lagi.';
-                    destinationError.hidden = false;
-                    destinationButton.disabled = false;
-                    destinationButton.textContent = 'Simpan Destinasi';
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 20000,
-                    maximumAge: 0
+            @unless ($showNumberUrl)
+                const destinationForm = document.getElementById('destinationForm');
+                const destinationButton = document.getElementById('saveDestination');
+                const destinationError = document.getElementById('destinationLocationError');
+                destinationForm?.addEventListener('submit', event => {
+                    event.preventDefault();
+                    destinationError.hidden = true;
+                    if (!navigator.geolocation) {
+                        destinationError.textContent = 'Perangkat tidak mendukung akses lokasi.';
+                        destinationError.hidden = false;
+                        return;
+                    }
+                    destinationButton.disabled = true;
+                    destinationButton.textContent = 'Menyimpan...';
+                    navigator.geolocation.getCurrentPosition(position => {
+                        document.getElementById('destinationLatitude').value = position.coords.latitude;
+                        document.getElementById('destinationLongitude').value = position.coords.longitude;
+                        document.getElementById('destinationAccuracy').value = position.coords.accuracy;
+                        destinationForm.submit();
+                    }, error => {
+                        destinationError.textContent = error.code === 1 ?
+                            'Akses lokasi diperlukan untuk menyimpan destinasi. Aktifkan izin lokasi pada pengaturan situs lalu coba lagi.' :
+                            'Lokasi perangkat belum dapat diperoleh. Pastikan layanan lokasi aktif dan coba lagi.';
+                        destinationError.hidden = false;
+                        destinationButton.disabled = false;
+                        destinationButton.textContent = 'Simpan Destinasi';
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 20000,
+                        maximumAge: 0
+                    });
                 });
-            });
+            @endunless
         })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

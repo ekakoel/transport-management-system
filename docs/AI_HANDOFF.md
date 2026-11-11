@@ -36,6 +36,9 @@ Laravel Transport Management System
   - Live review summary before submit; submit button shows loading state.
   - Supports restoring the initial step after validation errors.
 - Reservations store service dates and itinerary stop times only; approval derives the transport service's `start_time`/`end_time` from the first/last itinerary stops.
+- Vehicle plate numbers are stored on `transport_services`, entered during operational assignment or reservation approval, and copied from existing vehicles by the migration.
+- New services and reservation approvals automatically snapshot the active Default emergency contact into the SPK; services and SPK display that contact without manual selection.
+- Public Check In can optionally create an unscheduled, checked-in itinerary stop from `destination_name`, linked to both `destination_added` and `check_in` SPK events.
 - Added `itinerary_stops.*.note` validation (`nullable|string|max:500`) on store and update.
 - Removed obsolete `start_time`/`end_time` request validation.
 - Added 5-step wizard CSS (`service-wizard-steps--5`) and responsive breakpoints.

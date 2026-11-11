@@ -126,7 +126,7 @@ class ReservationController extends Controller
             'isAdmin' => $isAdmin,
             'drivers' => $isAdmin ? Driver::where('is_active', 1)->orderBy('name')->get() : collect(),
             'vehicles' => $isAdmin ? Vehicle::where('status', 'Available')->orderBy('name')->get() : collect(),
-            'contacts' => $isAdmin ? EmergencyContact::where('is_active', 1)->orderByDesc('is_default')->get() : collect(),
+            'defaultEmergencyContact' => $isAdmin ? EmergencyContact::activeDefault() : null,
         ]);
     }
 
@@ -271,9 +271,16 @@ class ReservationController extends Controller
             'order_number' => ['nullable', 'string', 'max:100'],
             'driver_id' => ['required', 'exists:drivers,id'],
             'vehicle_id' => ['required', 'exists:vehicles,id'],
-            'emergency_contact_id' => ['nullable', 'exists:emergency_contacts,id'],
+            'plate_number' => ['required', 'string', 'max:30'],
             'admin_notes' => ['nullable', 'string', 'max:3000'],
         ]);
+
+        $contact = EmergencyContact::activeDefault();
+        if (! $contact) {
+            return back()->withInput()->withErrors([
+                'emergency_contact' => 'Tidak ada Kontak Darurat aktif yang ditandai sebagai Default. Atur kontak default sebelum menyetujui reservasi.',
+            ]);
+        }
 
         $driver = Driver::where('is_active', 1)->findOrFail($data['driver_id']);
         $vehicle = Vehicle::where('status', 'Available')->findOrFail($data['vehicle_id']);
@@ -312,7 +319,7 @@ class ReservationController extends Controller
         $endTime = $itineraryStops[array_key_last($itineraryStops)]['visit_time'];
 
         $rawToken = Str::random(64);
-        $service = DB::transaction(function () use ($reservation, $data, $request, $rawToken, $start, $end, $startTime, $endTime) {
+        $service = DB::transaction(function () use ($reservation, $data, $request, $rawToken, $start, $end, $startTime, $endTime, $contact) {
             $locked = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
             abort_unless($locked->status === 'Pending', 422, 'Permintaan ini sudah diproses.');
 
@@ -330,6 +337,7 @@ class ReservationController extends Controller
                 'notes' => trim(($locked->notes ?? '') . (($data['admin_notes'] ?? '') ? "\nAdmin: " . $data['admin_notes'] : '')),
                 'driver_id' => $data['driver_id'],
                 'vehicle_id' => $data['vehicle_id'],
+                'plate_number' => $data['plate_number'],
                 'status' => 'Published',
                 'created_by' => $request->user()->id,
             ]);
@@ -354,18 +362,14 @@ class ReservationController extends Controller
                 ]);
             }
 
-            $contact = !empty($data['emergency_contact_id'])
-                ? EmergencyContact::where('is_active', 1)->find($data['emergency_contact_id'])
-                : EmergencyContact::where('is_active', 1)->where('is_default', 1)->first();
-
             $spk = Spk::create([
                 'transport_service_id' => $service->id,
                 'spk_number' => 'SPK-' . now('Asia/Makassar')->format('Ymd') . '-' . str_pad((string) $service->id, 5, '0', STR_PAD_LEFT),
                 'token_hash' => hash('sha256', $rawToken),
                 'published_at' => now(),
-                'emergency_name' => $contact?->name ?? 'Operasional Bali Kami Tour',
-                'emergency_phone' => $contact?->phone,
-                'emergency_whatsapp' => $contact?->whatsapp,
+                'emergency_name' => $contact->name,
+                'emergency_phone' => $contact->phone,
+                'emergency_whatsapp' => $contact->whatsapp,
             ]);
 
             $locked->update([
