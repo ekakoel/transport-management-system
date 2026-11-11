@@ -206,8 +206,8 @@
                                 ->implode('');
                         @endphp
 
-                        <div class="topbar-user" data-user-menu>
-                            <button type="button" class="topbar-user-toggle" data-user-menu-toggle
+                        <details class="topbar-user" data-user-menu>
+                            <summary class="topbar-user-toggle" data-user-menu-toggle
                                 aria-haspopup="menu" aria-expanded="false" aria-controls="topbar-user-menu"
                                 title="Menu akun">
                                 <span class="topbar-user-avatar" aria-hidden="true">
@@ -228,7 +228,7 @@
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
                                 </span>
-                            </button>
+                            </summary>
 
                             <div class="topbar-user-menu" id="topbar-user-menu" role="menu">
                                 <div class="topbar-user-menu-header">
@@ -265,7 +265,7 @@
                                     </button>
                                 </form>
                             </div>
-                        </div>
+                        </details>
                     </div>
                 </header>
                 <main class="content">
@@ -297,6 +297,41 @@
         </main>
         </section>
     </div>@else</main>
+    @endif
+    @if (auth()->check())
+        <script>
+            (() => {
+                const initUserMenu = () => {
+                    const userMenu = document.querySelector('[data-user-menu]');
+                    const toggle = userMenu?.querySelector('[data-user-menu-toggle]');
+                    if (!userMenu || !toggle) return;
+
+                    userMenu.addEventListener('toggle', () => {
+                        userMenu.classList.toggle('is-open', userMenu.open);
+                        toggle.setAttribute('aria-expanded', String(userMenu.open));
+                    });
+
+                    document.addEventListener('click', (event) => {
+                        if (userMenu.open && !userMenu.contains(event.target)) {
+                            userMenu.open = false;
+                        }
+                    });
+
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape' && userMenu.open) {
+                            userMenu.open = false;
+                            toggle.focus();
+                        }
+                    });
+                };
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initUserMenu);
+                } else {
+                    initUserMenu();
+                }
+            })();
+        </script>
     @endif
     @include('partials.password-toggle')
 </body>

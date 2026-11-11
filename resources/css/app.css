@@ -1405,12 +1405,18 @@ body {
     background: #fff;
     color: #34425b;
     font: inherit;
+    list-style: none;
     cursor: pointer;
     transition: background .2s ease, border-color .2s ease;
 }
 
+.topbar-user-toggle::-webkit-details-marker {
+    display: none;
+}
+
 .topbar-user-toggle:hover,
-.topbar-user.is-open .topbar-user-toggle {
+.topbar-user.is-open .topbar-user-toggle,
+.topbar-user[open] .topbar-user-toggle {
     background: #f0f4ff;
     border-color: #d5defb;
 }
@@ -1469,7 +1475,8 @@ body {
     height: 14px;
 }
 
-.topbar-user.is-open .topbar-user-caret {
+.topbar-user.is-open .topbar-user-caret,
+.topbar-user[open] .topbar-user-caret {
     transform: rotate(180deg);
 }
 
@@ -1490,7 +1497,8 @@ body {
     transition: opacity .18s ease, visibility .18s ease, transform .18s ease;
 }
 
-.topbar-user.is-open .topbar-user-menu {
+.topbar-user.is-open .topbar-user-menu,
+.topbar-user[open] .topbar-user-menu {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
