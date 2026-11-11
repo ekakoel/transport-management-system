@@ -86,8 +86,8 @@ Route::middleware(['auth'])->group(function () {
         ->whereNumber('service')
         ->name('services.show');
 
-    // Hanya admin yang dapat membuat atau mengubah data operasional.
-    Route::middleware('role:admin')->group(function () {
+    // Admin dan manager dapat mengelola data operasional (kecuali manajemen reservasi).
+    Route::middleware('role:admin,manager')->group(function () {
         Route::get('/services/create', [TmsController::class, 'createService'])
             ->name('services.create');
         Route::post('/services', [TmsController::class, 'storeService'])
@@ -126,13 +126,6 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/drivers/{driver}', [TmsController::class, 'updateDriver'])
             ->whereNumber('driver')
             ->name('drivers.update');
-        Route::get('/reservation-users', [TmsController::class, 'reservationUsers'])
-            ->name('reservation-users.index');
-        Route::post('/reservation-users', [TmsController::class, 'storeReservationUser'])
-            ->name('reservation-users.store');
-        Route::put('/reservation-users/{user}', [TmsController::class, 'updateReservationUser'])
-            ->whereNumber('user')
-            ->name('reservation-users.update');
 
         Route::get('/vehicles', [TmsController::class, 'vehicles'])
             ->name('vehicles.index');
@@ -163,5 +156,16 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/emergency-contacts/{contact}', [TmsController::class, 'destroyContact'])
             ->whereNumber('contact')
             ->name('contacts.destroy');
+    });
+
+    // Manajemen user reservation: hanya admin.
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/reservation-users', [TmsController::class, 'reservationUsers'])
+            ->name('reservation-users.index');
+        Route::post('/reservation-users', [TmsController::class, 'storeReservationUser'])
+            ->name('reservation-users.store');
+        Route::put('/reservation-users/{user}', [TmsController::class, 'updateReservationUser'])
+            ->whereNumber('user')
+            ->name('reservation-users.update');
     });
 });

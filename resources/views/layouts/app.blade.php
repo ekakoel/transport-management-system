@@ -61,7 +61,7 @@
                         <span>Layanan Transportasi / SPK</span>
                     </a>
 
-                    @if(strtolower((string) auth()->user()->role) === 'admin')
+                    @if(in_array(strtolower((string) auth()->user()->role), ['admin', 'manager'], true))
                     <a href="{{ route('drivers.index') }}" class="{{ request()->routeIs('drivers.*') ? 'active' : '' }}"
                         @if (request()->routeIs('drivers.*')) aria-current="page" @endif title="Drivers">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -105,6 +105,9 @@
                         <span>Emergency Contacts</span>
                     </a>
 
+                    @endif
+
+                    @if(strtolower((string) auth()->user()->role) === 'admin')
                     <a href="{{ route('reservation-users.index') }}"
                         class="{{ request()->routeIs('reservation-users.*') ? 'active' : '' }}"
                         @if (request()->routeIs('reservation-users.*')) aria-current="page" @endif title="Reservasi ">

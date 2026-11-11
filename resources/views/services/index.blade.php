@@ -4,7 +4,7 @@
 
 @section('content')
     @php
-        $isAdmin = strtolower((string) auth()->user()->role) === 'admin';
+        $isAdmin = in_array(strtolower((string) auth()->user()->role), ['admin', 'manager'], true);
     @endphp
     <header>
         <div class="main-header">

@@ -50,7 +50,7 @@
         <div class="tms-two-column">
             <div class="tms-main-column">
                 {{-- Public SPK Link --}}
-                @if ($newUrl && strtolower((string) auth()->user()->role) === 'admin')
+                @if ($newUrl && in_array(strtolower((string) auth()->user()->role), ['admin', 'manager'], true))
                     <section class="service-show-public-link">
                         <div class="service-show-public-icon">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

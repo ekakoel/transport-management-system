@@ -13,7 +13,7 @@
             'Expired' => 'expired',
             default => 'default',
         };
-        $isAdmin = strtolower((string) auth()->user()->role) === 'admin';
+        $isAdmin = in_array(strtolower((string) auth()->user()->role), ['admin', 'manager'], true);
         $isLocked = $service->isLocked();
         $canEditGuests = $isAdmin && ! $isLocked;
         $canEditItinerary = $isAdmin && ! $isLocked;
