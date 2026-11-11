@@ -43,7 +43,7 @@
                         class="{{ request()->routeIs('reservations.*') || request()->routeIs('admin.reservations.*') ? 'active' : '' }}"
                         title="Reservasi Requests">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        <span>{{ auth()->user()->role === 'reservation' ? 'Reservasi Saya' : 'Reservasi / Pesanan' }}</span>
+                        <span>{{ auth()->user()->role === 'reservation' ? 'Reservasi Saya' : 'Reservasi' }}</span>
                         @if ($isReservationReviewer && $pendingReservationCount > 0)
                             <span class="nav-badge"
                                 title="{{ $pendingReservationCount }} reservasi menunggu review">{{ $pendingReservationCount > 99 ? '99+' : $pendingReservationCount }}</span>
@@ -53,10 +53,19 @@
                         class="{{ request()->routeIs('services.*') ? 'active' : '' }}"
                         @if (request()->routeIs('services.*')) aria-current="page" @endif title="Layanan Transportasi / SPK">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <rect x="3" y="7" width="18" height="13" rx="3" stroke="currentColor"
-                                stroke-width="1.8" />
-                            <path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M3 12h18m-11 0v2h4v-2" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M3 14.5 5 8h14l2 6.5"
+                                stroke="currentColor" stroke-width="1.7"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M3 14.5h18v4a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5v-4Z"
+                                stroke="currentColor" stroke-width="1.7"
+                                stroke-linejoin="round" />
+                            <circle cx="7" cy="17" r="1"
+                                stroke="currentColor" stroke-width="1.5" />
+                            <circle cx="17" cy="17" r="1"
+                                stroke="currentColor" stroke-width="1.5" />
+                            <path d="M6 8l1.5-3h9L18 8"
+                                stroke="currentColor" stroke-width="1.7"
+                                stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                         <span>Layanan Transportasi / SPK</span>
                     </a>
@@ -64,10 +73,22 @@
                     @if(in_array(strtolower((string) auth()->user()->role), ['admin', 'manager'], true))
                     <a href="{{ route('drivers.index') }}" class="{{ request()->routeIs('drivers.*') ? 'active' : '' }}"
                         @if (request()->routeIs('drivers.*')) aria-current="page" @endif title="Drivers">
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        {{-- <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8" />
                             <path d="M4 21v-2a8 8 0 0 1 16 0v2" stroke="currentColor" stroke-width="1.8"
                                 stroke-linecap="round" />
+                        </svg> --}}
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <circle cx="12" cy="7" r="3.2"
+                                stroke="currentColor" stroke-width="1.7" />
+                            <path d="M5 21v-2a7 7 0 0 1 14 0v2"
+                                stroke="currentColor" stroke-width="1.7"
+                                stroke-linecap="round" />
+                            <circle cx="12" cy="17" r="2.5"
+                                stroke="currentColor" stroke-width="1.5" />
+                            <path d="M9.8 16.2 12 17l2.2-.8M12 17v2.5"
+                                stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                         <span>Drivers</span>
                     </a>

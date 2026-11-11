@@ -49,7 +49,7 @@
                     TRANSPORT OPERATIONS
                 </div>
                 <h1>Buat Layanan &amp; SPK</h1>
-                <p>Buat penugasan transportasi dengan detail pelanggan, jadwal, driver, kendaraan, dan itinerary.</p>
+                <p>Buat penugasan transportasi dengan detail agen, jadwal, driver, kendaraan, dan itinerary.</p>
             </div>
 
             <a href="{{ route('services.index') }}" class="service-create-back">
@@ -85,7 +85,7 @@
             {{-- Wizard Steps --}}
             <ol class="service-wizard-steps" aria-label="Langkah pembuatan layanan">
                 @foreach ([
-                    ['Detail Layanan', 'Pelanggan & tipe layanan'],
+                    ['Detail Layanan', 'Agen & tipe layanan'],
                     ['Jadwal Layanan', 'Tanggal & waktu'],
                     ['Daftar Tamu', 'Wisatawan'],
                     ['Penugasan Operasional', 'Driver & kendaraan'],
@@ -119,7 +119,7 @@
                     </div>
                     <div>
                         <h2>Detail Layanan</h2>
-                        <p>Informasi pelanggan dan kebutuhan transportasi.</p>
+                        <p>Informasi agen dan kebutuhan transportasi.</p>
                     </div>
                     <span class="service-create-step">01</span>
                 </div>
@@ -137,14 +137,14 @@
                         <small class="service-create-help">Pemilik kasus adalah staf internal Reservation, bukan wisatawan.</small>
                     </div>
                     <div class="service-create-field">
-                        <label for="customer_name">Nama pelanggan / kontak layanan <span>*</span></label>
+                        <label for="customer_name">Nama Agen / Kode Agen <span>*</span></label>
                         <input id="customer_name" name="customer_name" type="text" value="{{ old('customer_name') }}"
-                            placeholder="Nama pelanggan / kontak layanan" required>
+                            placeholder="Nama agen / Kode agen" required>
                         @error('customer_name')<small class="service-create-error">{{ $message }}</small>@enderror
                     </div>
 
                     <div class="service-create-field">
-                        <label for="customer_phone">Telepon Pelanggan</label>
+                        <label for="customer_phone">Telepon Agen</label>
                         <input id="customer_phone" name="customer_phone" type="tel"
                             value="{{ old('customer_phone') }}" placeholder="Contoh: +62 812..."
                             autocomplete="tel">
@@ -157,7 +157,7 @@
                         <label for="order_number">Nomor Order</label>
                         <input id="order_number" name="order_number" type="text" maxlength="100"
                             value="{{ old('order_number') }}"
-                            placeholder="Nomor order dari pelanggan / sistem">
+                            placeholder="Nomor order dari agen / sistem">
                         <small class="service-create-help">Opsional. Nomor order yang tersimpan pada reservasi.</small>
                         @error('order_number')
                             <small class="service-create-error">{{ $message }}</small>
@@ -441,7 +441,7 @@
                                         placeholder="https://maps.app.goo.gl/...">
                                 </div>
                                 <div class="service-create-field">
-                                    <label for="stop-address-{{ $i }}">Alamat / Keterangan Lokasi</label>
+                                    <label for="stop-address-{{ $i }}">Catatan</label>
                                     <input id="stop-address-{{ $i }}" name="stops[{{ $i }}][address]" type="text"
                                         value="{{ $stop['address'] ?? '' }}"
                                         placeholder="Alamat atau area destinasi">
@@ -687,7 +687,7 @@
                             <input name="stops[${i}][google_maps_url]" type="url" required placeholder="https://maps.app.goo.gl/...">
                         </div>
                         <div class="service-create-field">
-                            <label>Alamat / Keterangan Lokasi</label>
+                            <label>Catatan</label>
                             <input name="stops[${i}][address]" type="text" placeholder="Alamat atau area destinasi">
                         </div>
                     </div>
@@ -771,7 +771,7 @@
                 reviewRoot.innerHTML = [
                     reviewSection('Detail Layanan', [
                         ['Pemilik Reservation', selectedText('user_id', 'Belum dipilih')],
-                        ['Pelanggan', fieldValue('customer_name')],
+                        ['Agen', fieldValue('customer_name')],
                         ['Telepon', fieldValue('customer_phone')],
                         ['Nomor Order', fieldValue('order_number')],
                         ['Tipe Layanan', selectedText('service_type_id', 'Belum dipilih')],

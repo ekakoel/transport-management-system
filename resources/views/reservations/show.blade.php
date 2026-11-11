@@ -99,7 +99,7 @@
                                 </svg>
                             </span>
                             <div>
-                                <span class="service-show-detail-label">Pelanggan / Pemesan</span>
+                                <span class="service-show-detail-label">Agen</span>
                                 <strong>{{ $reservation->customer_name }}</strong>
                                 <small>{{ $reservation->requester?->phone ?: 'Nomor telepon tidak tersedia' }}</small>
                             </div>

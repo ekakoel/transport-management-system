@@ -9,6 +9,7 @@ use App\Models\ServiceType;
 use App\Models\Spk;
 use App\Models\TransportService;
 use App\Models\Vehicle;
+use App\Support\ScheduleConflict;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -287,18 +288,6 @@ class ReservationController extends Controller
         $start = $reservation->service_date->toDateString();
         $end = $reservation->service_end_date->toDateString();
 
-        $conflict = TransportService::whereNotIn('status', ['Cancelled', 'Expired', 'Completed'])
-            ->where(function ($q) use ($driver, $vehicle) {
-                $q->where('driver_id', $driver->id)->orWhere('vehicle_id', $vehicle->id);
-            })
-            ->whereDate('service_date', '<=', $end)
-            ->whereDate('service_end_date', '>=', $start)
-            ->exists();
-
-        if ($conflict) {
-            return back()->withInput()->withErrors(['driver_id' => 'Driver atau kendaraan sudah memiliki layanan pada tanggal tersebut.']);
-        }
-
         $itineraryStops = $reservation->itinerary;
         if (is_string($itineraryStops)) {
             $itineraryStops = json_decode($itineraryStops, true);
@@ -315,8 +304,17 @@ class ReservationController extends Controller
                 return back()->withErrors(['itinerary' => 'Setiap destinasi harus memiliki nama, waktu kunjungan, dan short link Google Maps yang valid.']);
             }
         }
-        $startTime = $itineraryStops[0]['visit_time'];
-        $endTime = $itineraryStops[array_key_last($itineraryStops)]['visit_time'];
+        $stopTimes = array_column($itineraryStops, 'visit_time');
+        $startTime = min($stopTimes);
+        $endTime = max($stopTimes);
+
+        // Validasi bentrok memakai rentang jam itinerary, bukan seluruh tanggal.
+        $driverConflict = ScheduleConflict::findDriverConflict($driver->id, $start, $end, $startTime, $endTime);
+        $vehicleConflict = ScheduleConflict::findVehicleConflict($vehicle->id, $start, $end, $startTime, $endTime);
+        $conflictErrors = [];
+        if ($driverConflict) $conflictErrors['driver_id'] = 'Driver sudah memiliki jadwal pada ' . ScheduleConflict::describe($driverConflict) . ' (' . $driverConflict->service_code . ').';
+        if ($vehicleConflict) $conflictErrors['vehicle_id'] = 'Kendaraan sudah memiliki jadwal pada ' . ScheduleConflict::describe($vehicleConflict) . ' (' . $vehicleConflict->service_code . ').';
+        if ($conflictErrors) return back()->withInput()->withErrors($conflictErrors);
 
         $rawToken = Str::random(64);
         $service = DB::transaction(function () use ($reservation, $data, $request, $rawToken, $start, $end, $startTime, $endTime, $contact) {

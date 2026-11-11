@@ -14,6 +14,7 @@ use App\Models\TransportService;
 use App\Models\Vehicle;
 use App\Models\User;
 use App\Support\DateFormatter;
+use App\Support\ScheduleConflict;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -153,7 +154,7 @@ class TmsController extends Controller
     {
         $today = now('Asia/Makassar')->toDateString();
 
-        $q = TransportService::with(['driver', 'vehicle', 'serviceType', 'spk', 'reservation']);
+        $q = TransportService::with(['driver', 'vehicle', 'serviceType', 'spk', 'reservation', 'stops']);
         if ($request->filled('date')) $q->whereDate('service_date', $request->input('date'));
         if ($request->filled('status')) $q->where('status', $request->input('status'));
         if ($request->filled('q')) $q->where(function ($w) use ($request) {
@@ -238,10 +239,19 @@ class TmsController extends Controller
 
         $stops = array_values($data['stops']);
         if ($data['service_date'] < now('Asia/Makassar')->toDateString()) return back()->withInput()->withErrors(['service_date' => 'Tanggal layanan tidak boleh di masa lalu.']);
-        $conflict = $this->hasScheduleConflict((int)$data['driver_id'], (int)$data['vehicle_id'], $data['service_date'], $data['service_end_date']);
-        if ($conflict) return back()->withInput()->withErrors(['driver_id' => 'Driver atau kendaraan sudah memiliki layanan yang tanggalnya bertumpang tindih.']);
+
+        // Validasi bentrok memakai rentang jam itinerary, bukan seluruh tanggal.
+        $startTime = collect($stops)->min('visit_time');
+        $endTime = collect($stops)->max('visit_time');
+        $driverConflict = ScheduleConflict::findDriverConflict((int) $data['driver_id'], $data['service_date'], $data['service_end_date'], $startTime, $endTime);
+        $vehicleConflict = ScheduleConflict::findVehicleConflict((int) $data['vehicle_id'], $data['service_date'], $data['service_end_date'], $startTime, $endTime);
+        $conflictErrors = [];
+        if ($driverConflict) $conflictErrors['driver_id'] = 'Driver sudah memiliki jadwal pada ' . ScheduleConflict::describe($driverConflict) . ' (' . $driverConflict->service_code . ').';
+        if ($vehicleConflict) $conflictErrors['vehicle_id'] = 'Kendaraan sudah memiliki jadwal pada ' . ScheduleConflict::describe($vehicleConflict) . ' (' . $vehicleConflict->service_code . ').';
+        if ($conflictErrors) return back()->withInput()->withErrors($conflictErrors);
+
         $rawToken = Str::random(64);
-        $service = DB::transaction(function () use ($data, $stops, $rawToken, $request, $contact) {
+        $service = DB::transaction(function () use ($data, $stops, $rawToken, $request, $contact, $startTime, $endTime) {
             $service = TransportService::create([
                 'service_code' => 'TMS-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(5)),
                 'customer_name' => $data['customer_name'] ?? null,
@@ -251,8 +261,8 @@ class TmsController extends Controller
                 'service_date' => $data['service_date'],
                 'service_end_date' => $data['service_end_date'],
                 'plate_number' => $data['plate_number'],
-                'start_time' => $stops[0]['visit_time'],
-                'end_time' => $stops[count($stops) - 1]['visit_time'],
+                'start_time' => $startTime,
+                'end_time' => $endTime,
                 'notes' => $data['notes'] ?? null,
                 'driver_id' => $data['driver_id'],
                 'vehicle_id' => $data['vehicle_id'],
@@ -284,15 +294,6 @@ class TmsController extends Controller
             return $service;
         });
         return redirect()->route('services.show', $service)->with('success', 'Layanan dan SPK berhasil diterbitkan. Simpan tautan publik SPK yang ditampilkan satu kali.');
-    }
-
-    private function hasScheduleConflict(int $driverId, int $vehicleId, string $start, string $end): bool
-    {
-        return TransportService::whereNotIn('status', ['Cancelled', 'Expired'])
-            ->where(function ($q) use ($driverId, $vehicleId) {
-                $q->where('driver_id', $driverId)->orWhere('vehicle_id', $vehicleId);
-            })
-            ->whereDate('service_date', '<=', $end)->whereDate('service_end_date', '>=', $start)->exists();
     }
 
     public function showService(TransportService $service)
@@ -665,7 +666,12 @@ class TmsController extends Controller
                     'type' => $service->serviceType?->name ?? 'Layanan',
                     'driver' => $service->driver?->name ?? 'Belum ditugaskan',
                     'start' => DateFormatter::format($service->service_date, $service->start_time),
-                    'end' => DateFormatter::format($service->service_end_date, $service->end_time),
+                    'end' => $service->end_time
+                        ? $service->service_end_date->copy()
+                            ->setTimeFromTimeString($service->end_time)
+                            ->addHours(ScheduleConflict::PREP_BUFFER_HOURS)
+                            ->format('d M Y (H:i)')
+                        : DateFormatter::format($service->service_end_date),
                     'code' => $service->service_code,
                     'url' => route('services.show', $service),
                     'status' => $service->status,

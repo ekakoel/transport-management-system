@@ -53,17 +53,17 @@
                     </div>
                     <div>
                         <h2>Detail Layanan</h2>
-                        <p>Informasi pelanggan dan kebutuhan transportasi.</p>
+                        <p>Informasi agen dan kebutuhan transportasi.</p>
                     </div>
                     <span class="service-create-step">01</span>
                 </div>
 
                 <div class="service-create-fields">
                     <div class="service-create-field">
-                        <label for="customer_name">Nama pelanggan / Nama Agent <span>*</span></label>
+                        <label for="customer_name">Nama agen / Kode Agen <span>*</span></label>
                         <input id="customer_name" name="customer_name" type="text" maxlength="150"
                             value="{{ old('customer_name', $reservation->customer_name) }}"
-                            placeholder="Nama pelanggan / Nama Agent" required>
+                            placeholder="Nama agen / Kode Agen" required>
                         @error('customer_name')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
@@ -72,7 +72,7 @@
                         <label for="order_number">Nomor Order <span>*</span></label>
                         <input id="order_number" name="order_number" type="text" maxlength="100"
                             value="{{ old('order_number', $reservation->order_number) }}"
-                            placeholder="Nomor order dari pelanggan / sistem" required>
+                            placeholder="Nomor order dari agen / sistem" required>
                         <small class="service-create-help">Opsional. Dapat diisi oleh admin saat membuat SPK.</small>
                         @error('order_number')
                             <small class="service-create-error">{{ $message }}</small>

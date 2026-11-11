@@ -34,20 +34,20 @@
                             </span>
                             <div>
                                 <h2>Filter Permintaan Layanan</h2>
-                                <p>Temukan permintaan layanan berdasarkan nomor pesanan, pelanggan, reservasi.</p>
+                                <p>Temukan permintaan layanan berdasarkan nomor pesanan, agen, reservasi.</p>
                             </div>
                         </div>
                     </div>
                     <form method="GET" class="services-filter-form">
                         <div class="services-filter-field w-100">
-                            <label for="service-search">Nomor pesanan / Pelanggan / Reservasi</label>
+                            <label for="service-search">Nomor pesanan / Agen / Reservasi</label>
                             <div class="services-input-wrap">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor"
                                         stroke-width="1.7" />
                                     <path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
                                 </svg>
-                                <input type="search" name="q" class="input-text" value="{{ request('q') }}" placeholder="Cari nomor / pelanggan / reservasi">
+                                <input type="search" name="q" class="input-text" value="{{ request('q') }}" placeholder="Cari nomor / agen / reservasi">
                             </div>
                         </div>
                         <div class="services-filter-field">
@@ -87,7 +87,7 @@
                                     <tr>
                                         <th>Nomor / Reservasi</th>
                                         <th>Jadwal</th>
-                                        <th>Pelanggan</th>
+                                        <th>Agen</th>
                                         <th>Layanan</th>
                                         <th>Status</th>
                                         <th></th>

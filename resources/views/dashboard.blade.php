@@ -106,58 +106,9 @@
                     </article>
                 </div>
 
-                <section class="dashboard-panel dashboard-live-panel" aria-labelledby="liveCheckInsTitle">
-                    <div class="panel-heading">
-                        <div>
-                            <div class="panel-title" id="liveCheckInsTitle">Check In driver terbaru</div>
-                            <div class="panel-subtitle">Aktivitas Check In dari SPK yang diperbarui otomatis.</div>
-                        </div>
-                        <span class="dashboard-live-status" id="liveCheckInsStatus" role="status" aria-live="polite">
-                            Live · memperbarui setiap 15 detik
-                        </span>
-                    </div>
+                
 
-                    <div class="dashboard-live-feed" id="liveCheckInsFeed"
-                        data-url="{{ route('dashboard.live-check-ins') }}">
-                        @forelse ($latestDriverCheckIns as $checkIn)
-                            <article class="dashboard-live-item">
-                                <div class="dashboard-live-indicator" aria-hidden="true"></div>
-                                <div class="dashboard-live-main">
-                                    <div class="dashboard-live-heading">
-                                        @if ($checkIn['service_url'])
-                                            <a class="service-code" href="{{ $checkIn['service_url'] }}">
-                                                {{ $checkIn['service_code'] }}
-                                            </a>
-                                        @else
-                                            <strong>{{ $checkIn['service_code'] }}</strong>
-                                        @endif
-                                        <span class="dashboard-live-spk">{{ $checkIn['spk_number'] }}</span>
-                                    </div>
-                                    <div class="dashboard-live-destination">
-                                        Check In di <strong>{{ $checkIn['destination'] }}</strong>
-                                    </div>
-                                    <div class="dashboard-live-meta">
-                                        <span>Driver: {{ $checkIn['driver'] }}</span>
-                                        @if ($checkIn['vehicle'])
-                                            <span>Kendaraan: {{ $checkIn['vehicle'] }}</span>
-                                        @endif
-                                        @if ($checkIn['plate_number'])
-                                            <span>{{ $checkIn['plate_number'] }}</span>
-                                        @endif
-                                    </div>
-                                    @if ($checkIn['note'])
-                                        <p class="dashboard-live-note">{{ $checkIn['note'] }}</p>
-                                    @endif
-                                </div>
-                                <time class="dashboard-live-time">{{ $checkIn['checked_in_at'] }}</time>
-                            </article>
-                        @empty
-                            <div class="dashboard-live-empty">Belum ada aktivitas Check In driver.</div>
-                        @endforelse
-                    </div>
-                </section>
-
-                <section class="dashboard-panel">
+                <section class="dashboard-panel mb-3">
                     <div class="panel-heading">
                         <div>
                             <div class="panel-title">Layanan aktif &amp; mendatang</div>
@@ -249,6 +200,56 @@
 
                     <div class="panel-footer">
                         Menampilkan {{ $services->count() }} layanan aktif dan mendatang
+                    </div>
+                </section>
+                <section class="dashboard-panel dashboard-live-panel" aria-labelledby="liveCheckInsTitle">
+                    <div class="panel-heading">
+                        <div>
+                            <div class="panel-title" id="liveCheckInsTitle">Check In driver terbaru</div>
+                            <div class="panel-subtitle">Aktivitas Check In dari SPK yang diperbarui otomatis.</div>
+                        </div>
+                        <span class="dashboard-live-status" id="liveCheckInsStatus" role="status" aria-live="polite">
+                            Live · memperbarui setiap 15 detik
+                        </span>
+                    </div>
+
+                    <div class="dashboard-live-feed" id="liveCheckInsFeed"
+                        data-url="{{ route('dashboard.live-check-ins') }}">
+                        @forelse ($latestDriverCheckIns as $checkIn)
+                            <article class="dashboard-live-item">
+                                <div class="dashboard-live-indicator" aria-hidden="true"></div>
+                                <div class="dashboard-live-main">
+                                    <div class="dashboard-live-heading">
+                                        @if ($checkIn['service_url'])
+                                            <a class="service-code" href="{{ $checkIn['service_url'] }}">
+                                                {{ $checkIn['service_code'] }}
+                                            </a>
+                                        @else
+                                            <strong>{{ $checkIn['service_code'] }}</strong>
+                                        @endif
+                                        <span class="dashboard-live-spk">{{ $checkIn['spk_number'] }}</span>
+                                    </div>
+                                    <div class="dashboard-live-destination">
+                                        Check In di <strong>{{ $checkIn['destination'] }}</strong>
+                                    </div>
+                                    <div class="dashboard-live-meta">
+                                        <span>Driver: {{ $checkIn['driver'] }}</span>
+                                        @if ($checkIn['vehicle'])
+                                            <span>Kendaraan: {{ $checkIn['vehicle'] }}</span>
+                                        @endif
+                                        @if ($checkIn['plate_number'])
+                                            <span>{{ $checkIn['plate_number'] }}</span>
+                                        @endif
+                                    </div>
+                                    @if ($checkIn['note'])
+                                        <p class="dashboard-live-note">{{ $checkIn['note'] }}</p>
+                                    @endif
+                                </div>
+                                <time class="dashboard-live-time">{{ $checkIn['checked_in_at'] }}</time>
+                            </article>
+                        @empty
+                            <div class="dashboard-live-empty">Belum ada aktivitas Check In driver.</div>
+                        @endforelse
                     </div>
                 </section>
             </div>

@@ -87,7 +87,7 @@
             {{-- Wizard Steps --}}
             <ol class="service-wizard-steps service-wizard-steps--5" aria-label="Langkah pembuatan permintaan layanan">
                 @foreach ([
-                    ['Detail Layanan', 'Pelanggan & jadwal'],
+                    ['Detail Layanan', 'Agen & jadwal'],
                     ['Daftar Tamu', 'Data wisatawan'],
                     ['Itinerary', 'Destinasi perjalanan'],
                     ['Note', 'Catatan untuk admin'],
@@ -120,17 +120,17 @@
                     </div>
                     <div>
                         <h2>Detail Layanan</h2>
-                        <p>Informasi pelanggan dan kebutuhan transportasi.</p>
+                        <p>Informasi agen dan kebutuhan transportasi.</p>
                     </div>
                     <span class="service-create-step">01</span>
                 </div>
 
                 <div class="service-create-fields">
                     <div class="service-create-field">
-                        <label for="customer_name">Nama pelanggan / Nama Agent <span>*</span></label>
+                        <label for="customer_name">Nama Agen / Kode Agen <span>*</span></label>
                         <input id="customer_name" name="customer_name" type="text" maxlength="150"
                             value="{{ old('customer_name', auth()->user()->name) }}"
-                            placeholder="Nama pelanggan / Nama Agent" required>
+                            placeholder="Nama Agen / Kode Agen" required>
                         @error('customer_name')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
@@ -140,7 +140,7 @@
                         <label for="order_number">Nomor Order</label>
                         <input id="order_number" name="order_number" type="text" maxlength="100"
                             value="{{ old('order_number') }}"
-                            placeholder="Nomor order dari pelanggan / sistem">
+                            placeholder="Nomor order dari agen / sistem">
                         <small class="service-create-help">Opsional. Admin juga dapat mengisinya saat SPK diterbitkan.</small>
                         @error('order_number')
                             <small class="service-create-error">{{ $message }}</small>
@@ -749,7 +749,7 @@
 
                 reviewRoot.innerHTML = [
                     reviewSection('Detail Layanan', [
-                        ['Pelanggan / Agent', fieldValue('customer_name')],
+                        ['Agen', fieldValue('customer_name')],
                         ['Nomor Order', fieldValue('order_number')],
                         ['Tipe Layanan', selectedText('service_type_id', 'Belum dipilih')],
                         ['Jumlah Tamu', guestCount],

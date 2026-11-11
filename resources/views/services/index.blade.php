@@ -55,7 +55,7 @@
 
                     <form method="GET" action="{{ route('services.index') }}" class="services-filter-form">
                         <div class="services-filter-field w-100">
-                            <label for="service-search">Kode SPK / Pelanggan</label>
+                            <label for="service-search">Kode SPK / Agen</label>
                             <div class="services-input-wrap">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor"
@@ -63,7 +63,7 @@
                                     <path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
                                 </svg>
                                 <input id="service-search" type="search" name="q" class="input-text"
-                                    value="{{ request('q') }}" placeholder="Cari nomor order atau nama pelanggan...">
+                                    value="{{ request('q') }}" placeholder="Cari nomor order atau nama agen...">
                             </div>
                         </div>
 
@@ -146,7 +146,7 @@
                                     <tr>
                                         <th>Nomor Order / SPK</th>
                                         <th>Tanggal Layanan</th>
-                                        <th>Pelanggan</th>
+                                        <th>Agen</th>
                                         <th>Driver / Kendaraan</th>
                                         <th>Status</th>
                                         <th class="services-action-heading"></th>
@@ -184,8 +184,13 @@
                                                     <div class="services-subtext">
                                                         s/d {{ \App\Support\DateFormatter::format($s->service_end_date) }}
                                                     </div>
-                                                @else
-                                                    <div class="services-subtext">Satu hari</div>
+                                                @endif
+                                                @if ($table['key'] === 'active' && $s->stops->isNotEmpty() && $s->stops->first()->visit_time && $s->stops->last()->visit_time)
+                                                    <div class="services-subtext" title="Termasuk {{ \App\Support\ScheduleConflict::PREP_BUFFER_HOURS }} jam persiapan sebelum SPK berikutnya">
+                                                        {{ \Illuminate\Support\Carbon::parse($s->stops->first()->visit_time)->format('H:i') }}
+                                                        -
+                                                        {{ \Illuminate\Support\Carbon::parse($s->stops->last()->visit_time)->addHours(\App\Support\ScheduleConflict::PREP_BUFFER_HOURS)->format('H:i') }}
+                                                    </div>
                                                 @endif
                                             </td>
 
@@ -199,6 +204,9 @@
                                             <td>
                                                 <div class="services-primary-text">
                                                     {{ $s->driver?->name ?? 'Belum ditugaskan' }}
+                                                </div>
+                                                <div class="services-subtext">
+                                                    🚗 {{ $s->vehicle?->name ?? 'Kendaraan belum ditentukan' }}
                                                 </div>
                                                 <div class="services-subtext">
                                                     {{ $s->plate_number ?? 'Nomor polisi belum ditentukan' }}

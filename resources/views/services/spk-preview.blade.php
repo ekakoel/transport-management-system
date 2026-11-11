@@ -13,6 +13,9 @@
             'Expired' => 'expired',
             default => 'default',
         };
+        $orderedStops = $service->stops
+            ->sortBy(fn ($stop) => [$stop->visit_time === null, $stop->visit_time ?? '', $stop->sort_order])
+            ->values();
     @endphp
     <header>
         <div class="main-header">
@@ -175,7 +178,7 @@
                             </div>
                             <div>
                                 <h2>Detail Perjalanan</h2>
-                                <p>Informasi pelanggan, penjemputan, dan instruksi layanan.</p>
+                                <p>Informasi agen, penjemputan, dan instruksi layanan.</p>
                             </div>
                         </div>
                     </div>
@@ -191,7 +194,7 @@
                                 </svg>
                             </span>
                             <div>
-                                <span class="service-show-detail-label">Pelanggan / Pemesan</span>
+                                <span class="service-show-detail-label">Agen</span>
                                 <strong>{{ $service->customer_name }}</strong>
                                 <small>{{ $service->customer_phone ?: 'Nomor telepon tidak tersedia' }}</small>
                             </div>
@@ -284,10 +287,10 @@
                         </span>
                     </div>
 
-                    @forelse ($service->stops as $stop)
+                    @forelse ($orderedStops as $stop)
                         <div class="service-show-stop">
                             <div class="service-show-stop-track">
-                                <span class="service-show-stop-number">{{ $stop->sort_order }}</span>
+                                <span class="service-show-stop-number">{{ $loop->iteration }}</span>
                                 @if (!$loop->last)
                                     <span class="service-show-stop-line"></span>
                                 @endif
@@ -322,7 +325,7 @@
                                 @endif
                                 <p>{{ $stop->address ?: 'Tidak ada keterangan lokasi.' }}</p>
                                 <span class="service-show-stop-sequence">
-                                    DESTINASI {{ str_pad((string) $stop->sort_order, 2, '0', STR_PAD_LEFT) }}
+                                    DESTINASI {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}
                                 </span>
                             </div>
                         </div>

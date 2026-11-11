@@ -751,14 +751,17 @@
                             <div class="public-field" id="checkinDestinationField" hidden>
                                 <label for="checkin-destination-name">Nama Destinasi <span>*</span></label>
                                 <input type="text" name="destination_name" id="checkin-destination-name"
-                                    maxlength="150" placeholder="Masukkan nama destinasi yang dikunjungi">
-                                <span class="public-small">Destinasi akan ditambahkan ke itinerary dan laporan aktivitas.</span>
+                                    maxlength="150" placeholder="Nama destinasi / lokasi / tempat yang dikunjungi">
                             </div>
                             <div class="public-field"><label for="checkin-note">Laporan singkat <span>*</span></label>
                                 <textarea name="note" id="checkin-note" rows="4" maxlength="1000"
                                     placeholder="Contoh: Tamu sudah dijemput dan perjalanan berjalan lancar." required></textarea>
                             </div>
                             <div id="gpsStatus" class="public-gps-message public-gps-error" hidden></div>
+                            <span>
+                                <i>* Isi data berdasarkan situasi sebenarnya untuk mempermudah pelaporan.</i><br>
+                                <i>* Tambahkan destinasi / lokasi / tempat yang dikunjungi saat berada dilokasi.</i>
+                            </span>
                         </div>
                         <div class="modal-footer">
                             {{-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button> --}}
@@ -813,9 +816,9 @@
                             placeholder="Contoh: Monkey Forest"></div>
                     <div class="public-field"><label for="destination-time">Waktu Kunjungan <span>*</span></label><input
                             id="destination-time" type="time" name="visit_time" required></div>
-                    <div class="public-field"><label for="destination-address">Alamat / Keterangan Lokasi</label><input
+                    <div class="public-field"><label for="destination-address">Catatan</label><input
                             id="destination-address" name="address" maxlength="500"
-                            placeholder="Alamat atau area destinasi"></div>
+                            placeholder="Contoh: Standby di parkiran"></div>
                     <div class="public-field"><label for="destination-note">Deskripsi / Catatan</label>
                         <textarea id="destination-note" name="note" rows="2" maxlength="1000"></textarea>
                     </div>
@@ -840,6 +843,7 @@
             <li>Selalu mengemudi dengan hati-hati dan mematuhi rambu lalu lintas.</li>
             <li>Pastikan kenyamanan penumpang menjadi prioritas.</li>
             <li>Lakukan check in di destinasi sesuai itinerary.</li>
+            <li>Hubungi kontak darurat yang tersedia jika terjadi situasi darurat.</li>
             <li>Jaga sikap profesional dan nama baik perusahaan.</li>
         </ul>
     </div>
@@ -896,7 +900,7 @@
             };
             const prepareCheckin = (id = '', name = '') => {
                 stopId.value = id;
-                target.textContent = name ? 'Destinasi: ' + name : 'Destinasi di luar SPK';
+                target.textContent = name ? 'Destinasi: ' + name : 'Destinasi / lokasi / tempat yang tidak terdaftar di SPK';
                 modalTitle.textContent = name ? 'Check In Destinasi' : 'Tambah Destinasi di Luar SPK';
                 note.value = '';
                 destinationName.value = '';
