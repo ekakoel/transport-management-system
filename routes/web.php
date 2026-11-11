@@ -158,14 +158,15 @@ Route::middleware(['auth'])->group(function () {
             ->name('contacts.destroy');
     });
 
-    // Manajemen user reservation: hanya admin.
+    // Manajemen user: hanya admin.
     Route::middleware('role:admin')->group(function () {
-        Route::get('/reservation-users', [TmsController::class, 'reservationUsers'])
-            ->name('reservation-users.index');
-        Route::post('/reservation-users', [TmsController::class, 'storeReservationUser'])
-            ->name('reservation-users.store');
-        Route::put('/reservation-users/{user}', [TmsController::class, 'updateReservationUser'])
+        Route::get('/users', [TmsController::class, 'users'])->name('users.index');
+        Route::post('/users', [TmsController::class, 'storeUser'])->name('users.store');
+        Route::put('/users/{user}', [TmsController::class, 'updateUser'])
             ->whereNumber('user')
-            ->name('reservation-users.update');
+            ->name('users.update');
+        Route::delete('/users/{user}', [TmsController::class, 'destroyUser'])
+            ->whereNumber('user')
+            ->name('users.destroy');
     });
 });

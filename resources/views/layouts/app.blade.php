@@ -108,9 +108,9 @@
                     @endif
 
                     @if(strtolower((string) auth()->user()->role) === 'admin')
-                    <a href="{{ route('reservation-users.index') }}"
-                        class="{{ request()->routeIs('reservation-users.*') ? 'active' : '' }}"
-                        @if (request()->routeIs('reservation-users.*')) aria-current="page" @endif title="Reservasi ">
+                    <a href="{{ route('users.index') }}"
+                        class="{{ request()->routeIs('users.*') ? 'active' : '' }}"
+                        @if (request()->routeIs('users.*')) aria-current="page" @endif title="Manajemen User">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <circle cx="9" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8" />
                             <path d="M2.5 20v-1.5A6.5 6.5 0 0 1 9 12h1" stroke="currentColor" stroke-width="1.8"
@@ -118,7 +118,7 @@
                             <path d="M17 12v6m-3-3h6" stroke="currentColor" stroke-width="1.8"
                                 stroke-linecap="round" />
                         </svg>
-                        <span>Reservasi </span>
+                        <span>Manajemen User</span>
                     </a>
                     @endif
 

@@ -822,30 +822,34 @@ class TmsController extends Controller
         return redirect()->route('contacts.index')->with('success', $message);
     }
 
-    public function reservationUsers()
+    public function users()
     {
-        $reservationUsers = User::query()
-            ->where('role', 'reservation')
+        $users = User::query()
             ->withCount('reservations')
             ->orderBy('name')
             ->paginate(20);
 
-        $reservationUserStats = [
-            'total' => User::where('role', 'reservation')->count(),
-            'active' => User::where('role', 'reservation')->where('is_active', 1)->count(),
-            'inactive' => User::where('role', 'reservation')->where('is_active', 0)->count(),
-            'with_requests' => User::where('role', 'reservation')->has('reservations')->count(),
+        $userStats = [
+            'total' => User::count(),
+            'active' => User::where('is_active', 1)->count(),
+            'inactive' => User::where('is_active', 0)->count(),
+            'staff' => User::whereIn('role', ['admin', 'owner', 'manager'])->count(),
+            'reservation' => User::where('role', 'reservation')->count(),
         ];
 
-        return view('users.index', compact('reservationUsers', 'reservationUserStats'));
+        $roles = $this->assignableRoles();
+        $editingUser = old('user_id') ? User::find(old('user_id')) : null;
+
+        return view('users.index', compact('users', 'userStats', 'roles', 'editingUser'));
     }
 
-    public function storeReservationUser(Request $request)
+    public function storeUser(Request $request)
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:40'],
+            'role' => ['required', Rule::in(array_keys($this->assignableRoles()))],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -855,26 +859,37 @@ class TmsController extends Controller
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
             'password' => $data['password'],
-            'role' => 'reservation',
+            'role' => $data['role'],
             'is_active' => $request->boolean('is_active'),
         ]);
 
-        return back()->with('success', 'User reservation berhasil ditambahkan.');
+        return back()->with('success', 'User berhasil ditambahkan.');
     }
 
-    public function updateReservationUser(Request $request, User $user)
+    public function updateUser(Request $request, User $user)
     {
-        abort_unless(strtolower((string) $user->role) === 'reservation', 404);
-
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:40'],
+            'role' => ['required', Rule::in(array_keys($this->assignableRoles()))],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
+
+        if ($request->user()->is($user) && ($data['role'] !== strtolower((string) $user->role) || ! $data['is_active'])) {
+            return back()->withErrors(['user' => 'Anda tidak dapat mengubah role atau menonaktifkan akun sendiri.']);
+        }
+
+        if (
+            strtolower((string) $user->role) === 'admin'
+            && $data['role'] !== 'admin'
+            && User::where('role', 'admin')->where('is_active', 1)->where('id', '!=', $user->id)->doesntExist()
+        ) {
+            return back()->withErrors(['role' => 'Minimal harus ada satu admin aktif di sistem.']);
+        }
 
         if (blank($data['password'] ?? null)) {
             unset($data['password']);
@@ -882,8 +897,39 @@ class TmsController extends Controller
 
         $user->update($data);
 
-        return redirect()->route('reservation-users.index')
-            ->with('success', 'Data user reservation berhasil diperbarui.');
+        return redirect()->route('users.index')->with('success', 'Data user berhasil diperbarui.');
+    }
+
+    public function destroyUser(Request $request, User $user)
+    {
+        if ($request->user()->is($user)) {
+            return back()->withErrors(['user' => 'Anda tidak dapat menghapus akun sendiri.']);
+        }
+
+        if (
+            strtolower((string) $user->role) === 'admin'
+            && User::where('role', 'admin')->where('is_active', 1)->where('id', '!=', $user->id)->doesntExist()
+        ) {
+            return back()->withErrors(['user' => 'Minimal harus ada satu admin aktif di sistem.']);
+        }
+
+        if ($user->reservations()->exists()) {
+            return back()->withErrors(['user' => 'User ini memiliki data reservasi. Nonaktifkan akun saja agar riwayat tetap tersimpan.']);
+        }
+
+        $user->delete();
+
+        return back()->with('success', 'User berhasil dihapus.');
+    }
+
+    private function assignableRoles(): array
+    {
+        return [
+            'admin' => 'Admin',
+            'owner' => 'Owner',
+            'manager' => 'Manager',
+            'reservation' => 'Reservation',
+        ];
     }
 
     private function validPublicSpk(string $token): ?Spk
