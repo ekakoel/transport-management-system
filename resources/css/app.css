@@ -514,7 +514,7 @@ body{
 
 .password-toggle {
     position: absolute;
-    right: 10px;
+    right: 2px;
     display: grid;
     width: 32px;
     height: 32px;
@@ -3840,6 +3840,7 @@ body {
     max-width: 100%;
     min-width: 0;
     min-height: 42px;
+    width: -webkit-fill-available;
     padding: 0 12px;
     border: 1px solid #e1e6ef;
     border-radius: 8px;

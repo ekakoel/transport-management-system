@@ -122,5 +122,6 @@
             <p class="auth-links"><a href="{{ route('login') }}">Kembali ke halaman login</a></p>
         </div>
     </div>
+    @include('partials.password-toggle')
 </body>
 </html>

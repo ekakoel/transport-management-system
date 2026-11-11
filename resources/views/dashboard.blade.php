@@ -411,7 +411,7 @@
                         hour: '2-digit',
                         minute: '2-digit'
                     }).format(new Date());
-                    status.textContent = `Live · diperbarui ${updatedAt} WITA`;
+                    status.textContent = `Live ${updatedAt} WITA`;
                 } catch (error) {
                     status.textContent = error instanceof Error
                         ? `Gagal memperbarui aktivitas Check In: ${error.message}`

@@ -277,6 +277,7 @@
         </section>
     </div>@else</main>
     @endif
+    @include('partials.password-toggle')
 </body>
 
 </html>

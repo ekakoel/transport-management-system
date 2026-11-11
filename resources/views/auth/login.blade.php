@@ -130,5 +130,6 @@
             <p class="secure-note">Secure access to your operations</p>
         </div>
     </div>
+    @include('partials.password-toggle')
 </body>
 </html>

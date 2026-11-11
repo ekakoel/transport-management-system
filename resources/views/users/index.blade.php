@@ -378,6 +378,7 @@
                 role.value = trigger.dataset.userRole || 'reservation';
                 password.value = '';
                 passwordConfirmation.value = '';
+                window.resetPasswordVisibility?.(form);
                 password.required = false;
                 passwordConfirmation.required = false;
                 passwordRequiredMarkers.forEach((marker) => marker.hidden = true);
