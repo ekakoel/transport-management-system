@@ -560,9 +560,24 @@ class TmsController extends Controller
     }
 
 
-    public function drivers()
+    public function drivers(Request $request)
     {
-        $drivers = Driver::withCount('services')->orderBy('name')->paginate(20);
+        $query = Driver::withCount('services');
+
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->string('status')->toString() === 'active' ? 1 : 0);
+        }
+
+        if ($request->filled('q')) {
+            $term = $request->string('q')->toString();
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%")
+                    ->orWhere('phone', 'like', "%{$term}%")
+                    ->orWhere('license_number', 'like', "%{$term}%");
+            });
+        }
+
+        $drivers = $query->orderBy('name')->paginate(20)->withQueryString();
         $driverStats = [
             'total' => Driver::count(),
             'active' => Driver::where('is_active', 1)->count(),

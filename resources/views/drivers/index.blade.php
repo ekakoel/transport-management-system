@@ -139,6 +139,53 @@
                 </div>
                 </div>
 
+                {{-- Filter Panel --}}
+                <section class="services-filter-panel">
+                    <div class="services-panel-heading">
+                        <div class="services-panel-title">
+                            <span class="services-filter-icon">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 7h16M7 12h10m-7 5h4" stroke="currentColor" stroke-width="1.8"
+                                        stroke-linecap="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h2>Filter Driver</h2>
+                                <p>Temukan driver berdasarkan nama, telepon, atau nomor SIM.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <form method="GET" class="services-filter-form">
+                        <div class="services-filter-field w-100">
+                            <label for="driver-search">Nama / Telepon / Nomor SIM</label>
+                            <div class="services-input-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor"
+                                        stroke-width="1.7" />
+                                    <path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                                </svg>
+                                <input type="search" id="driver-search" name="q" class="input-text"
+                                    value="{{ request('q') }}" placeholder="Cari nama / telepon / SIM">
+                            </div>
+                        </div>
+                        <div class="services-filter-field">
+                            <label for="driver-status">Status Driver</label>
+                            <select id="driver-status" name="status">
+                                <option value="">Semua status</option>
+                                <option value="active" @selected(request('status') === 'active')>Aktif</option>
+                                <option value="inactive" @selected(request('status') === 'inactive')>Nonaktif</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="services-filter-btn">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M4 7h16M7 12h10m-7 5h4" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linecap="round" />
+                            </svg>
+                            Terapkan
+                        </button>
+                    </form>
+                </section>
+
                 {{-- Daftar Driver --}}
                 <section class="service-create-card">
                     <div class="service-create-section-header">
