@@ -1,5 +1,6 @@
 <?php
 namespace App\Models;
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable {
@@ -11,5 +12,10 @@ class User extends Authenticatable {
     public function reservations()
     {
         return $this->hasMany(Reservation::class);
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }

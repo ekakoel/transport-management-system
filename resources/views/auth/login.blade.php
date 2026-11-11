@@ -52,6 +52,8 @@
         .form-options { margin: 4px 0 18px; }
         .remember-option { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #102338; }
         .remember-option input { width: 16px; height: 16px; accent-color: #0caaa5; }
+        .forgot-link { font-size: 14px; color: #0caaa5; font-weight: 600; text-decoration: none; }
+        .forgot-link:hover { text-decoration: underline; }
         .login-button { width: 100%; padding: 13px; border: 0; border-radius: 12px; background: #071525; color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; }
         .login-button:hover { background: #0c2035; }
         .secure-note { margin: 18px 0 0; font-size: 12px; color: #718096; text-align: center; }
@@ -112,11 +114,12 @@
                     @enderror
                 </div>
 
-                <div class="form-options">
+                <div class="form-options" style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
                     <label class="remember-option">
                         <input type="checkbox" name="remember" value="1" @checked(old('remember'))>
                         <span>Remember me</span>
                     </label>
+                    <a href="{{ route('password.request') }}" class="forgot-link">Lupa password?</a>
                 </div>
 
                 <button type="submit" class="login-button">

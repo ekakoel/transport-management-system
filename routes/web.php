@@ -14,6 +14,19 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
+Route::middleware('guest')->group(function () {
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])
+        ->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])
+        ->middleware('throttle:6,1')
+        ->name('password.email');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])
+        ->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+        ->middleware('throttle:6,1')
+        ->name('password.update');
+});
+
 // Tautan publik SPK dengan format yang mudah dibagikan seperti /spk/{id}/{nomor-spk}.
 Route::prefix('spk/{spk}/{spkNumber}')
     ->name('public.spk.number.')
