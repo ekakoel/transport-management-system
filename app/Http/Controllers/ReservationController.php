@@ -135,10 +135,12 @@ class ReservationController extends Controller
     {
         abort_unless($this->canEditReservation($request, $reservation), 403);
 
+        $isAdmin = $this->isAdmin($request);
         $reservation->load(['guests', 'serviceType']);
 
         return view('reservations.edit', [
             'reservation' => $reservation,
+            'isAdmin' => $isAdmin,
             'types' => ServiceType::where('is_active', 1)
                 ->orWhere('id', $reservation->service_type_id)
                 ->orderBy('name')
@@ -148,9 +150,11 @@ class ReservationController extends Controller
 
     public function update(Request $request, Reservation $reservation)
     {
+        $isAdmin = $this->isAdmin($request);
+
         if (! $this->canEditReservation($request, $reservation)) {
-            return redirect()->route('admin.reservations.show', $reservation)
-                ->withErrors(['reservation' => 'Reservasi tidak dapat diubah karena tanggal layanan sudah terlewat.']);
+            return redirect()->route($isAdmin ? 'admin.reservations.show' : 'reservations.show', $reservation)
+                ->withErrors(['reservation' => 'Permintaan tidak dapat diubah karena sudah diproses admin atau tanggal layanan sudah terlewat.']);
         }
 
         $data = $request->validate([
@@ -192,15 +196,22 @@ class ReservationController extends Controller
             }
         });
 
-        return redirect()->route('admin.reservations.show', $reservation)
+        return redirect()->route($isAdmin ? 'admin.reservations.show' : 'reservations.show', $reservation)
             ->with('success', 'Data permintaan berhasil diperbarui.');
+    }
+
+    private function isAdmin(Request $request): bool
+    {
+        return in_array(strtolower((string) $request->user()->role), ['admin', 'owner', 'manager'], true);
     }
 
     private function canEditReservation(Request $request, Reservation $reservation): bool
     {
-        $isAdmin = in_array(strtolower((string) $request->user()->role), ['admin', 'owner', 'manager'], true);
+        $isAdmin = $this->isAdmin($request);
+        $isPendingOwner = $reservation->user_id === $request->user()->id
+            && $reservation->status === 'Pending';
 
-        return $isAdmin
+        return ($isAdmin || $isPendingOwner)
             && now('Asia/Makassar')->toDateString() <= $reservation->service_date->format('Y-m-d');
     }
 

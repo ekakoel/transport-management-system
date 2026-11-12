@@ -121,14 +121,28 @@
                                                 <span class="resv-status {{ $r->status }}">{{ $r->status }}</span>
                                             </td>
                                             <td class="services-action-cell">
-                                                <a href="{{ route('reservations.show', $r) }}" class="services-detail-btn"
-                                                    aria-label="Detail">
-                                                    Detail
-                                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                        <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8"
-                                                            stroke-linecap="round" stroke-linejoin="round" />
-                                                    </svg>
-                                                </a>
+                                                <div class="services-action-group">
+                                                    @if ($r->status === 'Pending' && $r->service_date->format('Y-m-d') >= $today)
+                                                        <a href="{{ route('reservations.edit', $r) }}" class="services-detail-btn"
+                                                            aria-label="Edit">
+                                                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                                <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"
+                                                                    stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                                                                <path d="m13.5 5.5 3 3" stroke="currentColor" stroke-width="1.7"
+                                                                    stroke-linecap="round" />
+                                                            </svg>
+                                                            Edit
+                                                        </a>
+                                                    @endif
+                                                    <a href="{{ route('reservations.show', $r) }}" class="services-detail-btn"
+                                                        aria-label="Detail">
+                                                        Detail
+                                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                            <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8"
+                                                                stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty

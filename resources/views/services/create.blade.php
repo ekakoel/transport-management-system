@@ -19,7 +19,7 @@
         $initialStep = 1;
         if ($stepHasError(['service_date', 'service_end_date'])) {
             $initialStep = 2;
-        } elseif ($stepHasError(['guests'])) {
+        } elseif ($stepHasError(['guests', 'guest_count'])) {
             $initialStep = 3;
         } elseif ($stepHasError(['driver_id', 'vehicle_id', 'plate_number', 'emergency_contact'])) {
             $initialStep = 4;
@@ -154,10 +154,10 @@
                     </div>
 
                     <div class="service-create-field">
-                        <label for="order_number">Nomor Order</label>
+                        <label for="order_number">Nomor Order <span>*</span></label>
                         <input id="order_number" name="order_number" type="text" maxlength="100"
                             value="{{ old('order_number') }}"
-                            placeholder="Nomor order dari agen / sistem">
+                            placeholder="Nomor order dari agen / sistem" required>
                         <small class="service-create-help">Opsional. Nomor order yang tersimpan pada reservasi.</small>
                         @error('order_number')
                             <small class="service-create-error">{{ $message }}</small>
@@ -252,9 +252,21 @@
                     </div>
                     <div>
                         <h2>Daftar Tamu / Wisatawan</h2>
-                        <p>Pemilik Reservasi tidak otomatis menjadi tamu. Boleh dikosongkan bila data belum tersedia.</p>
+                        <p>Tentukan jumlah tamu. Daftar nama tamu boleh dikosongkan bila data belum tersedia.</p>
                     </div>
                     <span class="service-create-step">03</span>
+                </div>
+
+                <div class="service-create-fields mb-3">
+                    <div class="service-create-field">
+                        <label for="guest_count">Jumlah Tamu <span>*</span></label>
+                        <input id="guest_count" name="guest_count" type="number" min="1" max="100"
+                            value="{{ old('guest_count') }}" placeholder="Contoh: 2" required>
+                        <small class="service-create-help">Wajib diisi sesuai jumlah wisatawan yang mengikuti layanan.</small>
+                        @error('guest_count')
+                            <small class="service-create-error">{{ $message }}</small>
+                        @enderror
+                    </div>
                 </div>
 
                 <div id="service-guests" class="service-stops">
@@ -369,7 +381,7 @@
                         @enderror
                     </div>
 
-                    <div class="service-create-field service-field-full">
+                    {{-- <div class="service-create-field service-field-full">
                         <label>Kontak Darurat</label>
                         @if ($defaultEmergencyContact)
                             <p class="service-create-help">
@@ -386,7 +398,7 @@
                         @error('emergency_contact')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
-                    </div>
+                    </div> --}}
                 </div>
             </section>
 
@@ -782,7 +794,7 @@
                         ['Tanggal Akhir', fieldValue('service_end_date')],
                     ]),
                     reviewSection('Daftar Tamu', [
-                        ['Jumlah Tamu', guests.length ? `${guests.length} orang` : 'Belum ada tamu'],
+                        ['Jumlah Tamu', fieldValue('guest_count') ? `${fieldValue('guest_count')} orang` : 'Belum diisi'],
                     ], guestList),
                     reviewSection('Penugasan Operasional', [
                         ['Driver', selectedText('driver_id', 'Belum dipilih')],

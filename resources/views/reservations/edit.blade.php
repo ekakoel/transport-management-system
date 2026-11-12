@@ -27,7 +27,7 @@
                 <h1>Edit {{ $reservation->reservation_number }}</h1>
                 <p>Perbarui data permintaan layanan. Penyesuaian hanya dapat dilakukan sebelum tanggal layanan tiba.</p>
             </div>
-            <a href="{{ route('admin.reservations.show', $reservation) }}" class="service-show-back">
+            <a href="{{ $isAdmin ? route('admin.reservations.show', $reservation) : route('reservations.show', $reservation) }}" class="service-show-back">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M19 12H5m7 7-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
                         stroke-linejoin="round" />
@@ -37,7 +37,7 @@
         </div>
     </header>
     <div class="service-create-page">
-        <form method="POST" action="{{ route('admin.reservations.update', $reservation) }}" class="service-create-form">
+        <form method="POST" action="{{ $isAdmin ? route('admin.reservations.update', $reservation) : route('reservations.update', $reservation) }}" class="service-create-form">
             @csrf
             @method('PUT')
             <section class="service-create-card">
@@ -259,7 +259,7 @@
             </section>
 
             <div class="service-create-actions">
-                <a href="{{ route('admin.reservations.show', $reservation) }}" class="service-show-back">Batal</a>
+                <a href="{{ $isAdmin ? route('admin.reservations.show', $reservation) : route('reservations.show', $reservation) }}" class="service-show-back">Batal</a>
                 <button class="service-submit-btn" type="submit">Simpan Perubahan</button>
             </div>
         </form>

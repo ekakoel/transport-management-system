@@ -281,7 +281,7 @@
     
                         <div class="service-show-panel-actions">
                             <span class="service-show-count">
-                                {{ $service->guests->count() }} guests
+                                Jumlah Tamu: {{ $service->guest_count }}
                             </span>
                             @if ($canEditGuests)
                                 <button type="button" class="service-show-guest-add" data-guest-add>

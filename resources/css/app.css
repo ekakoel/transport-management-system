@@ -830,6 +830,17 @@ body{
     text-decoration: none;
     cursor: pointer;
 }
+.btn-primary {
+    min-height: 20px;
+    text-wrap: nowrap;
+    font-size: 12px;
+    font-weight: 700;
+    position: relative;
+}
+.btn-primary svg{
+    width: 16px;
+    padding-right: 8px;
+}
 .btn-map {
     display: inline-flex;
     align-items: center;
@@ -2486,6 +2497,12 @@ body {
     .topbar {
         padding-right: 23px;
         padding-left: 23px;
+    }
+    .resv-rejected,
+    .resv-cancelled,
+    .resv-approved,
+    .resv-pending {
+        font-size: 12px;
     }
 }
 
@@ -4317,7 +4334,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 44px;
+    min-height: 40px;
     padding: 0 18px;
     border-radius: 8px;
     font-family: inherit;
@@ -4373,6 +4390,12 @@ body {
     .service-wizard-steps,
     .service-wizard-steps--5 {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .resv-rejected,
+    .resv-cancelled,
+    .resv-approved,
+    .resv-pending {
+        font-size: 12px;
     }
 }
 
@@ -5569,7 +5592,7 @@ body {
 
 .tms-info-list {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(1, minmax(0, 1fr));
     gap: 8px;
     padding: 8px 0px;
 }

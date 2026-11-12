@@ -25,8 +25,11 @@
             'Pending' => 'resv-pending',
             default => 'default',
         };
-        $canEditReservation = $isAdmin
-            && now('Asia/Makassar')->toDateString() <= $reservation->service_date->format('Y-m-d');
+        $canEditReservation = now('Asia/Makassar')->toDateString() <= $reservation->service_date->format('Y-m-d')
+            && ($isAdmin || ($reservation->user_id === auth()->id() && $reservation->status === 'Pending'));
+        $editReservationUrl = $isAdmin
+            ? route('admin.reservations.edit', $reservation)
+            : route('reservations.edit', $reservation);
     @endphp
     <header>
         <div class="main-header">
@@ -37,7 +40,7 @@
             @if ($isAdmin)
                 <div class="service-show-header-actions">
                     @if ($canEditReservation)
-                        <a href="{{ route('admin.reservations.edit', $reservation) }}" class="service-show-action-add">
+                        <a href="{{ $editReservationUrl }}" class="service-show-action-add">
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"
                                     stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
@@ -56,13 +59,26 @@
                     </a>
                 </div>
             @else
-                <a href="{{ route('reservations.index') }}" class="service-show-back">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M19 12H5m7 7-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                    Kembali ke daftar permintaan
-                </a>
+                <div class="service-show-header-actions">
+                    @if ($canEditReservation)
+                        <a href="{{ $editReservationUrl }}" class="service-show-action-add">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"
+                                    stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                                <path d="m13.5 5.5 3 3" stroke="currentColor" stroke-width="1.7"
+                                    stroke-linecap="round" />
+                            </svg>
+                            Edit Permintaan
+                        </a>
+                    @endif
+                    <a href="{{ route('reservations.index') }}" class="service-show-back">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M19 12H5m7 7-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                        Kembali ke daftar permintaan
+                    </a>
+                </div>
             @endif
         </div>
     </header>
@@ -394,11 +410,29 @@
                 @endif
                 @if (!$isAdmin && $reservation->status === 'Pending')
                     <section class="resv-card">
-                        <form method="POST" action="{{ route('reservations.cancel', $reservation) }}">
-                            @csrf
-                            <button class="service-reject-btn" type="submit"
-                                onclick="return confirm('Batalkan permintaan ini?')">Batalkan Permintaan</button>
-                        </form>
+                        <div class="service-create-actions">
+                            <div class="resv-actions">
+                                <a class="service-show-back" href="{{ $isAdmin ? route('admin.reservations.index') : route('reservations.index') }}">
+                                    ← Kembali ke daftar permintaan
+                                </a>
+                            </div>
+                            @if ($canEditReservation)
+                                <a href="{{ $editReservationUrl }}" class="btn btn-primary">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"
+                                            stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                                        <path d="m13.5 5.5 3 3" stroke="currentColor" stroke-width="1.7"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                    Edit Permintaan
+                                </a>
+                            @endif
+                            <form method="POST" action="{{ route('reservations.cancel', $reservation) }}">
+                                @csrf
+                                <button class="service-reject-btn" type="submit"
+                                    onclick="return confirm('Batalkan permintaan ini?')">Batalkan Permintaan</button>
+                            </form>
+                        </div>
                     </section>
                 @endif
                 
@@ -441,11 +475,7 @@
                             </form>
                     </section>
                 @endif
-                <div class="resv-actions">
-                    <a class="service-show-back" href="{{ $isAdmin ? route('admin.reservations.index') : route('reservations.index') }}">
-                        ← Kembali ke daftar permintaan
-                    </a>
-                </div>
+                
             </div>
             <aside class="tms-info-panel" aria-label="Informasi Ringkasan Layanan">
                 <div class="tms-info-panel-heading">

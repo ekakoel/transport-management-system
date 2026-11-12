@@ -241,7 +241,15 @@
                                                     data-driver-phone="{{ $d->phone }}"
                                                     data-driver-license="{{ $d->license_number }}"
                                                     data-driver-notes="{{ $d->notes }}"
-                                                    data-driver-active="{{ $d->is_active ? '1' : '0' }}">Edit</button>
+                                                    data-driver-active="{{ $d->is_active ? '1' : '0' }}">
+                                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                        <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"
+                                                            stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                                                        <path d="m13.5 5.5 3 3" stroke="currentColor" stroke-width="1.7"
+                                                            stroke-linecap="round" />
+                                                    </svg>
+                                                    Edit
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
