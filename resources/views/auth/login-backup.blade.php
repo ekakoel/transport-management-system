@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Login | Bali Kami TMS')
+@section('title', 'Login | Bali Kami Tour TMS')
 
 @section('content')
 <div class="tms-login-page">
@@ -20,8 +20,8 @@
                     </svg>
                 </span>
                 <span class="brand-copy">
-                    <strong>BALI KAMI</strong>
-                    <small>TRANSPORT MANAGEMENT</small>
+                    <strong>BALI KAMI TOUR</strong>
+                    <small>TRANSPORT MANAGEMENT SYSTEM (TMS)</small>
                 </span>
             </a>
 
@@ -176,8 +176,8 @@
                     </svg>
                 </span>
                 <span class="brand-copy">
-                    <strong>BALI KAMI</strong>
-                    <small>TRANSPORT MANAGEMENT</small>
+                    <strong>BALI KAMI TOUR</strong>
+                    <small>TRANSPORT MANAGEMENT SYSTEM (TMS)</small>
                 </span>
             </div>
 
@@ -337,7 +337,7 @@
             </div>
 
             <footer class="login-footer">
-                <span>© {{ date('Y') }} Bali Kami TMS</span>
+                <span>© {{ date('Y') }} Bali Kami Tour TMS</span>
                 <span>Transport operations, simplified.</span>
             </footer>
         </section>

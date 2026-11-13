@@ -1,7 +1,7 @@
 {
   "name": "balikami/transport-management-system",
   "type": "project",
-  "description": "Bali Kami Tour lightweight Transport Management System",
+  "description": "Bali Kami Tour Transport Management System",
   "keywords": ["laravel", "transport", "spk"],
   "license": "proprietary",
   "require": {

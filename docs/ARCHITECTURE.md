@@ -10,7 +10,7 @@
 
 `resources/css/app.css` adalah sumber utama (source of truth) untuk warna, tipografi, layout, dan komponen UI.
 
-- Tema aplikasi terautentikasi berada pada bagian `BALI KAMI TMS — MODERN DASHBOARD`.
+- Tema aplikasi terautentikasi berada pada bagian `BALI KAMI TOUR TMS — MODERN DASHBOARD`.
 - Halaman login dan beberapa elemen publik memiliki aksen tambahan yang dideklarasikan pada blok `:root` pertama.
 - Blok `:root` kedua mendefinisikan ulang sebagian token inti. Untuk halaman aplikasi, gunakan nilai token dari blok dashboard.
 

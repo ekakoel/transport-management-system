@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Schedule;
 use App\Models\SpkEvent;
 use App\Models\TransportService;
 
-Artisan::command('tms:about', function () { $this->info('Bali Kami TMS'); });
+Artisan::command('tms:about', function () { $this->info('Bali Kami Tour TMS'); });
 
 Schedule::call(function () {
     $today = now('Asia/Makassar')->toDateString();

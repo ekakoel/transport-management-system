@@ -1,4 +1,4 @@
--- Bali Kami TMS schema for MySQL 8.0+
+-- Bali Kami Tour TMS schema for MySQL 8.0+
 -- Import into an EMPTY database. Use utf8mb4. Do not import over an existing production database.
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS=0;

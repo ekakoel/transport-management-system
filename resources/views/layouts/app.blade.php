@@ -14,11 +14,11 @@
     @if (auth()->check())
         <div class="shell">
             <aside class="sidebar">
-                <a href="{{ route('dashboard') }}" class="brand brand-link" aria-label="Bali Kami TMS">
+                <a href="{{ route('dashboard') }}" class="brand brand-link" aria-label="Bali Kami Tour TMS">
                     <img src="{{ asset('images/bali_kami_icon_white.png') }}" alt="Bali Kami Logo">
                     <span class="brand-copy">
-                        <span class="brand-name">BALI KAMI <b>TMS</b></span>
-                        <span class="brand-caption">TRANSPORT MANAGEMENT</span>
+                        <span class="brand-name">BALI KAMI TOUR</span>
+                        <span class="brand-caption">TRANSPORT MANAGEMENT SYSTEM (TMS)</span>
                     </span>
                 </a>
 
@@ -290,7 +290,7 @@
     @endif
     @yield('content')
     <footer class="footer">
-        <span>Bali Kami TMS</span>
+        <span>Bali Kami Tour TMS</span>
         <span>Transport Management System</span>
     </footer>
     @if (auth()->check())

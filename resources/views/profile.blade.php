@@ -20,7 +20,7 @@
                     ACCOUNT SETTINGS
                 </div>
                 <h1>Profil Saya</h1>
-                <p>Kelola informasi akun dan keamanan akses Anda ke Bali Kami TMS.</p>
+                <p>Kelola informasi akun dan keamanan akses Anda ke Bali Kami Tour TMS.</p>
             </div>
         </div>
     </header>

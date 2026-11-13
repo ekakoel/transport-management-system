@@ -746,7 +746,7 @@ body{
     font-size: 9px;
 }
 
-/* Bali Kami TMS Dashboard */
+/* Bali Kami Tour TMS Dashboard */
 .shell {
     display: flex;
     min-height: 100vh;
@@ -1157,7 +1157,7 @@ th {
 }
 
 /* =========================================
-   BALI KAMI TMS — MODERN DASHBOARD
+   BALI KAMI TOUR TMS — MODERN DASHBOARD
    ========================================= */
 
 :root {
@@ -2883,7 +2883,7 @@ body {
 
 /* =========================================
    Layanan Transportasi INDEX
-   Bali Kami TMS
+   Bali Kami Tour TMS
 ========================================= */
 
 .services-page {
@@ -3621,7 +3621,7 @@ body {
 
 /* =========================================
    CREATE SERVICE / SPK
-   Bali Kami TMS
+   Bali Kami Tour TMS
 ========================================= */
 
 .service-create-page {
@@ -4550,7 +4550,7 @@ body {
 
 /* =========================================
    SERVICE SHOW / SPK DETAIL
-   Bali Kami TMS
+   Bali Kami Tour TMS
 ========================================= */
 
 .service-show-page {
@@ -5797,7 +5797,7 @@ body {
     
 }
 /* =====================================================
-   SPK PREVIEW — BALI KAMI TMS THEME
+   SPK PREVIEW — BALI KAMI TOUR TMS THEME
    ===================================================== */
 .spk-preview-page,
 .service-show-page:has(.spk) {

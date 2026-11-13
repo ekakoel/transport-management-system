@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Reset Password | Bali Kami TMS</title>
+    <title>Reset Password | Bali Kami Tour TMS</title>
     <link rel="icon" type="image/jpeg" href="{{ asset('images/favicon.ico') }}">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -66,8 +66,8 @@
                     <img src="{{ asset('images/bali_kami_icon.png') }}" alt="Logo Bali Kami">
                 </span>
                 <span class="brand-copy">
-                    <strong>BALI KAMI</strong>
-                    <small>TRANSPORT MANAGEMENT</small>
+                    <strong>BALI KAMI TOUR</strong>
+                    <small>TRANSPORT MANAGEMENT SYSTEM (TMS)</small>
                 </span>
             </div>
 
