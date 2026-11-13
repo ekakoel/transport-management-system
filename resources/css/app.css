@@ -3770,6 +3770,13 @@ body {
     border-bottom: 1px solid #edf0f6;
     justify-content: space-between;
 }
+.service-create-section-header .header-title{
+    display: grid;
+    grid-auto-flow: column;
+    gap: 18px;
+    justify-content: center;
+    align-items: center;
+}
 
 .service-create-section-icon {
     display: flex;

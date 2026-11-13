@@ -212,22 +212,24 @@
             <div class="tms-main-column">
                 <section class="service-create-card mb-3">
                     <div class="service-create-section-header">
-                        <div class="service-create-section-icon service-icon-green">
-                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="m5 11 2-5h10l2 5M4 11h16v7H4z" stroke="currentColor" stroke-width="1.7"
-                                    stroke-linejoin="round" />
-                                <path d="M7 18v2m10-2v2" stroke="currentColor" stroke-width="1.7"
-                                    stroke-linecap="round" />
-                                <circle cx="7.5" cy="14.5" r="1.3" stroke="currentColor"
-                                    stroke-width="1.5" />
-                                <circle cx="16.5" cy="14.5" r="1.3" stroke="currentColor"
-                                    stroke-width="1.5" />
-                            </svg>
-                        </div>
-                        <div>
-                            <span class="vehicle-calendar-kicker">KETERSEDIAAN ARMADA</span>
-                            <h2>Kalender Ketersediaan Kendaraan</h2>
-                            <p>Jadwal layanan transportasi per bulan untuk melihat kendaraan yang sudah terpakai.</p>
+                        <div class="header-title">
+                            <div class="service-create-section-icon service-icon-green">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="m5 11 2-5h10l2 5M4 11h16v7H4z" stroke="currentColor" stroke-width="1.7"
+                                        stroke-linejoin="round" />
+                                    <path d="M7 18v2m10-2v2" stroke="currentColor" stroke-width="1.7"
+                                        stroke-linecap="round" />
+                                    <circle cx="7.5" cy="14.5" r="1.3" stroke="currentColor"
+                                        stroke-width="1.5" />
+                                    <circle cx="16.5" cy="14.5" r="1.3" stroke="currentColor"
+                                        stroke-width="1.5" />
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="vehicle-calendar-kicker">KETERSEDIAAN ARMADA</span>
+                                <h2>Kalender Ketersediaan Kendaraan</h2>
+                                <p>Jadwal layanan transportasi per bulan untuk melihat kendaraan yang sudah terpakai.</p>
+                            </div>
                         </div>
 
                         <div class="vehicle-calendar-toolbar-actions">
@@ -251,8 +253,6 @@
                             @endif
                         </div>
                     </div>
-                    
-                    
                         <div class="vehicle-calendar-weekdays">
                             @foreach (['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $weekday)
                                 <span>{{ $weekday }}</span>
