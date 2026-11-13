@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Detail Permintaan')
+@section('title', 'Detail Reservasi Layanan')
 @section('content')
     @php
         $serviceType = match ($reservation->serviceType?->name) {
@@ -25,8 +25,6 @@
             'Pending' => 'resv-pending',
             default => 'default',
         };
-        $canEditReservation = now('Asia/Makassar')->toDateString() <= $reservation->service_date->format('Y-m-d')
-            && ($isAdmin || ($reservation->user_id === auth()->id() && $reservation->status === 'Pending'));
         $editReservationUrl = $isAdmin
             ? route('admin.reservations.edit', $reservation)
             : route('reservations.edit', $reservation);
@@ -35,7 +33,7 @@
         <div class="main-header">
             <div class="services-heading">
                 <h1>{{ $reservation->reservation_number }}</h1>
-                <p class="resv-muted">Diajukan {{ \App\Support\DateFormatter::format($reservation->created_at, null, 'd M Y H:i') }} · Reservation: {{ $reservation->requester?->name }}</p>
+                <p class="resv-muted">Diajukan {{ \App\Support\DateFormatter::format($reservation->created_at, null, 'd M Y H:i') }} · Reservasi: {{ $reservation->requester?->name }}</p>
             </div>
             @if ($isAdmin)
                 <div class="service-show-header-actions">
@@ -47,7 +45,7 @@
                                 <path d="m13.5 5.5 3 3" stroke="currentColor" stroke-width="1.7"
                                     stroke-linecap="round" />
                             </svg>
-                            Edit Reservation
+                            Edit Reservasi
                         </a>
                     @endif
                     <a href="{{ route('admin.reservations.index') }}" class="service-show-back">
@@ -55,7 +53,7 @@
                             <path d="M19 12H5m7 7-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
                                 stroke-linejoin="round" />
                         </svg>
-                        Kembali ke daftar permintaan
+                        Kembali ke daftar reservasi
                     </a>
                 </div>
             @else
@@ -68,7 +66,7 @@
                                 <path d="m13.5 5.5 3 3" stroke="currentColor" stroke-width="1.7"
                                     stroke-linecap="round" />
                             </svg>
-                            Edit Permintaan
+                            Edit Reservasi
                         </a>
                     @endif
                     <a href="{{ route('reservations.index') }}" class="service-show-back">
@@ -76,7 +74,7 @@
                             <path d="M19 12H5m7 7-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
                                 stroke-linejoin="round" />
                         </svg>
-                        Kembali ke daftar permintaan
+                        Kembali ke daftar reservasi
                     </a>
                 </div>
             @endif
@@ -99,8 +97,8 @@
                                 </svg>
                             </div>
                             <div>
-                                <h2 class="resv-section-title">Informasi Permintaan Layanan</h2>
-                                <p>Detail permintaan, penjemputan, dan instruksi layanan.</p>
+                                <h2 class="resv-section-title">Informasi Reservasi Layanan</h2>
+                                <p>Detail reservasi, penjemputan, dan instruksi layanan.</p>
                             </div>
                         </div>
                     </div>
@@ -139,9 +137,9 @@
                                 {!! $serviceType ?? '—' !!}
                             </span>
                             <div>
-                                <span class="service-show-detail-label">Type Layanan</span>
+                                <span class="service-show-detail-label">Tipe Layanan</span>
                                 <strong>
-                                    {{ $reservation->serviceType?->name ?? '—' }} ({{ $reservation->guests->count() }} pax)
+                                    {{ $reservation->serviceType?->name ?? '—' }} ({{ $reservation->guest_count }} pax)
                                 </strong>
                                 <small>{{ $captionServiceType }}</small>
                             </div>
@@ -174,7 +172,7 @@
                                 </svg>
                             </span>
                             <div>
-                                <span class="service-show-detail-label">Catatan Layanan</span>
+                                <span class="service-show-detail-label">Catatan Reservasi</span>
                                 <strong>
                                     {{ $reservation->notes ?: '—' }}
                                 </strong>
@@ -197,7 +195,7 @@
                             </div>
                             <div>
                                 <h2 class="resv-section-title">Daftar Tamu</h2>
-                                <p>{{ $reservation->guests->count() }} pax</p>
+                                <p>{{ $reservation->guest_count }} pax</p>
                             </div>
                         </div>
                     </div>
@@ -325,7 +323,7 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <h2 class="resv-section-title">Persetujuan Permintaan Layanan</h2>
+                                    <h2 class="resv-section-title">Persetujuan Reservasi Layanan</h2>
                                     <p>Setujui setelah memastikan jadwal, driver, dan kendaraan. Kontak Darurat Default akan dicantumkan otomatis pada SPK.</p>
                                 </div>
                             </div>
@@ -385,7 +383,7 @@
                                         </p>
                                     @else
                                         <p class="service-create-error">
-                                            Belum ada kontak aktif berstatus Default. Atur Kontak Darurat sebelum menyetujui reservasi.
+                                            Belum ada kontak aktif berstatus Default. Atur Kontak Darurat sebelum menyetujui reservasi layanan.
                                         </p>
                                     @endif
                                     @error('emergency_contact')
@@ -393,9 +391,9 @@
                                     @enderror
                                 </div>
                                 <div class="service-create-field service-field-full m-b-3">
-                                    <label for="admin_notes">Catatan Layanan</label>
+                                    <label for="admin_notes">Catatan Reservasi</label>
                                     <textarea id="admin_notes" name="admin_notes" rows="3"
-                                        placeholder="Permintaan khusus, informasi tamu, atau instruksi tambahan...">{{ old('admin_notes') }}</textarea>
+                                        placeholder="Reservasi khusus, informasi tamu, atau instruksi tambahan...">{{ old('admin_notes') }}</textarea>
                                     @error('admin_notes')
                                         <small class="service-create-error">{{ $message }}</small>
                                     @enderror
@@ -408,12 +406,12 @@
                         
                     </section>
                 @endif
-                @if (!$isAdmin && $reservation->status === 'Pending')
+                @if (!$isAdmin && $isOwner && $reservation->status === 'Pending')
                     <section class="resv-card">
                         <div class="service-create-actions">
                             <div class="resv-actions">
                                 <a class="service-show-back" href="{{ $isAdmin ? route('admin.reservations.index') : route('reservations.index') }}">
-                                    ← Kembali ke daftar permintaan
+                                    ← Kembali ke daftar reservasi
                                 </a>
                             </div>
                             @if ($canEditReservation)
@@ -424,13 +422,13 @@
                                         <path d="m13.5 5.5 3 3" stroke="currentColor" stroke-width="1.7"
                                             stroke-linecap="round" />
                                     </svg>
-                                    Edit Permintaan
+                                    Edit Reservasi
                                 </a>
                             @endif
                             <form method="POST" action="{{ route('reservations.cancel', $reservation) }}">
                                 @csrf
                                 <button class="service-reject-btn" type="submit"
-                                    onclick="return confirm('Batalkan permintaan ini?')">Batalkan Permintaan</button>
+                                    onclick="return confirm('Batalkan reservasi ini?')">Batalkan Reservasi</button>
                             </form>
                         </div>
                     </section>
@@ -452,7 +450,7 @@
                                         </svg>
                                     </div>
                                     <div>
-                                        <h2 class="resv-section-title">Penolakan Permintaan Layanan</h2>
+                                        <h2 class="resv-section-title">Penolakan Reservasi Layanan</h2>
                                         <p>Setujui hanya setelah memastikan jadwal, driver, kendaraan, dan kontak darurat. SPK akan diterbitkan otomatis.</p>
                                     </div>
                                 </div>
@@ -463,30 +461,34 @@
                                     <div class="service-create-field service-field-full">
                                         <label for="reject_admin_notes">Alasan Penolakan <span>*</span></label>
                                         <textarea id="reject_admin_notes" name="reject_admin_notes" rows="3"
-                                            placeholder="Berikan alasan penolakan permintaan layanan" required>{{ old('reject_admin_notes') }}</textarea>
+                                            placeholder="Berikan alasan penolakan reservasi layanan" required>{{ old('reject_admin_notes') }}</textarea>
                                         @error('reject_admin_notes')
                                             <small class="service-create-error">{{ $message }}</small>
                                         @enderror
                                     </div>
                                 </div>
                                 <div class="service-create-actions">
-                                    <button class="service-reject-btn" type="submit">Tolak Permintaan</button>
+                                    <button class="service-reject-btn" type="submit">Tolak Reservasi</button>
                                 </div>
                             </form>
                     </section>
                 @endif
                 
             </div>
-            <aside class="tms-info-panel" aria-label="Informasi Ringkasan Layanan">
+            <aside class="tms-info-panel" aria-label="Informasi Ringkasan Reservasi">
                 <div class="tms-info-panel-heading">
                     <span class="tms-info-panel-kicker">INFORMASI</span>
-                    <h2>Ringkasan Layanan</h2>
-                    <p>Ringkasan daftar dan status layanan transportasi.</p>
+                    <h2>Ringkasan Reservasi</h2>
+                    <p>Ringkasan daftar dan status reservasi layanan.</p>
                 </div>
                 <div class="tms-info-list">
                     <div class="tms-info-item">
                         <strong>Status</strong>
                         <div class="{{ $statusClass }}">{{ $reservation->status }}</div>
+                    </div>
+                    <div class="tms-info-item">
+                        <span class="tms-info-label">Jumlah Tamu</span>
+                        <strong class="tms-info-value">{{ number_format($reservation->guest_count) }} orang</strong>
                     </div>
                     @if (count($reservation->guests)< 1)
                         <div class="attention-grid">

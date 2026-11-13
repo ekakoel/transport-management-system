@@ -558,7 +558,7 @@
             <td>{{ $service->serviceType?->name ?? 'Layanan Transportasi' }}</td>
         </tr>
         <tr>
-            <th>Tanggal Layanan</th>
+            <th>Tanggal</th>
             <td>{{ \App\Support\DateFormatter::format($service->service_date) }}@if (
                 $service->service_end_date &&
                     $service->service_end_date->format('Y-m-d') !== $service->service_date->format('Y-m-d'))
@@ -568,7 +568,7 @@
         </tr>
         <tr>
             <th>Jumlah Tamu</th>
-            <td>{{ $service->guest_count ?? 1 }} orang</td>
+            <td>{{ number_format($service->reservation?->guest_count ?? 1) }} pax</td>
         </tr>
         @if ($service->notes)
             <tr>
@@ -582,10 +582,10 @@
         $reservationUser = $service->reservation?->requester;
         $reservationPhone = $reservationUser?->phone ?: $service->customer_phone;
     @endphp
-    <h4 class="section-title">Detail Reservasi</h4>
+    <h4 class="section-title">Detail Reservasi Layanan</h4>
     <table>
         <tr>
-            <th>Nama Reservasi</th>
+            <th>Reservasi</th>
             <td>{{ $reservationUser?->name ?? ($service->customer_name ?? '—') }}</td>
         </tr>
         <tr>
@@ -632,7 +632,7 @@
             <h4 class="section-title">Data Driver</h4>
             <table>
                 <tr>
-                    <th>Nama Driver</th>
+                    <th>Driver</th>
                     <td>{{ $service->driver?->name ?? '—' }}</td>
                 </tr>
                 <tr>
@@ -657,6 +657,10 @@
                                 <span
                                     class="public-destination-state {{ $stop->status === 'Checked In' ? 'public-destination-state-checked' : ($stop->status === 'Cancelled' ? 'public-destination-state-cancelled' : '') }}">{{ $stop->status }}</span>
                             </div>
+                            @if ($stop->added_by_driver)
+                                <p class="public-small">Destinasi tambahan dari driver.</p>
+                            @endif
+                            <hr>
                             <div class="description-item">
                                 <div class="icon">🕒</div>
                                 <div class="desc">Waktu kunjungan:
@@ -686,23 +690,26 @@
                                     <div class="desc"><i>Catatan: {{ $stop->note }}</i></div>
                                 </div>
                             @endif
-                            @if ($stop->added_by_driver)
-                                <p class="public-small">Destinasi tambahan dari driver.</p>
-                            @endif
                             @if ($stop->status === 'Checked In')
-                                <p class="caption"><strong>✓ Check In tercatat</strong></p>
+                                <div class="description-item">
+                                    <div class="icon">✅</div>
+                                    <div class="desc"><i>Check In tercatat</i></div>
+                                </div>
                                 @php
                                     $stopEvent = $spk->events
                                         ->where('itinerary_stop_id', $stop->id)
                                         ->firstWhere('event_type', 'check_in');
                                 @endphp
                                 @if ($stopEvent?->created_at)
-                                    <p class="public-small">
-                                        {{ \App\Support\DateFormatter::format($stopEvent->created_at, null, 'd M Y') }}
-                                        pukul
-                                        {{ \App\Support\DateFormatter::format($stopEvent->created_at, null, 'H:i') }}
-                                        WITA
-                                    </p>
+                                    <div class="description-item">
+                                        <div class="icon">🗓️</div>
+                                        <div class="desc">
+                                            {{ \App\Support\DateFormatter::format($stopEvent->created_at, null, 'd M Y') }}
+                                            pukul
+                                            {{ \App\Support\DateFormatter::format($stopEvent->created_at, null, 'H:i') }}
+                                            WITA
+                                        </div>
+                                    </div>
                                 @endif
                             @endif
                             @if ($stop->status !== 'Checked In' && $canCheckIn && $stop->status !== 'Cancelled')

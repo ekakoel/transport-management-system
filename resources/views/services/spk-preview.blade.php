@@ -16,6 +16,7 @@
         $orderedStops = $service->stops
             ->sortBy(fn ($stop) => [$stop->visit_time === null, $stop->visit_time ?? '', $stop->sort_order])
             ->values();
+        $guestCount = $service->reservation?->guest_count ?? 1;
     @endphp
     <header>
         <div class="main-header">
@@ -225,6 +226,22 @@
                         <div class="service-show-detail-item">
                             <span class="service-show-detail-icon">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.7" />
+                                    <path d="M3 21v-1.5A4.5 4.5 0 0 1 7.5 15h5A4.5 4.5 0 0 1 17 19.5V21"
+                                        stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                                    <path d="M16 4a4 4 0 0 1 0 7.5m2 3a4.5 4.5 0 0 1 2 3.5V21" stroke="currentColor"
+                                        stroke-width="1.7" stroke-linecap="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <span class="service-show-detail-label">Jumlah Tamu</span>
+                                <strong>{{ number_format($guestCount) }} orang</strong>
+                            </div>
+                        </div>
+
+                        <div class="service-show-detail-item">
+                            <span class="service-show-detail-icon">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.7"
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
@@ -243,20 +260,20 @@
                     <div class="service-show-panel-header">
                         <div class="service-show-panel-heading">
                             <div>
-                                <h2>Pemilik Reservasi &amp; Daftar Tamu</h2>
+                                <h2>Reservation &amp; Daftar Tamu</h2>
                                 <p>Informasi internal kasus layanan.</p>
                             </div>
                         </div>
                     </div>
-                    <p><strong>Pemilik Reservation:</strong>
+                    <p><strong>Reservation:</strong>
                         {{ $service->reservation?->requester?->name ?? 'Belum ditetapkan' }} @if ($service->reservation?->requester?->email)
                             ({{ $service->reservation->requester->email }}{{ $service->reservation->requester?->phone ? ' · ' . $service->reservation->requester->phone : '' }})
                         @endif
                     </p>
                     @if ($service->reservation)
-                        <p><strong>Nomor Reservation:</strong> {{ $service->reservation->reservation_number }}</p>
+                        <p><strong>Nomor Reservasi Layanan:</strong> {{ $service->reservation->reservation_number }}</p>
                     @endif
-                    <h3>Daftar Tamu ({{ $service->guests->count() }})</h3>
+                    <h3>Daftar Tamu ({{ number_format($guestCount) }})</h3>
                     @forelse($service->guests as $guest)
                         <p>{{ $guest->name }} · {{ $guest->gender }} · {{ $guest->age_category }} ·
                             {{ $guest->phone ?: '—' }}</p>

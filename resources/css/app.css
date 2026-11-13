@@ -5210,6 +5210,12 @@ body {
     line-height: 1.6;
     overflow-wrap: anywhere;
 }
+.service-show-stop-heading h3 span {
+    font-size: 10px;
+    font-weight: 500;
+    font-style: italic;
+    color: grey;
+}
 
 .service-show-stop-badges {
     display: flex;
@@ -6379,6 +6385,88 @@ body.tms-modal-open {
 
 .tms-modal-btn-danger:hover {
     background: #a92a39;
+}
+
+.reservation-detail-dialog {
+    width: min(860px, 100%);
+}
+
+.reservation-detail-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.reservation-detail-grid {
+    padding: 0;
+    border: 1px solid #edf0f6;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.reservation-detail-grid .service-show-detail-item {
+    padding: 14px 16px;
+}
+
+.reservation-detail-grid .service-show-detail-item:nth-child(n + 3) {
+    border-top: 1px solid #f0f2f7;
+}
+
+.reservation-detail-section {
+    border: 1px solid #edf0f6;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.reservation-detail-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #edf0f6;
+    background: #fafbfe;
+}
+
+.reservation-detail-section-header h3 {
+    margin: 0;
+    color: #1d2942;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.reservation-detail-section-header span {
+    color: #6b7890;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.reservation-detail-section .services-table {
+    min-width: 560px;
+}
+
+.reservation-detail-notes {
+    margin: 0;
+    padding: 14px 16px;
+    color: #53617a;
+    font-size: 12px;
+    line-height: 1.7;
+    white-space: pre-line;
+}
+
+button.service-code {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+button.services-detail-btn {
+    font-family: inherit;
+    cursor: pointer;
 }
 
 @media (max-width: 760px) {

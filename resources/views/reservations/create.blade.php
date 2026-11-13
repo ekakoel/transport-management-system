@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Buat Permintaan Transportasi')
+@section('title', 'Buat Reservasi Layanan')
 
 @section('content')
     @php
@@ -50,10 +50,10 @@
             <div>
                 <div class="service-create-eyebrow">
                     <span></span>
-                    RESERVASI TRANSPORTASI
+                    RESERVASI LAYANAN
                 </div>
-                <h1>Buat Permintaan Transportasi</h1>
-                <p>Permintaan akan berstatus Pending sampai ditinjau admin. SPK baru dibuat setelah disetujui.</p>
+                <h1>Buat Reservasi Layanan</h1>
+                <p>Reservasi akan berstatus Pending sampai ditinjau admin. SPK baru dibuat setelah disetujui.</p>
             </div>
 
             <a href="{{ route('reservations.index') }}" class="service-create-back">
@@ -75,8 +75,8 @@
                 </svg>
             </span>
             <div>
-                <strong>Periksa detail sebelum melakukan permintaan layanan</strong>
-                <p>Pastikan data layanan, jadwal, dan destinasi sudah benar. Permintaan layanan dikirimkan setelah validasi permintaan layanan berhasil.</p>
+                <strong>Periksa detail sebelum melakukan reservasi layanan</strong>
+                <p>Pastikan data reservasi, jadwal, dan destinasi sudah benar. Reservasi layanan dikirimkan setelah validasi reservasi layanan berhasil.</p>
             </div>
         </div>
 
@@ -85,9 +85,9 @@
             @csrf
 
             {{-- Wizard Steps --}}
-            <ol class="service-wizard-steps service-wizard-steps--5" aria-label="Langkah pembuatan permintaan layanan">
+            <ol class="service-wizard-steps service-wizard-steps--5" aria-label="Langkah pembuatan reservasi layanan">
                 @foreach ([
-                    ['Detail Layanan', 'Agen & jadwal'],
+                    ['Detail Reservasi', 'Agen & jadwal'],
                     ['Daftar Tamu', 'Data wisatawan'],
                     ['Itinerary', 'Destinasi perjalanan'],
                     ['Note', 'Catatan untuk admin'],
@@ -119,7 +119,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h2>Detail Layanan</h2>
+                        <h2>Detail Reservasi</h2>
                         <p>Informasi agen dan kebutuhan transportasi.</p>
                     </div>
                     <span class="service-create-step">01</span>
@@ -151,7 +151,7 @@
                         <label for="guest_count">Jumlah Tamu <span>*</span></label>
                         <input id="guest_count" name="guest_count" type="number" min="1" max="100"
                             value="{{ old('guest_count', 1) }}" required>
-                        <small class="service-create-help">Otomatis mengikuti daftar tamu bila daftar tamu diisi.</small>
+                        <small class="service-create-help">Isi jumlah tamu sebenarnya. Nilai ini tidak dihitung otomatis dari daftar tamu.</small>
                         @error('guest_count')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
@@ -213,7 +213,7 @@
                     </div>
                     <div>
                         <h2>Daftar Tamu</h2>
-                        <p>Tambahkan daftar tamu sesuai dengan jumlah pax.</p>
+                        <p>Daftar wisatawan yang mengikuti layanan. Boleh dikosongkan bila data belum tersedia.</p>
                     </div>
                     <span class="service-create-step">02</span>
                 </div>
@@ -407,7 +407,7 @@
                     <div class="service-create-field service-field-full">
                         <label for="notes">Catatan / kebutuhan khusus</label>
                         <textarea id="notes" name="notes" rows="4"
-                            placeholder="Permintaan khusus, informasi tamu, atau instruksi tambahan...">{{ old('notes') }}</textarea>
+                            placeholder="Reservasi khusus, informasi tamu, atau instruksi tambahan...">{{ old('notes') }}</textarea>
                         @error('notes')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
@@ -427,7 +427,7 @@
                     </div>
                     <div>
                         <h2>Review input &amp; Submit</h2>
-                        <p>Periksa kembali seluruh data sebelum permintaan dikirim.</p>
+                        <p>Periksa kembali seluruh data sebelum reservasi dikirim.</p>
                     </div>
                     <span class="service-create-step">05</span>
                 </div>
@@ -438,7 +438,7 @@
                         <path d="M12 11v5m0-8h.01" stroke="currentColor" stroke-width="1.8"
                             stroke-linecap="round"/>
                     </svg>
-                    <p>Setelah tombol <strong>Kirim Permintaan</strong> ditekan, permintaan akan disimpan dengan status
+                    <p>Setelah tombol <strong>Kirim Reservasi</strong> ditekan, reservasi akan disimpan dengan status
                         Pending. Pastikan data sudah benar sebelum dikirim untuk ditinjau admin.</p>
                 </div>
 
@@ -468,7 +468,7 @@
                             <path d="M5 12.5 9.5 17 19 7" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span data-wizard-submit-label>Kirim Permintaan</span>
+                        <span data-wizard-submit-label>Kirim Reservasi</span>
                     </button>
                 </div>
             </div>
@@ -740,15 +740,15 @@
                     ? `<ul class="service-wizard-review-list">${stops.map((stop) => `<li><strong>${escapeHtml(stop.time || '--:--')}</strong> — ${escapeHtml(stop.name)}${stop.note ? ` <em>(${escapeHtml(stop.note)})</em>` : ''}${stop.map ? ' — Maps tersedia' : ''}</li>`).join('')}</ul>`
                     : '<p class="service-wizard-review-empty">Belum ada destinasi pada itinerary.</p>';
 
-                const guestCount = guests.length
-                    ? `${guests.length} orang`
-                    : (fieldValue('guest_count') ? `${fieldValue('guest_count')} orang` : '—');
+                const guestCount = fieldValue('guest_count')
+                    ? `${fieldValue('guest_count')} orang`
+                    : '—';
 
                 const startTime = stops.length ? stops[0].time : '';
                 const endTime = stops.length ? stops[stops.length - 1].time : '';
 
                 reviewRoot.innerHTML = [
-                    reviewSection('Detail Layanan', [
+                    reviewSection('Detail Reservasi', [
                         ['Agen', fieldValue('customer_name')],
                         ['Nomor Order', fieldValue('order_number')],
                         ['Tipe Layanan', selectedText('service_type_id', 'Belum dipilih')],
@@ -759,7 +759,7 @@
                         ['Jam Selesai', endTime],
                     ]),
                     reviewSection('Daftar Tamu', [
-                        ['Jumlah Tamu', guests.length ? `${guests.length} orang` : 'Belum ada tamu'],
+                        ['Jumlah Tamu', guestCount],
                     ], guestList),
                     reviewSection('Itinerary', [
                         ['Jumlah Destinasi', stops.length ? `${stops.length} destinasi` : 'Belum ada destinasi'],
@@ -805,7 +805,7 @@
 
                 form.dataset.submitting = '1';
                 if (submitButton) submitButton.disabled = true;
-                if (submitLabel) submitLabel.textContent = 'Mengirim Permintaan...';
+                if (submitLabel) submitLabel.textContent = 'Mengirim Reservasi...';
             });
 
             renumber(guestContainer);

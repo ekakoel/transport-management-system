@@ -90,9 +90,6 @@ class ReservationController extends Controller
 
         $guests = array_values(array_filter($data['guests'] ?? [], fn ($guest) => !empty($guest['name'])));
         unset($data['guests']);
-        if ($guests) {
-            $data['guest_count'] = count($guests);
-        }
 
         $itineraryStops = array_values(array_filter($data['itinerary_stops'] ?? [], fn ($stop) => !empty($stop['name'])));
         unset($data['itinerary_stops']);
@@ -113,18 +110,23 @@ class ReservationController extends Controller
         });
 
         return redirect()->route('reservations.show', $reservation)
-            ->with('success', 'Permintaan transportasi berhasil dikirim untuk ditinjau admin.');
+            ->with('success', 'Reservasi layanan berhasil dikirim untuk ditinjau admin.');
     }
 
     public function show(Request $request, Reservation $reservation)
     {
         $isAdmin = in_array(strtolower((string) $request->user()->role), ['admin', 'owner', 'manager'], true);
-        abort_unless($isAdmin || $reservation->user_id === $request->user()->id, 403);
+        $isOwner = (int) $reservation->user_id === (int) $request->user()->id;
+        $canViewShared = strtolower((string) $request->user()->role) === 'reservation'
+            && in_array($reservation->status, ['Pending', 'Approved'], true);
+        abort_unless($isAdmin || $isOwner || $canViewShared, 403);
 
         $reservation->load(['serviceType', 'requester', 'transportService', 'reviewer', 'guests']);
         return view('reservations.show', [
             'reservation' => $reservation,
             'isAdmin' => $isAdmin,
+            'isOwner' => $isOwner,
+            'canEditReservation' => $this->canEditReservation($request, $reservation),
             'drivers' => $isAdmin ? Driver::where('is_active', 1)->orderBy('name')->get() : collect(),
             'vehicles' => $isAdmin ? Vehicle::where('status', 'Available')->orderBy('name')->get() : collect(),
             'defaultEmergencyContact' => $isAdmin ? EmergencyContact::activeDefault() : null,
@@ -152,10 +154,7 @@ class ReservationController extends Controller
     {
         $isAdmin = $this->isAdmin($request);
 
-        if (! $this->canEditReservation($request, $reservation)) {
-            return redirect()->route($isAdmin ? 'admin.reservations.show' : 'reservations.show', $reservation)
-                ->withErrors(['reservation' => 'Permintaan tidak dapat diubah karena sudah diproses admin atau tanggal layanan sudah terlewat.']);
-        }
+        abort_unless($this->canEditReservation($request, $reservation), 403, 'Reservasi ini tidak dapat diubah.');
 
         $data = $request->validate([
             'service_type_id' => ['required', 'exists:service_types,id'],
@@ -179,25 +178,25 @@ class ReservationController extends Controller
 
         $guests = array_values(array_filter($data['guests'] ?? [], fn ($guest) => !empty($guest['name'])));
         unset($data['guests']);
-        if ($guests) {
-            $data['guest_count'] = count($guests);
-        }
 
         $itineraryStops = array_values(array_filter($data['itinerary_stops'] ?? [], fn ($stop) => !empty($stop['name'])));
         unset($data['itinerary_stops']);
         $data['itinerary'] = $itineraryStops;
 
-        DB::transaction(function () use ($reservation, $data, $guests) {
-            $reservation->update($data);
-            $reservation->guests()->delete();
+        DB::transaction(function () use ($request, $reservation, $data, $guests) {
+            $locked = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
+            abort_unless($this->canEditReservation($request, $locked), 403, 'Reservasi ini tidak dapat diubah.');
+
+            $locked->update($data);
+            $locked->guests()->delete();
 
             foreach ($guests as $guest) {
-                $reservation->guests()->create($guest);
+                $locked->guests()->create($guest);
             }
         });
 
         return redirect()->route($isAdmin ? 'admin.reservations.show' : 'reservations.show', $reservation)
-            ->with('success', 'Data permintaan berhasil diperbarui.');
+            ->with('success', 'Data reservasi berhasil diperbarui.');
     }
 
     private function isAdmin(Request $request): bool
@@ -207,21 +206,22 @@ class ReservationController extends Controller
 
     private function canEditReservation(Request $request, Reservation $reservation): bool
     {
-        $isAdmin = $this->isAdmin($request);
-        $isPendingOwner = $reservation->user_id === $request->user()->id
-            && $reservation->status === 'Pending';
-
-        return ($isAdmin || $isPendingOwner)
+        return (int) $reservation->user_id === (int) $request->user()->id
+            && $reservation->status === 'Pending'
             && now('Asia/Makassar')->toDateString() <= $reservation->service_date->format('Y-m-d');
     }
 
     public function cancel(Request $request, Reservation $reservation)
     {
-        abort_unless($reservation->user_id === $request->user()->id, 403);
-        abort_unless($reservation->status === 'Pending', 422, 'Hanya permintaan Pending yang dapat dibatalkan.');
+        DB::transaction(function () use ($request, $reservation) {
+            $locked = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
+            abort_unless((int) $locked->user_id === (int) $request->user()->id, 403, 'Anda tidak berhak membatalkan reservasi ini.');
+            abort_unless($locked->status === 'Pending', 422, 'Hanya reservasi Pending yang dapat dibatalkan.');
 
-        $reservation->update(['status' => 'Cancelled']);
-        return redirect()->route('reservations.index')->with('success', 'Permintaan berhasil dibatalkan.');
+            $locked->update(['status' => 'Cancelled']);
+        });
+
+        return redirect()->route('reservations.index')->with('success', 'Reservasi berhasil dibatalkan.');
     }
 
     public function adminIndex(Request $request)
@@ -277,7 +277,7 @@ class ReservationController extends Controller
 
     public function approve(Request $request, Reservation $reservation)
     {
-        abort_unless($reservation->status === 'Pending', 422, 'Permintaan ini sudah diproses.');
+        abort_unless($reservation->status === 'Pending', 422, 'Reservasi ini sudah diproses.');
 
         $data = $request->validate([
             'order_number' => ['nullable', 'string', 'max:100'],
@@ -290,7 +290,7 @@ class ReservationController extends Controller
         $contact = EmergencyContact::activeDefault();
         if (! $contact) {
             return back()->withInput()->withErrors([
-                'emergency_contact' => 'Tidak ada Kontak Darurat aktif yang ditandai sebagai Default. Atur kontak default sebelum menyetujui reservasi.',
+                'emergency_contact' => 'Tidak ada Kontak Darurat aktif yang ditandai sebagai Default. Atur kontak default sebelum menyetujui reservasi layanan.',
             ]);
         }
 
@@ -304,7 +304,7 @@ class ReservationController extends Controller
             $itineraryStops = json_decode($itineraryStops, true);
         }
         if (!is_array($itineraryStops) || count($itineraryStops) < 1) {
-            return back()->withErrors(['itinerary' => 'Permintaan harus memiliki minimal satu destinasi dengan waktu kunjungan dan short link Google Maps.']);
+            return back()->withErrors(['itinerary' => 'Reservasi harus memiliki minimal satu destinasi dengan waktu kunjungan dan short link Google Maps.']);
         }
         $itineraryStops = array_values($itineraryStops);
         foreach ($itineraryStops as $stop) {
@@ -330,7 +330,7 @@ class ReservationController extends Controller
         $rawToken = Str::random(64);
         $service = DB::transaction(function () use ($reservation, $data, $request, $rawToken, $start, $end, $startTime, $endTime, $contact) {
             $locked = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
-            abort_unless($locked->status === 'Pending', 422, 'Permintaan ini sudah diproses.');
+            abort_unless($locked->status === 'Pending', 422, 'Reservasi ini sudah diproses.');
 
             $service = TransportService::create([
                 'service_code' => 'TMS-' . now('Asia/Makassar')->format('ymd') . '-' . Str::upper(Str::random(5)),
@@ -394,21 +394,26 @@ class ReservationController extends Controller
             return $service;
         });
 
-        return redirect()->route('services.show', $service)->with('success', 'Permintaan disetujui. Layanan Transportasi dan SPK berhasil dibuat.');
+        return redirect()->route('services.show', $service)->with('success', 'Reservasi disetujui. Layanan Transportasi dan SPK berhasil dibuat.');
     }
 
     public function reject(Request $request, Reservation $reservation)
     {
-        abort_unless($reservation->status === 'Pending', 422, 'Permintaan ini sudah diproses.');
+        abort_unless($reservation->status === 'Pending', 422, 'Reservasi ini sudah diproses.');
         $data = $request->validate(['reject_admin_notes' => ['required', 'string', 'max:3000']]);
 
-        $reservation->update([
-            'status' => 'Rejected',
-            'admin_notes' => $data['reject_admin_notes'],
-            'reviewed_by' => $request->user()->id,
-            'reviewed_at' => now(),
-        ]);
+        DB::transaction(function () use ($request, $reservation, $data) {
+            $locked = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
+            abort_unless($locked->status === 'Pending', 422, 'Reservasi ini sudah diproses.');
 
-        return redirect()->route('admin.reservations.index')->with('success', 'Permintaan ditolak dan alasan disimpan.');
+            $locked->update([
+                'status' => 'Rejected',
+                'admin_notes' => $data['reject_admin_notes'],
+                'reviewed_by' => $request->user()->id,
+                'reviewed_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('admin.reservations.index')->with('success', 'Reservasi ditolak dan alasan disimpan.');
     }
 }

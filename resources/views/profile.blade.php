@@ -186,7 +186,7 @@
                     </div>
                     @if (strtolower((string) $user->role) === 'reservation')
                         <div class="profile-summary-row">
-                            <span class="profile-summary-label">Permintaan layanan</span>
+                            <span class="profile-summary-label">Reservasi layanan</span>
                             <span class="profile-summary-value">{{ number_format($reservationCount) }}</span>
                         </div>
                     @endif

@@ -10,15 +10,15 @@
                     <span class="status-dot"></span>
                     RESERVATION WORKSPACE
                 </div>
-                <h1>Dashboard Reservasi</h1>
-                <p>Pantau permintaan layanan yang Anda ajukan dan status persetujuannya.</p>
+                <h1>Dashboard Reservasi Layanan</h1>
+                <p>Pantau semua reservasi layanan dari semua pemohon beserta status persetujuannya.</p>
             </div>
 
             <a class="btn dashboard-create-btn" href="{{ route('reservations.create') }}">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
-                Ajukan Permintaan Layanan
+                Ajukan Reservasi Layanan
             </a>
         </div>
         <div class="dashboard-date">
@@ -47,7 +47,7 @@
                             <span class="stat-label">MENUNGGU REVIEW</span>
                         </div>
                         <div class="stat-value">{{ number_format($pendingReservationCount) }}</div>
-                        <div class="stat-title">Permintaan menunggu review</div>
+                        <div class="stat-title">Reservasi menunggu review</div>
                         <div class="stat-foot">Menunggu keputusan admin sebelum dijadwalkan.</div>
                     </article>
 
@@ -63,7 +63,7 @@
                             <span class="stat-label">DISETUJUI</span>
                         </div>
                         <div class="stat-value">{{ number_format($approvedReservationCount) }}</div>
-                        <div class="stat-title">Permintaan disetujui</div>
+                        <div class="stat-title">Reservasi disetujui</div>
                         <div class="stat-foot">Sudah diproses dan siap dijadwalkan.</div>
                     </article>
 
@@ -80,8 +80,8 @@
                             <span class="stat-label">HARI INI</span>
                         </div>
                         <div class="stat-value">{{ number_format($todayReservationCount) }}</div>
-                        <div class="stat-title">Permintaan untuk hari ini</div>
-                        <div class="stat-foot">Permintaan Pending atau Approved yang berlangsung hari ini.</div>
+                        <div class="stat-title">Reservasi untuk hari ini</div>
+                        <div class="stat-foot">Reservasi Pending atau Approved yang berlangsung hari ini.</div>
                     </article>
 
                     <article class="stat-card stat-purple">
@@ -99,17 +99,17 @@
                             <span class="stat-label">TOTAL</span>
                         </div>
                         <div class="stat-value">{{ number_format($totalReservationCount) }}</div>
-                        <div class="stat-title">Seluruh permintaan</div>
-                        <div class="stat-foot">Termasuk riwayat permintaan yang pernah Anda buat.</div>
+                        <div class="stat-title">Seluruh reservasi</div>
+                        <div class="stat-foot">Termasuk riwayat reservasi yang pernah Anda buat.</div>
                     </article>
                 </div>
 
                 <section class="dashboard-panel">
                     <div class="panel-heading">
                         <div>
-                            <div class="panel-title">Permintaan mendatang</div>
+                            <div class="panel-title">Reservasi Layanan</div>
                             <div class="panel-subtitle">
-                                Permintaan layanan Anda yang belum terlewat dan masih diproses
+                                Daftar reservasi layanan
                             </div>
                         </div>
 
@@ -139,12 +139,15 @@
                                 @forelse($reservations as $reservation)
                                     <tr>
                                         <td>
-                                            <a class="service-code"
-                                                href="{{ route('reservations.show', $reservation) }}">
+                                            <button type="button" class="service-code"
+                                                data-reservation-detail-open="reservationDetailModal{{ $reservation->id }}">
                                                 {{ $reservation->reservation_number }}
-                                            </a>
+                                            </button>
                                             <div class="service-spk">
                                                 {{ $reservation->order_number ? 'Order: ' . $reservation->order_number : 'Tanpa nomor order' }}
+                                            </div>
+                                            <div class="service-spk">
+                                                Reservasi: {{ $reservation->requester?->name ?? '—' }}
                                             </div>
                                         </td>
                                         <td class="table-date">
@@ -158,14 +161,14 @@
                                                 class="resv-status {{ $reservation->status }}">{{ $reservation->status }}</span>
                                         </td>
                                         <td>
-                                            <a href="{{ route('reservations.show', $reservation) }}"
-                                                class="services-detail-btn">
+                                            <button type="button" class="services-detail-btn"
+                                                data-reservation-detail-open="reservationDetailModal{{ $reservation->id }}">
                                                 Detail
                                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                                     <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor"
                                                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                                                 </svg>
-                                            </a>
+                                            </button>
                                         </td>
                                     </tr>
                                 @empty
@@ -180,10 +183,10 @@
                                                             stroke-width="1.6" stroke-linecap="round" />
                                                     </svg>
                                                 </div>
-                                                <strong>Belum ada permintaan mendatang</strong>
-                                                <span>Permintaan layanan yang Anda ajukan akan muncul di sini.</span>
+                                                <strong>Belum ada reservasi layanan tersedia</strong>
+                                                <span>Reservasi berstatus Pending dan Approved akan muncul di sini.</span>
                                                 <a href="{{ route('reservations.create') }}">
-                                                    Ajukan permintaan pertama
+                                                    Ajukan reservasi pertama
                                                 </a>
                                             </div>
                                         </td>
@@ -194,7 +197,7 @@
                     </div>
 
                     <div class="panel-footer">
-                        Menampilkan {{ $reservations->count() }} permintaan mendatang
+                        Menampilkan {{ $reservations->count() }} reservasi layanan
                     </div>
                 </section>
             </div>
@@ -202,37 +205,76 @@
             <aside class="tms-info-panel" aria-label="Informasi Ringkasan Reservasi">
                 <div class="tms-info-panel-heading">
                     <span class="tms-info-panel-kicker">INFORMASI</span>
-                    <h2>Ringkasan Permintaan</h2>
-                    <p>Status permintaan layanan yang Anda ajukan saat ini.</p>
+                    <h2>Ringkasan Reservasi</h2>
+                    <p>Status reservasi layanan yang Anda ajukan saat ini.</p>
                 </div>
                 <div class="tms-info-list">
                     <div class="tms-info-item">
                         <span class="tms-info-label">Menunggu persetujuan</span>
                         <strong class="tms-info-value">{{ number_format($pendingReservationCount) }}</strong>
-                        <span class="tms-info-description">Permintaan yang masih berstatus Pending.</span>
+                        <span class="tms-info-description">Reservasi yang masih berstatus Pending.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Disetujui</span>
                         <strong class="tms-info-value">{{ number_format($approvedReservationCount) }}</strong>
-                        <span class="tms-info-description">Permintaan yang telah disetujui admin.</span>
+                        <span class="tms-info-description">Reservasi yang telah disetujui admin.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Ditolak</span>
                         <strong class="tms-info-value">{{ number_format($rejectedReservationCount) }}</strong>
-                        <span class="tms-info-description">Permintaan yang ditolak admin.</span>
+                        <span class="tms-info-description">Reservasi yang ditolak admin.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Dibatalkan</span>
                         <strong class="tms-info-value">{{ number_format($cancelledReservationCount) }}</strong>
-                        <span class="tms-info-description">Permintaan yang dibatalkan.</span>
+                        <span class="tms-info-description">Reservasi yang dibatalkan.</span>
                     </div>
                 </div>
                 <div class="tms-info-panel-footer">
                     <a href="{{ route('reservations.index') }}">Buka reservasi →</a>
                     <span aria-hidden="true"> · </span>
-                    <a href="{{ route('reservations.create') }}">Ajukan permintaan →</a>
+                    <a href="{{ route('reservations.create') }}">Ajukan reservasi →</a>
                 </div>
             </aside>
         </div>
     </div>
+
+    @foreach ($reservations as $reservation)
+        @include('reservations._detail-modal', ['reservation' => $reservation])
+    @endforeach
+
+    <script>
+        (() => {
+            const modals = document.querySelectorAll('.reservation-detail-modal');
+            const closeModal = (modal) => {
+                modal.hidden = true;
+                document.body.classList.remove('tms-modal-open');
+            };
+
+            document.querySelectorAll('[data-reservation-detail-open]').forEach((trigger) => {
+                trigger.addEventListener('click', () => {
+                    const modal = document.getElementById(trigger.dataset.reservationDetailOpen);
+                    if (!modal) return;
+
+                    modal.hidden = false;
+                    document.body.classList.add('tms-modal-open');
+                    modal.querySelector('.tms-modal-close')?.focus();
+                });
+            });
+
+            modals.forEach((modal) => {
+                modal.querySelectorAll('[data-reservation-detail-close]').forEach((element) => {
+                    element.addEventListener('click', () => closeModal(modal));
+                });
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key !== 'Escape') return;
+
+                modals.forEach((modal) => {
+                    if (!modal.hidden) closeModal(modal);
+                });
+            });
+        })();
+    </script>
 @endsection

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Edit Permintaan Transportasi')
+@section('title', 'Edit Reservasi Layanan')
 @section('content')
     @php
         $guestRows = old('guests', $reservation->guests->map(fn ($guest) => [
@@ -22,17 +22,17 @@
             <div class="services-heading">
                 <div class="services-eyebrow">
                     <span class="services-eyebrow-dot"></span>
-                    PERMINTAAN LAYANAN TRANSPORTASI
+                    RESERVASI LAYANAN
                 </div>
                 <h1>Edit {{ $reservation->reservation_number }}</h1>
-                <p>Perbarui data permintaan layanan. Penyesuaian hanya dapat dilakukan sebelum tanggal layanan tiba.</p>
+                <p>Perbarui data reservasi layanan. Hanya pemohon dan reservasi berstatus Pending sebelum tanggal layanan yang dapat diubah.</p>
             </div>
             <a href="{{ $isAdmin ? route('admin.reservations.show', $reservation) : route('reservations.show', $reservation) }}" class="service-show-back">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M19 12H5m7 7-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
                         stroke-linejoin="round" />
                 </svg>
-                Kembali ke detail permintaan
+                Kembali ke detail reservasi
             </a>
         </div>
     </header>
@@ -52,7 +52,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h2>Detail Layanan</h2>
+                        <h2>Detail Reservasi</h2>
                         <p>Informasi agen dan kebutuhan transportasi.</p>
                     </div>
                     <span class="service-create-step">01</span>
@@ -96,7 +96,7 @@
                         <label for="guest_count">Jumlah Tamu <span>*</span></label>
                         <input id="guest_count" name="guest_count" type="number" min="1" max="100"
                             value="{{ old('guest_count', $reservation->guest_count ?: 1) }}" required>
-                        <small class="service-create-help">Otomatis mengikuti daftar tamu bila daftar tamu diisi.</small>
+                        <small class="service-create-help">Isi jumlah tamu sebenarnya. Nilai ini tidak dihitung otomatis dari daftar tamu.</small>
                         @error('guest_count')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
@@ -125,7 +125,7 @@
                     <div class="service-create-field service-field-full">
                         <label for="notes">Catatan / Kebutuhan Khusus</label>
                         <textarea id="notes" name="notes" rows="3"
-                            placeholder="Permintaan khusus, informasi tamu, atau instruksi tambahan...">{{ old('notes', $reservation->notes) }}</textarea>
+                            placeholder="Reservasi khusus, informasi tamu, atau instruksi tambahan...">{{ old('notes', $reservation->notes) }}</textarea>
                         @error('notes')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror

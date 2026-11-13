@@ -17,6 +17,7 @@
         $isLocked = $service->isLocked();
         $canEditGuests = $isAdmin && ! $isLocked;
         $canEditItinerary = $isAdmin && ! $isLocked;
+        $guestCount = $service->reservation?->guest_count ?? 1;
         $orderedStops = $service->stops
             ->sortBy(fn ($stop) => [$stop->visit_time === null, $stop->visit_time ?? '', $stop->sort_order])
             ->values();
@@ -29,13 +30,12 @@
                     TRANSPORT OPERATIONS / DETAIL SPK
                 </div>
 
-                <h1>{{ $service->service_code }}</h1>
+                <h1>{{ $service->spk?->spk_number }}</h1>
 
                 <p>
-                    Nomor SPK:
-                    <strong>{{ $service->spk?->spk_number ?: 'Belum diterbitkan' }}</strong>
-                    <span class="service-show-separator">&#10132;</span>
-                    Detail layanan dan laporan driver
+                    Nomor Order:
+                    <strong>{{ $service->reservation->order_number }}</strong>
+                    <span class="service-show-separator"></span>
                 </p>
             </div>
 
@@ -70,7 +70,7 @@
                                     @if ($isLocked)
                                         Layanan sudah berlalu. Tautan publik SPK hanya dapat dibuka.
                                     @else
-                                        {{ $isAdmin ? 'Kirim SPK kepada driver dan detail pesanan ke Reservasi.' : 'Buka dokumen SPK untuk melihat detail layanan.' }}
+                                        {{ $isAdmin ? 'Kirim SPK kepada driver dan detail pesanan ke pemohon.' : 'Buka dokumen SPK untuk melihat detail layanan.' }}
                                     @endif
                                 </p>
                             </div>
@@ -125,7 +125,7 @@
                             </span>
                         </div>
 
-                        <div class="service-show-card-label">Reservasi:</div>
+                        <div class="service-show-card-label">Reservation:</div>
                         <div class="service-show-status-row">
                             <div class="service-show-summary-value">
                                 {{ $service->reservation?->requester?->name ?? 'Belum ditetapkan' }}
@@ -247,12 +247,28 @@
                         <div class="service-show-detail-item">
                             <span class="service-show-detail-icon">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.7" />
+                                    <path d="M3 21v-1.5A4.5 4.5 0 0 1 7.5 15h5A4.5 4.5 0 0 1 17 19.5V21"
+                                        stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                                    <path d="M16 4a4 4 0 0 1 0 7.5m2 3a4.5 4.5 0 0 1 2 3.5V21" stroke="currentColor"
+                                        stroke-width="1.7" stroke-linecap="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <span class="service-show-detail-label">Jumlah Tamu</span>
+                                <strong>{{ number_format($guestCount) }} pax</strong>
+                            </div>
+                        </div>
+
+                        <div class="service-show-detail-item">
+                            <span class="service-show-detail-icon">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.7"
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </span>
                             <div>
-                                <span class="service-show-detail-label">Catatan Layanan</span>
+                                <span class="service-show-detail-label">Catatan</span>
                                 <strong>
                                     {!! $service->notes ?: '-' !!}
                                 </strong>
@@ -264,7 +280,7 @@
                 <section class="service-show-panel">
                     <div class="service-show-panel-header">
                         <div class="service-show-panel-heading">
-                            <div class="service-show-panel-icon service-show-orange">
+                            <div class="service-show-panel-icon service-show-paxe">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.7" />
                                     <path d="M3 21v-1.5A4.5 4.5 0 0 1 7.5 15h5A4.5 4.5 0 0 1 17 19.5V21"
@@ -281,7 +297,7 @@
     
                         <div class="service-show-panel-actions">
                             <span class="service-show-count">
-                                Jumlah Tamu: {{ $service->guest_count }}
+                                Jumlah Tamu: {{ number_format($guestCount) }} pax
                             </span>
                             @if ($canEditGuests)
                                 <button type="button" class="service-show-guest-add" data-guest-add>
@@ -438,7 +454,7 @@
                     <section class="service-show-panel">
                         <div class="service-show-panel-header">
                             <div class="service-show-panel-heading">
-                                <div class="service-show-panel-icon service-show-orange">
+                                <div class="service-show-panel-icon service-show-paxe">
                                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                         <path d="M12 21s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12Z" stroke="currentColor"
                                             stroke-width="1.7" />
@@ -479,7 +495,11 @@
 
                                 <div class="service-show-stop-content">
                                     <div class="service-show-stop-heading">
-                                        <h3>{{ $stop->name }}</h3>
+                                        <h3>{{ $stop->name }}
+                                        @if ($stop->added_by_driver)
+                                            <span>(Destinasi tambahan dari driver.)</span>
+                                        @endif
+                                        </h3>
                                         <div class="service-show-stop-meta">
                                             <div class="service-show-stop-badges">
                                                 <span class="service-show-stop-status">
@@ -522,8 +542,7 @@
                                     <p><strong>Waktu kunjungan:</strong>
                                         {{ $stop->visit_time ? \App\Support\DateFormatter::format($stop->visit_time, null, 'H:i') . ' WITA' : 'Belum ditentukan' }}
                                     </p>
-                                    @if ($stop->google_maps_url)
-                                        
+                                    {{-- @if ($stop->google_maps_url)
                                             <a href="{{ $stop->google_maps_url }}"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
@@ -554,11 +573,13 @@
                                                         <path d="M7 7h10v10"/>
                                                     </svg>
                                                 </a>
+                                    @endif --}}
+                                    @if ($stop->address)
+                                        <p>{{ $stop->address }}</p>
                                     @endif
-                                    <p>{{ $stop->address ?: 'Tidak ada keterangan lokasi.' }}</p>
-                                    <span class="service-show-stop-sequence">
-                                        DESTINASI {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}
-                                    </span>
+                                    @if ($stop->note)
+                                        <p>{{ $stop->note }}</p>
+                                    @endif
                                 </div>
                             </div>
                         @empty
@@ -766,21 +787,15 @@
                     </div>
                     <div class="tms-info-list">
                         <div class="tms-info-item">
-                            <span class="tms-info-label">Status layanan</span>
+                            <span class="tms-info-label">Status</span>
                             <strong class="tms-info-value">{{ $service->status }}</strong>
                             <span class="tms-info-description">Status terkini pada layanan ini.</span>
                         </div>
                         <div class="tms-info-item">
-                            <span class="tms-info-label">Tanggal mulai</span>
+                            <span class="tms-info-label">Tanggal</span>
                             <strong
                                 class="tms-info-value">{{ \App\Support\DateFormatter::format($service->service_date) ?? '-' }}</strong>
                             <span class="tms-info-description">Tanggal layanan.</span>
-                        </div>
-                        <div class="tms-info-item">
-                            <span class="tms-info-label">Tanggal selesai</span>
-                            <strong
-                                class="tms-info-value">{{ \App\Support\DateFormatter::format($service->service_end_date) ?? '-' }}</strong>
-                            <span class="tms-info-description">Tanggal akhir layanan.</span>
                         </div>
                         <div class="tms-info-item">
                             <span class="tms-info-label">Driver</span>
@@ -790,7 +805,7 @@
                         <div class="tms-info-item">
                             <span class="tms-info-label">Kendaraan</span>
                             <strong
-                                class="tms-info-value">{{ $service->plate_number ?? 'Belum ditentukan' }}</strong>
+                                class="tms-info-value">{{ $service->vehicle?->name }} ({{ $service->plate_number ?? 'Belum ditentukan' }})</strong>
                             <span class="tms-info-description">Nomor kendaraan.</span>
                         </div>
                         <div class="tms-info-item">

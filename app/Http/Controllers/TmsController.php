@@ -68,7 +68,7 @@ class TmsController extends Controller
             'activeVehicleCount' => $activeVehicleCount,
             'activeDriverCount' => $activeDriverCount,
             'latestDriverCheckIns' => $this->latestDriverCheckIns(),
-            'services' => TransportService::with(['driver', 'vehicle', 'serviceType', 'spk'])
+            'services' => TransportService::with(['driver', 'vehicle', 'serviceType', 'spk', 'reservation'])
                 ->whereDate('service_end_date', '>=', $today)
                 ->whereIn('status', ['Published', 'In Progress'])
                 ->orderBy('service_date')
@@ -133,10 +133,18 @@ class TmsController extends Controller
 
         $totalReservationCount = (clone $base)->count();
 
-        $reservations = (clone $upcoming)
-            ->with('serviceType')
+        $reservations = Reservation::query()
+            ->with([
+                'serviceType',
+                'requester',
+                'guests',
+                'transportService.driver',
+                'transportService.vehicle',
+                'transportService.spk',
+            ])
+            ->whereDate('service_end_date', '>=', $today)
+            ->whereIn('status', ['Pending', 'Approved'])
             ->orderBy('service_date')
-            ->limit(8)
             ->get();
 
         return view('dashboard-reservation', [
@@ -374,7 +382,7 @@ class TmsController extends Controller
         abort_unless($service->spk, 404, 'SPK tidak ditemukan.');
 
         $reservation = $service->reservation;
-        abort_unless($reservation, 404, 'Data reservasi tidak ditemukan.');
+        abort_unless($reservation, 404, 'Data reservasi layanan tidak ditemukan.');
         $recipientName = $reservation?->requester?->name
             ?? $reservation?->customer_name
             ?? $service->customer_name
@@ -387,7 +395,7 @@ class TmsController extends Controller
         }
 
         if (strlen($phone) < 8) {
-            return back()->withErrors(['reservation_phone' => 'Nomor WhatsApp reservasi belum tersedia atau tidak valid.']);
+            return back()->withErrors(['reservation_phone' => 'Nomor WhatsApp pemohon belum tersedia atau tidak valid.']);
         }
 
         $guestLines = $service->guests->isNotEmpty()
@@ -451,7 +459,6 @@ class TmsController extends Controller
         ]);
 
         $service->guests()->create($data);
-        $service->update(['guest_count' => max(1, $service->guests()->count())]);
 
         return back()->with('success', 'Tamu berhasil ditambahkan.');
     }
@@ -485,7 +492,6 @@ class TmsController extends Controller
         }
 
         $guest->delete();
-        $service->update(['guest_count' => max(1, $service->guests()->count())]);
 
         return back()->with('success', 'Tamu berhasil dihapus.');
     }
@@ -936,7 +942,7 @@ class TmsController extends Controller
         }
 
         if ($user->reservations()->exists()) {
-            return back()->withErrors(['user' => 'User ini memiliki data reservasi. Nonaktifkan akun saja agar riwayat tetap tersimpan.']);
+            return back()->withErrors(['user' => 'User ini memiliki data reservasi layanan. Nonaktifkan akun saja agar riwayat tetap tersimpan.']);
         }
 
         $user->delete();
@@ -950,7 +956,7 @@ class TmsController extends Controller
             'admin' => 'Admin',
             'owner' => 'Owner',
             'manager' => 'Manager',
-            'reservation' => 'Reservation',
+            'reservation' => 'Staf Reservasi',
         ];
     }
 
@@ -1098,19 +1104,6 @@ class TmsController extends Controller
                     'status' => 'Checked In',
                     'added_by_driver' => true,
                 ]);
-
-                SpkEvent::create([
-                    'spk_id' => $spk->id,
-                    'transport_service_id' => $spk->transport_service_id,
-                    'itinerary_stop_id' => $destinationStop->id,
-                    'event_type' => 'destination_added',
-                    'actor_type' => 'driver_public',
-                    'actor_id' => null,
-                    'created_at' => now('UTC'),
-                    'metadata' => [
-                        'idempotency_key' => $data['idempotency_key'],
-                    ],
-                ]);
             }
 
             SpkEvent::create([
@@ -1188,16 +1181,6 @@ class TmsController extends Controller
                 'sort_order' => $max + 1,
                 'status' => 'Checked In',
                 'added_by_driver' => true,
-            ]);
-
-            SpkEvent::create([
-                'spk_id' => $spk->id,
-                'transport_service_id' => $spk->transport_service_id,
-                'itinerary_stop_id' => $stop->id,
-                'event_type' => 'destination_added',
-                'actor_type' => 'driver_public',
-                'created_at' => now('UTC'),
-                'metadata' => ['note' => $data['note'] ?? null],
             ]);
 
             SpkEvent::create([

@@ -147,6 +147,7 @@
                                         <th>Nomor Order / SPK</th>
                                         <th>Tanggal Layanan</th>
                                         <th>Agen</th>
+                                        <th>Jumlah Tamu</th>
                                         <th>Driver / Kendaraan</th>
                                         <th>Status</th>
                                         <th class="services-action-heading"></th>
@@ -202,8 +203,12 @@
                                             </td>
 
                                             <td>
+                                                {{ number_format($s->reservation?->guest_count ?? 1) }} orang
+                                            </td>
+
+                                            <td>
                                                 <div class="services-primary-text">
-                                                    {{ $s->driver?->name ?? 'Belum ditugaskan' }}
+                                                    👨‍✈️ {{ $s->driver?->name ?? 'Belum ditugaskan' }}
                                                 </div>
                                                 <div class="services-subtext">
                                                     🚗 {{ $s->vehicle?->name ?? 'Kendaraan belum ditentukan' }}
@@ -233,7 +238,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6">
+                                            <td colspan="7">
                                                 <div class="services-empty-state">
                                                     <span class="services-empty-icon">
                                                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

@@ -49,7 +49,7 @@
                             <span class="stat-label">RESERVASI</span>
                         </div>
                         <div class="stat-value">{{ number_format($todayReservationCount) }}</div>
-                        <div class="stat-title">Reservasi / pesanan hari ini</div>
+                        <div class="stat-title">Reservasi layanan hari ini</div>
                         <div class="stat-foot">Pending dan Approved yang berlangsung hari ini.</div>
                     </article>
 
@@ -133,6 +133,7 @@
                                     <th>KODE / SPK</th>
                                     <th>TANGGAL</th>
                                     <th>PELANGGAN</th>
+                                    <th>TAMU</th>
                                     <th>DRIVER</th>
                                     <th>KENDARAAN</th>
                                     <th>STATUS</th>
@@ -155,6 +156,7 @@
                                         <td class="table-customer">
                                             {{ $s->customer_name }}
                                         </td>
+                                        <td>{{ number_format($s->reservation?->guest_count ?? 1) }} orang</td>
                                         <td>{{ $s->driver?->name ?? '—' }}</td>
                                         <td>
                                             @if ($s->plate_number)
@@ -175,7 +177,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6">
+                                        <td colspan="7">
                                             <div class="dashboard-empty">
                                                 <div class="empty-icon">
                                                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -264,12 +266,12 @@
                     <div class="tms-info-item">
                         <span class="tms-info-label">Reservasi menunggu review</span>
                         <strong class="tms-info-value">{{ number_format($pendingReservationReviewCount) }}</strong>
-                        <span class="tms-info-description">Semua permintaan berstatus Pending yang belum ditinjau.</span>
+                        <span class="tms-info-description">Semua reservasi berstatus Pending yang belum ditinjau.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Reservasi menunggu persetujuan</span>
                         <strong class="tms-info-value">{{ number_format($todayPendingReservationCount) }}</strong>
-                        <span class="tms-info-description">Permintaan hari ini yang masih berstatus Pending.</span>
+                        <span class="tms-info-description">Reservasi hari ini yang masih berstatus Pending.</span>
                     </div>
                     <div class="tms-info-item">
                         <span class="tms-info-label">Layanan sedang berjalan</span>
@@ -293,7 +295,7 @@
                     </div>
                 </div>
                 <div class="tms-info-panel-footer">
-                    <a href="{{ route('admin.reservations.index') }}">Buka reservasi →</a>
+                    <a href="{{ route('admin.reservations.index') }}">Buka reservasi layanan →</a>
                     <span aria-hidden="true"> · </span>
                     <a href="{{ route('services.index') }}">Daftar layanan →</a>
                 </div>
@@ -398,7 +400,7 @@
                     });
 
                     if (!response.ok) {
-                        throw new Error(`Permintaan gagal (${response.status}).`);
+                        throw new Error(`Reservasi gagal (${response.status}).`);
                     }
 
                     const result = await response.json();

@@ -126,15 +126,15 @@
 
                 <div class="service-create-fields">
                     <div class="service-create-field service-field-full">
-                        <label for="user_id">Pemilik Reservasi / Kasus <span>*</span></label>
+                        <label for="user_id">Reservasi<span>*</span></label>
                         <select id="user_id" name="user_id" required>
-                            <option value="">Pilih user ber-role reservation</option>
+                            <option value="">Pilih pemohon (staf reservasi layanan)</option>
                             @foreach ($reservationUsers as $reservationUser)
                                 <option value="{{ $reservationUser->id }}" @selected(old('user_id') == $reservationUser->id)>{{ $reservationUser->name }} ({{ $reservationUser->email }}{{ $reservationUser->phone ? ' · ' . $reservationUser->phone : '' }})</option>
                             @endforeach
                         </select>
                         @error('user_id')<small class="service-create-error">{{ $message }}</small>@enderror
-                        <small class="service-create-help">Pemilik kasus adalah staf internal Reservation, bukan wisatawan.</small>
+                        <small class="service-create-help"> adalah staf internal reservasi layanan, bukan wisatawan.</small>
                     </div>
                     <div class="service-create-field">
                         <label for="customer_name">Nama Agen / Kode Agen <span>*</span></label>
@@ -158,7 +158,7 @@
                         <input id="order_number" name="order_number" type="text" maxlength="100"
                             value="{{ old('order_number') }}"
                             placeholder="Nomor order dari agen / sistem" required>
-                        <small class="service-create-help">Opsional. Nomor order yang tersimpan pada reservasi.</small>
+                        <small class="service-create-help">Opsional. Nomor order yang tersimpan pada reservasi layanan.</small>
                         @error('order_number')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
@@ -182,7 +182,7 @@
                     <div class="service-create-field service-field-full">
                         <label for="notes">Catatan Layanan</label>
                         <textarea id="notes" name="notes" rows="3"
-                            placeholder="Permintaan khusus, informasi tamu, atau instruksi tambahan...">{{ old('notes') }}</textarea>
+                            placeholder="Reservasi khusus, informasi tamu, atau instruksi tambahan...">{{ old('notes') }}</textarea>
                         @error('notes')
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
@@ -380,25 +380,6 @@
                             <small class="service-create-error">{{ $message }}</small>
                         @enderror
                     </div>
-
-                    {{-- <div class="service-create-field service-field-full">
-                        <label>Kontak Darurat</label>
-                        @if ($defaultEmergencyContact)
-                            <p class="service-create-help">
-                                Otomatis menggunakan {{ $defaultEmergencyContact->name }} · {{ $defaultEmergencyContact->phone }}
-                                @if ($defaultEmergencyContact->whatsapp)
-                                    · WhatsApp {{ $defaultEmergencyContact->whatsapp }}
-                                @endif
-                            </p>
-                        @else
-                            <p class="service-create-error">
-                                Belum ada kontak aktif berstatus Default. Atur Kontak Darurat sebelum membuat SPK.
-                            </p>
-                        @endif
-                        @error('emergency_contact')
-                            <small class="service-create-error">{{ $message }}</small>
-                        @enderror
-                    </div> --}}
                 </div>
             </section>
 
@@ -782,7 +763,7 @@
 
                 reviewRoot.innerHTML = [
                     reviewSection('Detail Layanan', [
-                        ['Pemilik Reservation', selectedText('user_id', 'Belum dipilih')],
+                        ['', selectedText('user_id', 'Belum dipilih')],
                         ['Agen', fieldValue('customer_name')],
                         ['Telepon', fieldValue('customer_phone')],
                         ['Nomor Order', fieldValue('order_number')],

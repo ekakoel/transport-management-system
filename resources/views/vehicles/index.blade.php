@@ -92,7 +92,6 @@
                     <div class="vehicle-calendar-detail-item">
                         <span class="vehicle-calendar-detail-label">Waktu Layanan</span>
                         <strong id="calendarEventTime">—</strong>
-                        <small>Waktu setempat Bali (WITA), termasuk {{ \App\Support\ScheduleConflict::PREP_BUFFER_HOURS }} jam buffer persiapan</small>
                     </div>
                 </div>
             </div>

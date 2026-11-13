@@ -218,7 +218,7 @@
                                     <th>Email</th>
                                     <th>Telepon</th>
                                     <th>Role</th>
-                                    <th>Permintaan</th>
+                                    <th>Reservasi</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
@@ -303,9 +303,9 @@
                         <span class="tms-info-description">Akun dengan akses operasional.</span>
                     </div>
                     <div class="tms-info-item">
-                        <span class="tms-info-label">Reservation</span>
+                        <span class="tms-info-label">Staf Reservasi</span>
                         <strong class="tms-info-value">{{ number_format($userStats['reservation']) }}</strong>
-                        <span class="tms-info-description">Akun staf Reservasi.</span>
+                        <span class="tms-info-description">Akun staf reservasi layanan.</span>
                     </div>
                 </div>
                 <div class="tms-info-panel-footer">

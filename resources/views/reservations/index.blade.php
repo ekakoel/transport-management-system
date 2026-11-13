@@ -1,21 +1,21 @@
 @extends('layouts.app')
-@section('title', 'Permintaan Transportasi')
+@section('title', 'Reservasi Layanan')
 @section('content')
     <header>
         <div class="main-header">
             <div class="services-heading">
                 <div class="services-eyebrow">
                     <span class="services-eyebrow-dot"></span>
-                    LAYANAN TRANSPORTASI
+                    RESERVASI LAYANAN
                 </div>
-                <h1>Daftar Permintaan Layanan Transportasi</h1>
+                <h1>Daftar Reservasi Layanan</h1>
                 <p class="resv-muted">Ajukan kebutuhan transportasi dan pantau keputusan admin.</p>
             </div>
             <a href="{{ route('reservations.create')}}" class="services-create-btn">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
-                <span>Ajukan Permintaan Layanan</span>
+                <span>Ajukan Reservasi Layanan</span>
             </a>
         </div>
     </header>
@@ -33,8 +33,8 @@
                                 </svg>
                             </span>
                             <div>
-                                <h2>Filter Permintaan Layanan</h2>
-                                <p>Temukan permintaan layanan berdasarkan nomor pesanan, agen, reservasi.</p>
+                                <h2>Filter Reservasi Layanan</h2>
+                                <p>Temukan reservasi layanan berdasarkan nomor pesanan, agen, atau pemohon.</p>
                             </div>
                         </div>
                     </div>
@@ -47,11 +47,11 @@
                                         stroke-width="1.7" />
                                     <path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
                                 </svg>
-                                <input type="search" name="q" class="input-text" value="{{ request('q') }}" placeholder="Cari nomor / agen / reservasi">
+                                <input type="search" name="q" class="input-text" value="{{ request('q') }}" placeholder="Cari nomor / agen / pemohon">
                             </div>
                         </div>
                         <div class="services-filter-field">
-                            <label for="service-status">Status Permintaan</label>
+                            <label for="service-status">Status Reservasi</label>
                             <select name="status">
                                 <option value="">Semua status</option>
                                 @foreach (['Pending', 'Approved', 'Rejected', 'Cancelled'] as $status)
@@ -72,12 +72,12 @@
                 <section class="services-table-panel">
                     <div class="services-table-header">
                         <div>
-                            <h2>Daftar Permintaan Layanan</h2>
-                            <p>Data permintaan layanan yang tersedia</p>
+                            <h2>Daftar Reservasi Layanan</h2>
+                            <p>Data reservasi layanan yang tersedia</p>
                         </div>
                         <div class="services-total">
                             <span class="services-total-dot"></span>
-                            {{ number_format($reservations->total()) }} Permintaan
+                            {{ number_format($reservations->total()) }} Reservasi
                         </div>
                     </div>
                     <div class="resv-card">
@@ -88,7 +88,8 @@
                                         <th>Nomor / Reservasi</th>
                                         <th>Jadwal</th>
                                         <th>Agen</th>
-                                        <th>Layanan</th>
+                                        <th>Tipe Layanan</th>
+                                        <th>Jumlah Tamu</th>
                                         <th>Status</th>
                                         <th></th>
                                     </tr>
@@ -118,11 +119,14 @@
                                                 {{ $r->serviceType?->name ?? '—' }}
                                             </td>
                                             <td>
+                                                {{ number_format($r->guest_count) }} orang
+                                            </td>
+                                            <td>
                                                 <span class="resv-status {{ $r->status }}">{{ $r->status }}</span>
                                             </td>
                                             <td class="services-action-cell">
                                                 <div class="services-action-group">
-                                                    @if ($r->status === 'Pending' && $r->service_date->format('Y-m-d') >= $today)
+                                                    @if ((int) $r->user_id === (int) auth()->id() && $r->status === 'Pending' && $r->service_date->format('Y-m-d') >= $today)
                                                         <a href="{{ route('reservations.edit', $r) }}" class="services-detail-btn"
                                                             aria-label="Edit">
                                                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -147,7 +151,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="empty-value">Belum ada permintaan yang anda buat.</td>
+                                            <td colspan="7" class="empty-value">Belum ada reservasi yang anda buat.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -157,11 +161,11 @@
                     </div>
                 </section>
             </div>
-            <aside class="tms-info-panel" aria-label="Informasi Ringkasan Layanan">
+            <aside class="tms-info-panel" aria-label="Informasi Ringkasan Reservasi">
                 <div class="tms-info-panel-heading">
                     <span class="tms-info-panel-kicker">INFORMASI</span>
-                    <h2>Ringkasan Layanan</h2>
-                    <p>Ringkasan daftar dan status layanan transportasi.</p>
+                    <h2>Ringkasan Reservasi</h2>
+                    <p>Ringkasan daftar dan status reservasi layanan.</p>
                 </div>
                 <div class="tms-info-list">
                     <div class="tms-info-item">

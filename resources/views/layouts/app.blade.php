@@ -41,12 +41,12 @@
 
                     <a href="{{ auth()->user()->role === 'reservation' ? route('reservations.index') : route('admin.reservations.index') }}"
                         class="{{ request()->routeIs('reservations.*') || request()->routeIs('admin.reservations.*') ? 'active' : '' }}"
-                        title="Reservasi Requests">
+                        title="Reservasi Layanan">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        <span>{{ auth()->user()->role === 'reservation' ? 'Reservasi Saya' : 'Reservasi' }}</span>
+                        <span>{{ auth()->user()->role === 'reservation' ? 'Reservasi Saya' : 'Reservasi Layanan' }}</span>
                         @if ($isReservationReviewer && $pendingReservationCount > 0)
                             <span class="nav-badge"
-                                title="{{ $pendingReservationCount }} reservasi menunggu review">{{ $pendingReservationCount > 99 ? '99+' : $pendingReservationCount }}</span>
+                                title="{{ $pendingReservationCount }} reservasi layanan menunggu review">{{ $pendingReservationCount > 99 ? '99+' : $pendingReservationCount }}</span>
                         @endif
                     </a>
                     <a href="{{ route('services.index') }}"
@@ -176,8 +176,8 @@
                         @if ($isReservationReviewer)
                             <a href="{{ route('admin.reservations.index', ['status' => 'Pending']) }}"
                                 class="topbar-notification"
-                                aria-label="Notifikasi reservasi: {{ $pendingReservationCount }} menunggu review"
-                                title="{{ $pendingReservationCount > 0 ? $pendingReservationCount . ' reservasi menunggu review' : 'Tidak ada reservasi menunggu review' }}">
+                                aria-label="Notifikasi reservasi layanan: {{ $pendingReservationCount }} menunggu review"
+                                title="{{ $pendingReservationCount > 0 ? $pendingReservationCount . ' reservasi layanan menunggu review' : 'Tidak ada reservasi layanan menunggu review' }}">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7Z"
                                         stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
